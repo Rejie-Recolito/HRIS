@@ -43,7 +43,7 @@
         </nav>
         @endif
     </header>
-
+    
     <!-- Spacer to offset fixed header -->
     <div class="h-24"></div>
 
