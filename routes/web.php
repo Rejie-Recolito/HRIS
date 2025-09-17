@@ -19,9 +19,12 @@ Route::get('/service_record', function () {
     return view('admin.service_record');
 })->middleware(['auth', 'verified'])->name('service_record');
 
-Route::get('/leave', function () {
-    return view('admin.leave');
-})->middleware(['auth', 'verified'])->name('leave');
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Admin leave management
+    Route::get('/leave', [\App\Http\Controllers\LeaveApplicationController::class, 'index'])->name('leave');
+    Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
+    Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
+});
 
 Route::get('/dtr', function () {
     return view('admin.dtr');
