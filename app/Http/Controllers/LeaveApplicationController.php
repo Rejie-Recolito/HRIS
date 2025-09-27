@@ -7,6 +7,18 @@ use App\Models\LeaveApplication;
 
 class LeaveApplicationController extends Controller
 {
+    // Admin: approve a leave application and download PDF
+    public function approve($id)
+    {
+        $leave = LeaveApplication::findOrFail($id);
+        if ($leave->status === 'Under Review') {
+            $leave->status = 'Approved';
+            $leave->save();
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_application_letter', compact('leave'));
+            return $pdf->download('leave_application_letter_'.$leave->lastname.'_'.$leave->firstname.'.pdf');
+        }
+        return redirect()->back()->with('error', 'Leave application must be Under Review to approve.');
+    }
     public function create()
     {
         return view('leave_user');
@@ -60,5 +72,16 @@ class LeaveApplicationController extends Controller
         $leave = LeaveApplication::findOrFail($id);
         $leave->delete();
         return redirect()->back()->with('success', 'Leave application deleted.');
+    }
+
+    public function downloadPdf($id)
+    {
+        $leaveApplication = LeaveApplication::findOrFail($id);
+
+        // Generate the PDF
+        $pdf = \PDF::loadView('pdf.leave_application_letter', ['leave' => $leaveApplication]);
+
+        // Return the PDF as a download
+        return $pdf->download('leave-application-' . $id . '.pdf');
     }
 }

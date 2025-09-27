@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,9 +12,12 @@ Route::get('/dashboard', function () {
     return view('dashboard_user');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/employees', function () {
-    return view('admin.employees');
-})->middleware(['auth', 'verified'])->name('employees');
+Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+Route::get('/employees/{id}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+Route::put('/employees/{id}', [EmployeeController::class, 'update'])->name('employees.update');
+Route::delete('/employees/{id}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
 
 Route::get('/service_record', function () {
     return view('admin.service_record');
@@ -23,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Admin leave management
     Route::get('/leave', [\App\Http\Controllers\LeaveApplicationController::class, 'index'])->name('leave');
     Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
+    Route::post('/leave/{id}/approve', [\App\Http\Controllers\LeaveApplicationController::class, 'approve'])->name('leave.approve');
     Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
 });
 

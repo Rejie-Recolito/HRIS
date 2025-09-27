@@ -20,5 +20,6 @@ class LeaveApplication extends Model
         'others',
         'number_of_days',
         'inclusive_dates',
+        'status',
     ];
 }
