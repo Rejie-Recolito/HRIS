@@ -11,6 +11,27 @@
         body {
             color: white;
         }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .overlay .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
     </style>
 
     <div class="py-12">
@@ -67,7 +88,7 @@
 
                     <!-- Filter Input -->
                     <div class="mb-4">
-                        <input type="text" id="employeeFilter" placeholder="Search employees..." class="w-full border-gray-300 rounded-md shadow-sm">
+                        <input type="text" id="employeeFilter" placeholder="Search employees..." class="w-full border-gray-300 rounded-md shadow-sm text-gray-900">
                     </div>
 
                     <table class="min-w-full border text-sm mb-6">
@@ -111,10 +132,58 @@
         </div>
     </div>
 
+    <div id="overlay" class="overlay">
+        <div class="form-container">
+            <form method="POST" action="{{ route('employees.store') }}">
+                @csrf
+
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="name" id="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                </div>
+
+                <div class="mb-4">
+                    <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
+                    <input type="text" name="department" id="department" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                </div>
+
+                <div class="mb-4">
+                    <label for="job_title" class="block text-sm font-medium text-gray-700">Job Title</label>
+                    <input type="text" name="job_title" id="job_title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                </div>
+
+                <div class="mb-4">
+                    <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                </div>
+
+                <div class="mb-4">
+                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <input type="text" name="status" id="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                </div>
+
+                <div class="mb-4">
+                    <label for="sex" class="block text-sm font-medium text-gray-700">Sex</label>
+                    <input type="text" name="sex" id="sex" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" id="closeOverlay" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.getElementById('addEmployeeButton').addEventListener('click', function() {
-            const form = document.getElementById('addEmployeeForm');
-            form.classList.toggle('hidden');
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'flex';
+        });
+
+        document.getElementById('closeOverlay').addEventListener('click', function() {
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'none';
         });
 
         document.getElementById('employeeFilter').addEventListener('input', function() {

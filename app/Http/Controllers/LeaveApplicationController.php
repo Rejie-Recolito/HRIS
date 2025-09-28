@@ -74,14 +74,10 @@ class LeaveApplicationController extends Controller
         return redirect()->back()->with('success', 'Leave application deleted.');
     }
 
-    public function downloadPdf($id)
+    public function downloadPdf()
     {
-        $leaveApplication = LeaveApplication::findOrFail($id);
-
-        // Generate the PDF
-        $pdf = \PDF::loadView('pdf.leave_application_letter', ['leave' => $leaveApplication]);
-
-        // Return the PDF as a download
-        return $pdf->download('leave-application-' . $id . '.pdf');
+        $leaveApplications = LeaveApplication::all(); // Fetch all leave applications
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_applications', compact('leaveApplications'));
+        return $pdf->download('leave_applications.pdf');
     }
 }

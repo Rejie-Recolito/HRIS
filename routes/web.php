@@ -3,6 +3,7 @@
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ServiceRecordController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,7 +22,7 @@ Route::post('/employees', [EmployeeController::class, 'store'])->name('employees
 
 Route::get('/service_record', function () {
     return view('admin.service_record');
-})->middleware(['auth', 'verified'])->name('service_record');
+})->name('service_record');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Admin leave management
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
     Route::post('/leave/{id}/approve', [\App\Http\Controllers\LeaveApplicationController::class, 'approve'])->name('leave.approve');
     Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
+    Route::get('/leave/download-pdf', [\App\Http\Controllers\LeaveApplicationController::class, 'downloadPdf'])->name('leave.download-pdf');
 });
 
 Route::get('/dtr', function () {
@@ -46,8 +48,6 @@ Route::middleware('auth')->group(function () {
      Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard');
 });
 
-
-
 require __DIR__.'/auth.php';
 
 // User-only routes
@@ -58,4 +58,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/service_record_user', function () {
         return view('service_record_user');
     })->name('service_record.user');
+
+    Route::post('/service-records', [ServiceRecordController::class, 'store'])->name('service-records.store');
+    Route::get('/service-records', [ServiceRecordController::class, 'index'])->name('service-records.index');
 });
+
+Route::get('/service_record/{id}', function ($id) {
+    $serviceRecord = \App\Models\ServiceRecord::findOrFail($id);
+    return view('admin.request_form', compact('serviceRecord'));
+})->name('service_record.request_form');
+
+Route::post('/service_record/{id}/generate', function ($id) {
+    $serviceRecord = \App\Models\ServiceRecord::findOrFail($id);
+
+    $pdf = \PDF::loadView('admin.service_record_pdf', compact('serviceRecord'));
+    return $pdf->download('service_record.pdf');
+})->name('service_record.generate');

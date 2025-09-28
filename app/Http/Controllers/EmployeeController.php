@@ -10,7 +10,7 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        $employees = DB::table('employee')->get(); // Fetch data from the 'employee' table
+        $employees = Employee::all(); // Fetch data using the Employee model
         return view('admin.employees', compact('employees'));
     }
 
