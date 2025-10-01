@@ -7,6 +7,9 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="{{ asset('Images/logo.jpg') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
@@ -54,7 +57,7 @@
             </a>
             @if (Route::has('register'))
             <a href="{{ route('register') }}"
-                 class="inline-block px-5 py-1.5 text-white dark:text-[#ffffff] border-[#FFFFFF] rounded-full hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal">
+                class="inline-block px-5 py-1.5 text-white dark:text-[#ffffff] border-[#FFFFFF] rounded-full hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal">
                 Register
             </a>
             @endif
