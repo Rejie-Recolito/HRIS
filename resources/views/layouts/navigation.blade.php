@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-[#198F51] border-b border-gray-100 dark:border-gray-700">
+<nav x-data="{ open: false }" class="bg-[#198f51] dark:bg-[#b91c1c] border-b border-gray-100 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -15,45 +15,45 @@
                     @if(Auth::user() && Auth::user()->is_admin)
                         <!-- Admin Navigation -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="!text-white hover:!text-gray-200">
                                 {{ __('Admin Dashboard') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.index')">
+                            <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.index')" class="!text-white hover:!text-gray-200">
                                 {{ __('Employees') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('service_record')" :active="request()->routeIs('service_record')">
+                            <x-nav-link :href="route('service_record')" :active="request()->routeIs('service_record')" class="!text-white hover:!text-gray-200">
                                 {{ __('Service Record') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('leave')" :active="request()->routeIs('leave')">
+                            <x-nav-link :href="route('leave')" :active="request()->routeIs('leave')" class="!text-white hover:!text-gray-200">
                                 {{ __('Leave') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('dtr')" :active="request()->routeIs('dtr')">
+                            <x-nav-link :href="route('dtr')" :active="request()->routeIs('dtr')" class="!text-white hover:!text-gray-200">
                                 {{ __('DTR') }}
                             </x-nav-link>
                         </div>
                     @else
                         <!-- User Navigation -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                                {{ __('Dashboard') }}
+                            <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="!text-white hover:!text-gray-200">
+                                {{ __('HOME') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')">
-                                {{ __('Leave') }}
+                            <x-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')" class="!text-white hover:!text-gray-200">
+                                {{ __('LEAVE') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">
-                                {{ __('Service Record') }}
+                            <x-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')" class="!text-white hover:!text-gray-200">
+                                {{ __('SERVICE RECORD') }}
                             </x-nav-link>
                         </div>
                     @endif
@@ -138,19 +138,19 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="!text-white hover:!text-gray-200">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
         </div>
 
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">
+            <x-responsive-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')" class="!text-white hover:!text-gray-200">
                 {{ __('Service Record') }}
             </x-responsive-nav-link>
         </div>
 
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')">
+            <x-responsive-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')" class="!text-white hover:!text-gray-200">
                 {{ __('Leave') }}
             </x-responsive-nav-link>
         </div>
