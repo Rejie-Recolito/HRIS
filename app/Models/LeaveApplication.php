@@ -22,4 +22,9 @@ class LeaveApplication extends Model
         'inclusive_dates',
         'status',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

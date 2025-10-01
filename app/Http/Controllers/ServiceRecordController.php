@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ServiceRecord;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\AdminNotification;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ServiceRecordController extends Controller
 {
@@ -25,7 +29,19 @@ class ServiceRecordController extends Controller
             'place_of_assignment' => 'required|string',
         ]);
 
-        ServiceRecord::create($validated);
+        $serviceRecord = ServiceRecord::create($validated);
+
+        // Notify admin with a custom message
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            $admin->notifications()->create([
+                'type' => AdminNotification::class,
+                'data' => [
+                    'message' => Auth::user()->name . ' has requested a service record.',
+                    'service_record_id' => $serviceRecord->id,
+                ],
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Service record created successfully.');
     }

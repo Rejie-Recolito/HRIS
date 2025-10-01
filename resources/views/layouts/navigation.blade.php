@@ -67,7 +67,7 @@
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+                            <div>{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
 
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -94,6 +94,33 @@
                         </form>
                     </x-slot>
                 </x-dropdown>
+
+                @if(Auth::user() && Auth::user()->is_admin)
+                    <!-- Admin Notification Bell -->
+                    <div class="relative ms-4">
+                        <button @click="open = !open" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
+                            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.outside="open = false" class="absolute right-0 mt-2 w-64 h-[380px] overflow-y-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                            <x-notification-component :notifications="$notifications" />
+                        </div>
+                    </div>
+                @else
+                    <!-- User Notification Bell -->
+                    <div class="relative ms-4">
+                        <button @click="openUserNotifications = !openUserNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
+                            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </button>
+                        <div x-show="openUserNotifications" @click.outside="openUserNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                            <x-notification-component :notifications="$notifications" />
+                            
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Hamburger -->
@@ -128,13 +155,27 @@
             </x-responsive-nav-link>
         </div>
 
+        <div class="pt-2 pb-3 space-y-1">
+            <div class="relative">
+                <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
+                    <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </button>
+                <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                    <x-notification-component :notifications="$notifications" />
+
+                
+                </div>
+            </div>
+        </div>
 
    
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
+                <div class="font-medium text-sm text-gray-500">{{ Auth::user() ? Auth::user()->email : '' }}</div>
             </div>
 
             <div class="mt-3 space-y-1">

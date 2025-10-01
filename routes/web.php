@@ -4,6 +4,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServiceRecordController;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,7 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
     Route::post('/leave/{id}/approve', [\App\Http\Controllers\LeaveApplicationController::class, 'approve'])->name('leave.approve');
     Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
-    Route::get('/leave/download-pdf', [\App\Http\Controllers\LeaveApplicationController::class, 'downloadPdf'])->name('leave.download-pdf');
+    Route::get('/leave/download-pdf/{id}', [\App\Http\Controllers\LeaveApplicationController::class, 'downloadPdf'])->name('leave.download-pdf');
 });
 
 Route::get('/dtr', function () {
@@ -71,6 +72,6 @@ Route::get('/service_record/{id}', function ($id) {
 Route::post('/service_record/{id}/generate', function ($id) {
     $serviceRecord = \App\Models\ServiceRecord::findOrFail($id);
 
-    $pdf = \PDF::loadView('admin.service_record_pdf', compact('serviceRecord'));
+    $pdf = Pdf::loadView('admin.service_record_pdf', compact('serviceRecord'));
     return $pdf->download('service_record.pdf');
 })->name('service_record.generate');
