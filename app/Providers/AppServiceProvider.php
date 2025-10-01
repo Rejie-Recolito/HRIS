@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\ServiceRecord;
+use App\Models\Notification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
         View::composer('admin.service_record', function ($view) {
             $view->with('serviceRecords', ServiceRecord::all());
         });
+        View::share('notifications', Notification::latest()->get());
     }
 }

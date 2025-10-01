@@ -3,12 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leave Applications</title>
+    <title>Leave Application Form</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
             line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            text-align: center; /* Center all text */
+        }
+        .container {
+            width: 80%; /* Adjust width for centering */
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #000;
+            text-align: left; /* Align text inside container */
+        }
+        h1, h2, h3 {
+            text-align: center;
+            margin: 0;
+            padding: 10px 0;
         }
         table {
             width: 100%;
@@ -26,9 +41,9 @@
     </style>
 </head>
 <body>
-    <h1>Leave Applications</h1>
-    @foreach ($leaveApplications as $leave)
-        <h2>Application for Leave</h2>
+    <div class="container">
+        <h1>Application for Leave</h1>
+        <h2>Personal Information</h2>
         <table>
             <tr>
                 <td>Office/Department:</td>
@@ -52,7 +67,7 @@
             </tr>
         </table>
 
-        <h3>Details of Application</h3>
+        <h2>Details of Leave</h2>
         <table>
             <tr>
                 <td>Type of Leave:</td>
@@ -72,7 +87,7 @@
             </tr>
         </table>
 
-        <h3>Details of Action on Application</h3>
+        <h2>Details of Action on Application</h2>
         <table>
             <tr>
                 <td>Certification of Leave Credits:</td>
@@ -91,7 +106,6 @@
                 <td>{{ $leave->disapproved_reason }}</td>
             </tr>
         </table>
-        <hr>
-    @endforeach
+    </div>
 </body>
 </html>

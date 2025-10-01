@@ -25,20 +25,61 @@ class LeaveApplicationForm extends Component
         'inclusive_dates' => 'required|string|max:255',
     ];
 
+    /**
+     * The last leave application of the logged-in user.
+     *
+     * @var \App\Models\LeaveApplication|null
+     */
+    public $lastApplication;
+
+    /**
+     * The status message to display after submission.
+     *
+     * @var string|null
+     */
+    public $submitStatus = null;
+
+    public function mount()
+    {
+        // Fetch the last application for the logged-in user
+        $this->lastApplication = LeaveApplication::where('user_id', Auth::id())
+            ->latest()
+            ->first();
+
+        // Debugging: Log the last application
+        logger()->info('Last Application:', ['lastApplication' => $this->lastApplication]);
+    }
+
     public function submit()
     {
+        // Check if the user has a pending leave application
+        if ($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted'])) {
+            session()->flash('error', 'You already have a pending leave application. Please wait for it to be approved or denied.');
+            return;
+        }
+
+        // Validate and create the leave application
         $validated = $this->validate();
         $validated['status'] = 'Submitted';
+        $validated['user_id'] = Auth::id();
         LeaveApplication::create($validated);
+
+        // Reset the form and refresh the last application
         $this->reset();
-        $this->dispatch('refreshTable');
-        session()->flash('success', 'Leave application submitted successfully!');
+        $this->mount(); // Refresh the last application
+
+        // Set the submit status message
+        $this->submitStatus = 'Leave application submitted successfully!';
+        session()->flash('success', $this->submitStatus);
     }
 
     public function getLastApplicationProperty()
     {
-        return LeaveApplication::orderByDesc('created_at')->first();
+        return LeaveApplication::where('user_id', Auth::id()) // Filter by logged-in user
+            ->orderByDesc('created_at')
+            ->first();
     }
+
 
     public function render()
     {

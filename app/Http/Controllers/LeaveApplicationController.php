@@ -4,6 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\LeaveApplication;
+use App\Models\User;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\AdminNotification;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade as PDF;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Barryvdh\DomPDF\PDF as DomPDFPDF;
 
 class LeaveApplicationController extends Controller
 {
@@ -26,6 +33,7 @@ class LeaveApplicationController extends Controller
 
     public function store(Request $request)
     {
+        
         $validated = $request->validate([
             'lastname' => 'required|string|max:255',
             'firstname' => 'required|string|max:255',
@@ -39,7 +47,29 @@ class LeaveApplicationController extends Controller
             'inclusive_dates' => 'required|string|max:255',
         ]);
 
-        LeaveApplication::create($validated);
+        // Check if the user has a pending leave application
+        $existingApplication = LeaveApplication::where('user_id', Auth::id())
+            ->whereIn('status', ['Under Review', 'Submitted'])
+            ->first();
+
+        if ($existingApplication) {
+            return redirect()->back()->with('error', 'You already have a leave application under review or submitted.');
+        }
+
+        $leaveApplication = LeaveApplication::create($validated);
+
+        // Notify admin with a custom message
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            
+            $admin->notifications()->create([
+                'type' => AdminNotification::class,
+                'data' => [
+                    'message' => Auth::user()->name . ' has requested a leave.',
+                    'leave_application_id' => $leaveApplication->id,
+                ],
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Leave application submitted successfully!');
     }
@@ -74,10 +104,22 @@ class LeaveApplicationController extends Controller
         return redirect()->back()->with('success', 'Leave application deleted.');
     }
 
-    public function downloadPdf()
+    public function downloadAllPdf()
     {
         $leaveApplications = LeaveApplication::all(); // Fetch all leave applications
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_applications', compact('leaveApplications'));
         return $pdf->download('leave_applications.pdf');
+    }
+
+    public function downloadPdf($id)
+    {
+        // Fetch the specific leave application by ID
+        $leave = LeaveApplication::findOrFail($id);
+
+        // Generate the PDF using the view and the leave application data
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_applications', compact('leave'));
+
+        // Return the PDF for download
+        return $pdf->download('leave_application_' . $id . '.pdf');
     }
 }
