@@ -1,4 +1,5 @@
 <div x-data="{ showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
+
     {{-- Leave Application Status Section --}}
     @if($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted']))
         <div class="status-container mb-6">
@@ -7,6 +8,7 @@
             </div>
         </div>
     @endif
+
 
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
@@ -52,4 +54,21 @@
             </form>
         </div>
     @endif
+
+    {{-- Leave Application Status Section --}}
+    @if($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted']))
+        <div class="status-container mb-6">
+            <div class="mb-4 text-blue-600">
+                Your leave application status: {{ $this->lastApplication->status }}
+            </div>
+        </div>
+    @endif
+
+    <div x-show="showOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded shadow-lg text-center">
+            <h2 class="text-lg font-semibold text-green-600 mb-4">Leave application submitted</h2>
+            <button @click="submitForm" class="bg-green-600 text-white px-4 py-2 rounded">OK</button>
+        </div>
+    </div>
+
 </div>
