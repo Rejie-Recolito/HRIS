@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'LGU-Bulusan Employee Portal') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="{{ asset('Images/logo.jpg') }}">
@@ -32,11 +32,12 @@
 
     <!-- Logo and Title -->
     <main class="flex flex-col items-center text-center px-5 mt-10">
-        <img src="/Images/logo.jpg" alt="LGU Bulusan Logo"
+
+        <img src="{{ asset('Images/logo.jpg') }}" alt="LGU Bulusan Logo"
             class="w-[120px] h-[119px] sm:w-[150px] sm:h-[149px] md:w-[180px] md:h-[179px] rounded-full mb-4" />
 
         <h1 class="text-4xl lg:text-5xl font-extrabold text-white mb-2">
-            LGU Bulusan-Employee's Portal
+            LGU Bulusan - Employee Portal
         </h1>
         <p class="text-base lg:text-2xl text-white mb-6 mt-2">
             Welcome to the Human Resource Information System of the Local Government Unit of Bulusan, Sorsogon.
@@ -52,13 +53,13 @@
             </a>
             @else
             <a href="{{ route('login') }}"
-                class="inline-block px-5 py-1.5 text-white dark:text-[#ffffff] border-[#FFFFFF] rounded-full hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal">
-                Log in
+                class="inline-block px-5 py-1.5 bg-white text-[#198f51] border-white rounded-xl hover:border-[#1915014a] border rounded-sm text-sm leading-normal">
+                SIGN IN
             </a>
             @if (Route::has('register'))
             <a href="{{ route('register') }}"
-                class="inline-block px-5 py-1.5 text-white dark:text-[#ffffff] border-[#FFFFFF] rounded-full hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal">
-                Register
+                class="inline-block px-5 py-1.5 text-white border border-white rounded-xl text-sm leading-normal">
+                REGISTER
             </a>
             @endif
             @endauth
