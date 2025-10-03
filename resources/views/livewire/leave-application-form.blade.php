@@ -44,7 +44,11 @@
                 <x-primary-text-input name="others" label="Others" />
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
                 <x-primary-text-input name="inclusive_dates" type="text" label="Inclusive Dates" />
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Submit</button>
+                <div class="submit-container">
+                    <button type="submit" class="custom-submit-btn px-6 py-2 rounded-md font-medium">
+                        Submit Leave Application
+                    </button>
+                </div>
             </form>
         </div>
     @endif
