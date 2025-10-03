@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('header')
@@ -12,11 +13,25 @@
             <!-- Greeting Card -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-2">
-                    <img 
-                        src="{{ asset('images/greeting.svg') }}" 
-                        alt="Welcome! Bulusanon Employee"
-                        class="w-full h-auto object-cover rounded-lg"
-                    >
+                    @if(file_exists(public_path('Images/greeting-mobile.png')))
+                        @php
+                            $mobileImage = base64_encode(file_get_contents(public_path('Images/greeting-mobile.png')));
+                            $tabletImage = base64_encode(file_get_contents(public_path('Images/greeting-tablet.png')));
+                            $desktopImage = base64_encode(file_get_contents(public_path('Images/greeting-desktop.png')));
+                        @endphp
+                        
+                        <picture>
+                            <source media="(min-width: 1024px)" srcset="data:image/png;base64,{{ $desktopImage }}">
+                            <source media="(min-width: 768px)" srcset="data:image/png;base64,{{ $tabletImage }}">
+                            <img src="data:image/png;base64,{{ $mobileImage }}" 
+                                 alt="Welcome! Bulusanon Employee"
+                                 class="w-full h-auto object-cover rounded-lg">
+                        </picture>
+                    @else
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            <strong>Error:</strong> Greeting images not found in public/Images/ directory.
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
