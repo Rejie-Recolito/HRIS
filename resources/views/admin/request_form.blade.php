@@ -1,9 +1,16 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-        {{ $serviceRecord->name }}
-    </h2>
+    <div class="flex items-center">
+        <a href="{{ route('service_record') }}" class="mr-4 text-gray-800 dark:text-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </a>
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ $serviceRecord->name }}
+        </h2>
+    </div>
 @endsection
 
 @section('content')
@@ -22,14 +29,22 @@
                         <div>Date of Service: {{ $serviceRecord->date_of_service }}</div>
                         <div>Place of Assignment: {{ $serviceRecord->place_of_assignment }}</div>
                     </div>
-                    <div class="mt-4">
-                        <form method="POST" action="{{ route('service_record.generate', ['id' => $serviceRecord->id]) }}">
-                            @csrf
-                            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-md">Generate Service Record</button>
-                        </form>
+                    <div class="mt-4 flex space-x-4">
+                        <a href="{{ route('service_record.request_form', ['id' => $serviceRecord->id, 'view_pdf' => true]) }}" class="bg-green-500 text-white px-4 py-2 rounded-md">View PDF</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    @if(request()->has('view_pdf'))
+        @include('admin.service_record_pdf')
+
+        <div class="mt-8 flex justify-center">
+            <form method="POST" action="{{ route('service_record.generate', ['id' => $serviceRecord->id]) }}">
+                @csrf
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md">Generate Service Record</button>
+            </form>
+        </div>
+    @endif
 @endsection
