@@ -144,6 +144,13 @@
     .dark .custom-submit-btn:hover {
         background-color: #22a55a !important;
     }
+    
+    /* Center submit button */
+    .submit-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
 </style>
 
 <div class="py-12">
@@ -213,6 +220,7 @@
                             <input type="text" name="status" id="status" class="flex-1 border-gray-300 custom-border custom-input text-black dark:text-white rounded-xl shadow-sm" required>
                         </div>
 
+<<<<<<< HEAD
                         <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
                             <label for="date_of_service" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Date of Service :</label>
                             <input type="date" name="date_of_service" id="date_of_service" class="flex-1 border-gray-300 custom-border custom-input text-black dark:text-white rounded-xl shadow-sm" required>
@@ -228,6 +236,12 @@
                         </div>
                     </form>
                 </div>
+=======
+                    <div class="submit-container">
+                        <button type="submit" class="custom-submit-btn px-4 py-2 rounded-md">Submit</button>
+                    </div>
+                </form>
+>>>>>>> 0377ec83836b82e7f28c53d2900420617bdd078e
             </div>
         </div>
     </div>

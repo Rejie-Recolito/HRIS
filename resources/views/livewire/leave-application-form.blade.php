@@ -1,4 +1,15 @@
 <div x-data="{ showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
+<<<<<<< HEAD
+=======
+    {{-- Leave Application Status Section --}}
+    @if($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted']))
+        <div class="status-container mb-6">
+            <div class="mb-4 text-blue-600">
+                Your leave application status: {{ $this->lastApplication->status }}
+            </div>
+        </div>
+    @endif
+>>>>>>> 0377ec83836b82e7f28c53d2900420617bdd078e
 
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
@@ -36,7 +47,11 @@
                 <x-primary-text-input name="others" label="Others" />
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
                 <x-primary-text-input name="inclusive_dates" type="text" label="Inclusive Dates" />
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Submit</button>
+                <div class="submit-container">
+                    <button type="submit" class="custom-submit-btn px-6 py-2 rounded-md font-medium">
+                        Submit Leave Application
+                    </button>
+                </div>
             </form>
         </div>
     @endif
