@@ -13,13 +13,13 @@
             <!-- Greeting Card -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-2">
-<<<<<<< HEAD
+
                     <img 
                         src="{{ asset('images/greeting.svg') }}"
                         alt="Welcome! Bulusanon Employee"
                         class="w-full h-auto object-cover rounded-lg"
                     >
-=======
+
                     @if(file_exists(public_path('Images/greeting-mobile.png')))
                         @php
                             $mobileImage = base64_encode(file_get_contents(public_path('Images/greeting-mobile.png')));
@@ -39,7 +39,7 @@
                             <strong>Error:</strong> Greeting images not found in public/Images/ directory.
                         </div>
                     @endif
->>>>>>> 0377ec83836b82e7f28c53d2900420617bdd078e
+
                 </div>
             </div>
         </div>

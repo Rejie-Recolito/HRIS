@@ -1,6 +1,5 @@
 <div x-data="{ showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
-<<<<<<< HEAD
-=======
+
     {{-- Leave Application Status Section --}}
     @if($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted']))
         <div class="status-container mb-6">
@@ -9,7 +8,7 @@
             </div>
         </div>
     @endif
->>>>>>> 0377ec83836b82e7f28c53d2900420617bdd078e
+
 
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
