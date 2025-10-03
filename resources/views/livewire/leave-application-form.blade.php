@@ -1,4 +1,4 @@
-<div>
+<div x-data="{ showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
     {{-- Leave Application Status Section --}}
     @if($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted']))
         <div class="status-container mb-6">
@@ -11,7 +11,7 @@
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
         <div class="form-container">
-            <form method="POST" action="{{ route('leave.user.submit') }}">
+            <form x-ref="leaveForm" method="POST" action="{{ route('leave.user.submit') }}" @submit.prevent="showOverlay = true">
                 @csrf
 
                 <x-primary-text-input name="lastname" label="LASTNAME" />
