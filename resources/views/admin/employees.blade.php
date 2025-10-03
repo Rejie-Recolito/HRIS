@@ -77,7 +77,10 @@
 
                             <div class="mb-4">
                                 <label for="sex" class="block text-sm font-medium text-gray-200">Sex</label>
-                                <input type="text" name="sex" id="sex" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                                <select name="sex" id="sex" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                                    <option value="Male" {{ old('sex') === 'Male' ? 'selected' : '' }}>Male</option>
+                                    <option value="Female" {{ old('sex') === 'Female' ? 'selected' : '' }}>Female</option>
+                                </select>
                             </div>
 
                             <div class="flex justify-end">
@@ -124,6 +127,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    <div id="noMatchMessage" class="text-center text-gray-500" style="display:none;">There are no matching employees.</div>
                     @if(empty($employees) || count($employees) === 0)
                         <div class="text-center text-gray-500">No employees found.</div>
                     @endif
@@ -164,12 +168,15 @@
 
                 <div class="mb-4">
                     <label for="sex" class="block text-sm font-medium text-gray-700">Sex</label>
-                    <input type="text" name="sex" id="sex" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                    <select name="sex" id="sex" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                        <option value="Male" {{ old('sex') === 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ old('sex') === 'Female' ? 'selected' : '' }}>Female</option>
+                    </select>
                 </div>
 
                 <div class="flex justify-end">
                     <button type="button" id="closeOverlay" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">Cancel</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Submit</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Add Employee</button>
                 </div>
             </form>
         </div>
@@ -189,11 +196,36 @@
         document.getElementById('employeeFilter').addEventListener('input', function() {
             const filter = this.value.toLowerCase();
             const rows = document.querySelectorAll('#employeeTable tr');
+            let hasMatch = false;
 
             rows.forEach(row => {
                 const name = row.querySelector('td:first-child').textContent.toLowerCase();
-                row.style.display = name.includes(filter) ? '' : 'none';
+                const isVisible = name.includes(filter);
+                row.style.display = isVisible ? '' : 'none';
+                if (isVisible) hasMatch = true;
             });
+
+            const noMatchMessage = document.getElementById('noMatchMessage');
+            noMatchMessage.style.display = hasMatch ? 'none' : 'block';
         });
+
+        const employeeFilter = document.getElementById('employeeFilter');
+        const employeeTable = document.getElementById('employeeTable');
+
+        employeeFilter.addEventListener('mouseenter', function() {
+            employeeTable.style.display = 'none';
+        });
+
+        employeeFilter.addEventListener('mouseleave', function() {
+            employeeTable.style.display = '';
+        });
+
+        // Add this element to display the no match message
+        const noMatchElement = document.createElement('div');
+        noMatchElement.id = 'noMatchMessage';
+        noMatchElement.textContent = 'There are no matching employees.';
+        noMatchElement.style.display = 'none';
+        noMatchElement.className = 'text-center text-gray-500';
+        document.querySelector('#employeeTable').parentElement.appendChild(noMatchElement);
     </script>
 @endsection
