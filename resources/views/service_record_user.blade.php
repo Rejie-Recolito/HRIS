@@ -230,6 +230,7 @@
                             <input type="text" name="place_of_assignment" id="place_of_assignment" class="flex-1 border-gray-300 custom-border custom-input text-black dark:text-white rounded-xl shadow-sm" required>
                         </div>
 
+<<<<<<< HEAD
                         <div class="submit-container">
                             <button type="submit" class="custom-submit-btn px-4 py-2 rounded-md">Submit</button>
                         </div>
@@ -238,6 +239,12 @@
 
   
 
+=======
+                    <div class="flex justify-end">
+                        <button type="submit" class="custom-submit-btn px-4 py-2 rounded-md">Submit</button>
+                    </div>
+                </form>
+>>>>>>> 558a135cc752d263a175ed60fe1043e37317b72d
             </div>
         </div>
     </div>
