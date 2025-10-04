@@ -5,7 +5,7 @@
         <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
         </svg>
-        {{ __('Service Record Request') }}
+        {{ __('SERVICE RECORD REQUEST') }}
     </h2>
 @endsection
 
@@ -230,7 +230,7 @@
                             <input type="text" name="place_of_assignment" id="place_of_assignment" class="flex-1 border-gray-300 custom-border custom-input text-black dark:text-white rounded-xl shadow-sm" required>
                         </div>
 
-                        <div class="flex justify-end">
+                        <div class="submit-container">
                             <button type="submit" class="custom-submit-btn px-4 py-2 rounded-md">Submit</button>
                         </div>
                     </form>

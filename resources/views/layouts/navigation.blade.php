@@ -4,12 +4,19 @@
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
+            @if(Auth::user() && Auth::user()->is_admin)
                 <div class="shrink-0 flex items-center">
+                    <a href="{{ route('admin.dashboard') }}" class="h-9 w-9">
+                        <x-application-logo class="block  fill-current text-gray-800 dark:text-gray-200" />
+                    </a>
+                </div>
+            @else
+            <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="h-9 w-9">
                         <x-application-logo class="block  fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                 </div>
-
+            @endif
                 <!-- Navigation Links -->
 
                     @if(Auth::user() && Auth::user()->is_admin)

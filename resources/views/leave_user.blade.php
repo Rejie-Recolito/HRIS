@@ -3,7 +3,7 @@
 @section('header')
     <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight flex items-center">
         <img src="{{ asset('images/leave-icon.svg') }}" class="w-8 h-8 mr-3 header-icon" alt="Leave Icon">
-        {{ __('Leave Application') }}
+        {{ __('LEAVE APPLICATION') }}
     </h2>
 @endsection
 

@@ -1,4 +1,4 @@
-<div x-data="{ showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
+<div x-data="{  showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
 
     {{-- Leave Application Status Section --}}
     @if($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted']))
@@ -15,10 +15,9 @@
         <div class="form-container">
             <form x-ref="leaveForm" method="POST" action="{{ route('leave.user.submit') }}" @submit.prevent="showOverlay = true">
                 @csrf
-
-                <x-primary-text-input name="lastname" label="LASTNAME" />
-                <x-primary-text-input name="firstname" label="FIRSTNAME"/>
-                <x-primary-text-input name="middlename" label="MIDDLENAME"/>
+                <x-primary-text-input name="lastname" label="Lastname" />
+                <x-primary-text-input name="firstname" label="Firstname"/>
+                <x-primary-text-input name="middlename" label="Middlename"/>
                 <x-primary-text-input name="date_of_filing" type="date" label="Date"/>
                 <x-primary-text-input name="position" label="Position" />
                 <x-primary-text-input name="salary" type="number" label="Salary" /> 
@@ -32,18 +31,21 @@
                         'Sick Leave',
                         'Maternity Leave',
                         'Paternity Leave',
-                        'Solo Parent Leave' ,
+                        'Solo Parent Leave',
                         'Study Leave',
                         '10-Day VAWC Leave',
                         'Rehabilitation Privilage',
                         'Special Leave Benefits for Women',
                         'Special Emergency(Calamity) Leave',
-                        'Adoption Leave'
-                        ]" 
+                        'Adoption Leave',
+                        'others'
+                    ]"
                     label="Type of Leave"
-                /> 
-            
-                <x-primary-text-input name="others" label="Others" />
+                    
+                />
+
+                
+
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
                 <x-primary-text-input name="inclusive_dates" type="text" label="Inclusive Dates" />
                 <div class="submit-container">
