@@ -159,13 +159,7 @@
 
 <div class="py-12">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        @if ($lastServiceRecord && $lastServiceRecord->request_status === 'pending')
-            <div class="text-center mb-8 bg-white dark:bg-white-800 p-6 rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-green-600 mb-4">Your service record request is being processed.</h2>
-                <p class="text-gray-700 dark:text-gray-300">You can submit a new request once the current one is ready to claim.</p>
-            </div>
-        @else
-            <!-- Styled text section -->
+        <!-- Styled text section -->
             <div class="text-center mb-8 bg-white rk:bg-white -6 rounded-lg dark:border-gray-700">
                 <div class="flex items-center justify-center mb-3">
                     <svg class="w-7 h-7 sm:w-9 sm:h-9 mr-2 sm:mr-3 text-green-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -176,6 +170,13 @@
                 <p class="text-base sm:text-lg text-black-600 dark:text-white-400 mb-2">Fill the required fields below to request for a service record.</p>
                 <div class="w-24 h-1 bg-green-600 mx-auto rounded"></div>
             </div>
+        @if ($lastServiceRecord && $lastServiceRecord->request_status === 'pending')
+            <div class="text-center mb-8 bg-white dark:bg-white-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-green-600 mb-4">Your service record request is being processed.</h2>
+                <p class="text-gray-700 dark:text-gray-300">You can submit a new request once the current one is ready to claim.</p>
+            </div>
+        @else
+            
 
             <div class="bg-white dark:bg-white-800 overflow-hidden shadow-sm sm:rounded-lg border-2" style="border-color: #2bb16b;">
                 <div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100">

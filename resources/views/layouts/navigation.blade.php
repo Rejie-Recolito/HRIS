@@ -23,22 +23,22 @@
                         <!-- Admin Navigation -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                                {{ __('Admin Dashboard') }}
+                                {{ __('ADMIN DASHBOARD') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.index')">
-                                {{ __('Employees') }}
+                                {{ __('EMPLOYEES') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('service_record')" :active="request()->routeIs('service_record')">
-                                {{ __('Service Record') }}
+                                {{ __('SERVICE RECORD') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('leave')" :active="request()->routeIs('leave')">
-                                {{ __('Leave') }}
+                                {{ __('LEAVE') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
@@ -50,17 +50,17 @@
                         <!-- User Navigation -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                                {{ __('Home') }}
+                                {{ __('HOME') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')">
-                                {{ __('Leave') }}
+                                {{ __('LEAVE') }}
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">
-                                {{ __('Service Record') }}
+                                {{ __('SERVICE RECORD') }}
                             </x-nav-link>
                         </div>
                     @endif

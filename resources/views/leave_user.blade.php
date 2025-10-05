@@ -165,6 +165,7 @@
 
 <div class="py-12">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         <!-- Styled text section -->
         <div class="text-center mb-8 bg-white rk:bg-white -6 rounded-lg dark:border-gray-700">
             <div class="flex items-center justify-center mb-3">
@@ -180,8 +181,8 @@
                
                 
                 @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
-                    <div class="status-container mb-6">
-                        <div class="mb-4 text-blue-600">
+                    <div class="text-center mb-8 bg-white dark:bg-white-800 p-6 rounded-lg shadow-md">
+                        <div class="mb-4 text-green-600">
                             Your leave application status: {{ $lastApplication->status }}
                         </div>
                     </div>
