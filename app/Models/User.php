@@ -45,4 +45,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function leaveApplications()
+    {
+        return $this->hasMany(LeaveApplication::class);
+    }
+
+    public function serviceRecords()
+    {
+        return $this->hasMany(ServiceRecord::class);
+    }
 }

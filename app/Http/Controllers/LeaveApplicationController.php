@@ -28,7 +28,8 @@ class LeaveApplicationController extends Controller
     }
     public function create()
     {
-        return view('leave_user');
+        $lastApplication = Auth::user()->leaveApplications()->latest()->first();
+        return view('leave_user', compact('lastApplication'));
     }
 
     public function store(Request $request)
@@ -46,6 +47,8 @@ class LeaveApplicationController extends Controller
             'number_of_days' => 'required|integer|min:1',
             'inclusive_dates' => 'required|string|max:255',
         ]);
+
+        $validated['user_id'] = Auth::id();
 
         // Check if the user has a pending leave application
         $existingApplication = LeaveApplication::where('user_id', Auth::id())

@@ -29,7 +29,10 @@ class ServiceRecordController extends Controller
             'place_of_assignment' => 'required|string',
         ]);
 
-        $serviceRecord = ServiceRecord::create($validated);
+        $serviceRecord = ServiceRecord::create(array_merge($validated, [
+            'user_id' => Auth::id(),
+        ]));
+
 
         // Notify admin with a custom message
         $admin = User::where('is_admin', true)->first();
@@ -53,5 +56,30 @@ class ServiceRecordController extends Controller
     {
         $serviceRecords = ServiceRecord::all();
         return view('admin.service_record', compact('serviceRecords'));
+    }
+
+    /**
+     * Update the status of a service record.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending,ready',
+        ]);
+
+        $serviceRecord = ServiceRecord::findOrFail($id);
+        $serviceRecord->request_status = $validated['status'];
+        $serviceRecord->save();
+
+        return response()->json(['message' => 'Status updated successfully']);
+    }
+
+    /**
+     * Show the service record form for the authenticated user.
+     */
+    public function show()
+    {
+        $lastServiceRecord = Auth::user()->serviceRecords()->latest()->first();
+        return view('service_record_user', compact('lastServiceRecord'));
     }
 }

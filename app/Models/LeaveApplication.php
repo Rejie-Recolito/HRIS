@@ -21,6 +21,7 @@ class LeaveApplication extends Model
         'number_of_days',
         'inclusive_dates',
         'status',
+        'user_id',
     ];
 
     public function user()

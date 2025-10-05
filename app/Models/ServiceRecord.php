@@ -25,5 +25,6 @@ class ServiceRecord extends Model
         'status',
         'date_of_service',
         'place_of_assignment',
+        'user_id',
     ];
 }

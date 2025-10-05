@@ -26,9 +26,9 @@
                                 <tr>
                                     <td class="border border-gray-300 px-4 py-2">{{ $record->name }} requested for Service Record</td>
                                     <td class="border border-gray-300 px-4 py-2">
-                                        <select class="border border-gray-300 rounded-md text-black">
-                                            <option value="pending" {{ $record->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                            <option value="ready" {{ $record->status === 'ready' ? 'selected' : '' }}>Ready To Claim</option>
+                                        <select class="border border-gray-300 rounded-md text-black" onchange="updateStatus(this, {{ $record->id }})">
+                                            <option value="pending" {{ $record->request_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                            <option value="ready" {{ $record->request_status === 'ready' ? 'selected' : '' }}>Ready To Claim</option>
                                         </select>
                                     </td>
                                     <td class="border border-gray-300 px-4 py-2">
@@ -42,6 +42,33 @@
                             @endforelse
                         </tbody>
                     </table>
+
+                    <script>
+                        function updateStatus(select, recordId) {
+                            const status = select.value;
+                            fetch(`/service-records/${recordId}/update-status`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ status })
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to update status');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                alert('Status updated successfully');
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Failed to update status');
+                            });
+                        }
+                    </script>
                 </div>
             </div>
         </div>

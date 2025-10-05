@@ -177,7 +177,17 @@
         
         <div class="bg-white dark:bg-white-800 overflow-hidden shadow-sm sm:rounded-lg border-2" style="border-color: #2bb16b;">
             <div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100">
+               
+                
+                @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
+                    <div class="status-container mb-6">
+                        <div class="mb-4 text-blue-600">
+                            Your leave application status: {{ $lastApplication->status }}
+                        </div>
+                    </div>
+                @else
                 @livewire('leave-application-form')
+                @endif
             </div>
         </div>
     </div>
