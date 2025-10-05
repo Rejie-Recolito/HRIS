@@ -57,4 +57,26 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Handle profile picture upload.
+     */
+    public function uploadPicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Max size in KB (2MB)
+        ]);
+
+        $user = $request->user();
+        $file = $request->file('profile_picture');
+        $filename = 'profile_' . $user->id . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs('profile_pictures', $filename, 'public');
+
+
+        // Save the path to the user's profile (assuming a 'profile_picture' column exists)
+        $user->profile_picture = $filename;
+        $user->save();
+
+        return redirect()->route('profile.edit')->with('status', 'Profile picture updated!');
+    }
 }

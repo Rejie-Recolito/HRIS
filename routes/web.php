@@ -77,3 +77,5 @@ Route::post('/service_record/{id}/generate', function ($id) {
     $pdf = Pdf::loadView('admin.service_record_pdf', compact('serviceRecord'));
     return $pdf->download('service_record.pdf');
 })->name('service_record.generate');
+
+Route::post('/profile/picture', [ProfileController::class, 'uploadPicture'])->name('profile.picture.upload');

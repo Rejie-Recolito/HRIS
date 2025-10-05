@@ -68,9 +68,12 @@
 
 
             </div>
-
+            
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                @if(Auth::user() && Auth::user()->profile_picture)
+                    <img src="{{ asset('storage/profile_pictures/' . Auth::user()->profile_picture) }}" alt="Profile Picture" class="h-8 w-8 rounded-full object-cover me-2">
+                @endif
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
@@ -132,6 +135,24 @@
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
+                @if(Auth::user() && Auth::user()->profile_picture)
+                    <img src="{{ asset('storage/profile_pictures/' . Auth::user()->profile_picture) }}" alt="Profile Picture" class="h-8 w-8 rounded-full object-cover me-2">
+                @endif
+                <div class="pt-2 pb-3 space-y-1">
+            <div class="relative">
+                <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
+                    <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </button>
+                <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                    <x-notification-component :notifications="$notifications" />
+
+                
+                </div>
+            </div>
+        </div>
+
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -162,20 +183,7 @@
             </x-responsive-nav-link>
         </div>
 
-        <div class="pt-2 pb-3 space-y-1">
-            <div class="relative">
-                <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
-                    <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                </button>
-                <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
-                    <x-notification-component :notifications="$notifications" />
-
-                
-                </div>
-            </div>
-        </div>
+        
 
    
         <!-- Responsive Settings Options -->
