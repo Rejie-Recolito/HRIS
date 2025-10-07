@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight flex items-center">
+    <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
         <img src="{{ asset('images/leave-icon.svg') }}" class="w-8 h-8 mr-3 header-icon" alt="Leave Icon">
         {{ __('LEAVE APPLICATION') }}
     </h2>
@@ -155,6 +155,7 @@
         display: inline-block;
         vertical-align: middle;
         margin-top: 2px;
+        filter: brightness(0) invert(1);
     }
     
     /* Form header icon alignment */
@@ -167,30 +168,38 @@
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Styled text section -->
-        <div class="text-center mb-8 bg-white rk:bg-white -6 rounded-lg dark:border-gray-700">
+        <div class="text-center mb-8 bg-white dark:bg-[#1c1c1d] rounded-lg border border-gray-700 dark:border-gray-600">
             <div class="flex items-center justify-center mb-3">
                 <img src="{{ asset('images/leave-icon.svg') }}" class="w-7 h-7 sm:w-9 sm:h-9 mr-2 sm:mr-3 form-header-icon" alt="Leave Icon">
-                <h1 class="font-bold custom-label custom-heading mb-0" style="margin-top: 0 !important;">Leave Application Form</h1>
+                @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
+                    <h1 class="font-bold custom-label custom-heading mb-0" style="margin-top: 0 !important;">Leave Application Status</h1>
+                @else
+                    <h1 class="font-bold custom-label custom-heading mb-0" style="margin-top: 0 !important;">Leave Application Form</h1>
+                @endif
             </div>
-            <p class="text-base sm:text-lg text-black-600 dark:text-white-400 mb-2">Fill the required fields below to submit your leave application.</p>
+            @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
+                <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-2">You have submitted a leave application.</p>
+            @else
+                <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-2">Fill the required fields below to submit your leave application.</p>
+            @endif
             <div class="w-24 h-1 bg-green-600 mx-auto rounded"></div>
         </div>
         
-        <div class="bg-white dark:bg-white-800 overflow-hidden shadow-sm sm:rounded-lg border-2" style="border-color: #2bb16b;">
-            <div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100">
-               
-                
-                @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
-                    <div class="text-center mb-8 bg-white dark:bg-white-800 p-6 rounded-lg shadow-md">
-                        <div class="mb-4 text-green-600">
-                            Your leave application status: {{ $lastApplication->status }}
-                        </div>
+        @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
+            <div class="w-full flex items-center justify-center mb-8">
+                <div class="bg-white dark:bg-[#1c1c1d] p-6 rounded-lg shadow-md text-center max-w-md w-full border-2" style="border-color: #2bb16b;">
+                    <div class="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">
+                        Status: {{ $lastApplication->status }}
                     </div>
-                @else
-                @livewire('leave-application-form')
-                @endif
+                </div>
             </div>
-        </div>
+        @else
+            <div class="bg-white dark:bg-[#1c1c1d] overflow-hidden shadow-sm sm:rounded-lg border-2" style="border-color: #2bb16b;">
+                <div class="p-4 sm:p-6 text-gray-900 dark:text-gray-100">
+                    @livewire('leave-application-form')
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 @endsection

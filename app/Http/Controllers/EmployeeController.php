@@ -23,11 +23,17 @@ class EmployeeController extends Controller
             'start_date' => 'required|date',
             'status' => 'required|string|max:255',
             'sex' => 'required|string|max:255',
+            'age' => 'required|integer|min:0',
+            'date_of_birth' => 'required|date',
+            'place_of_birth' => 'required|string|max:255',
+            'salary' => 'required|numeric|min:0',
+            'designation' => 'required|string|max:255',
+            'place_of_assignment' => 'required|string|max:255',
         ]);
 
         Employee::create($request->all());
 
-        return redirect()->route('employees.index')->with('success', 'Employee added successfully.');
+        return redirect()->back()->with('success', 'Employee added successfully.');
     }
 
     public function edit($id)
@@ -45,6 +51,12 @@ class EmployeeController extends Controller
             'start_date' => 'required|date',
             'status' => 'required|string|max:255',
             'sex' => 'required|string|max:255',
+            'age' => 'required|integer|min:0',
+            'date_of_birth' => 'required|date',
+            'place_of_birth' => 'required|string|max:255',
+            'salary' => 'required|numeric|min:0',
+            'designation' => 'required|string|max:255',
+            'place_of_assignment' => 'required|string|max:255',
         ]);
 
         $employee = Employee::findOrFail($id);
