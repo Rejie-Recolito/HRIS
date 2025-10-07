@@ -1,3 +1,235 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Leave & Service Record Request Form */
+
+.input-field-border {
+        border-color: #198f51 !important;
+    }
+.input-field-border:focus {
+        border-color: #198f51 !important;
+        box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
+    }
+    .custom-input {
+        color: #000000 !important; /* Black text in light mode */
+        background-color: #ffffff !important; /* White background in light mode */
+    }
+    .dark .custom-input {
+        color: #ffffff !important; /* White text in dark mode */
+        background-color: #374151 !important; /* Dark background in dark mode */
+    }
+    /* Add specific label styling */
+    .custom-label {
+        color: #000000ff !important; /* Dark gray/black in light mode */
+        font-size: 16px !important; /* Change this value to your desired size */
+    }
+    .dark .custom-label {
+        color: #f9fafb !important; /* White in dark mode */
+        font-size: 16px !important; /* Change this value to your desired size */
+    }
+    
+    /* Custom heading styling */
+    .custom-heading,
+    h1.custom-heading,
+    h2.custom-heading,
+    h3.custom-heading {
+        font-size: 36px !important;
+        margin-top: 24px !important; /* Adds spacing from top */
+    }
+    
+    .dark .custom-heading,
+    .dark h1.custom-heading,
+    .dark h2.custom-heading,
+    .dark h3.custom-heading {
+        font-size: 36px !important;
+        margin-top: 24px !important; /* Adds spacing from top */
+    }
+    
+    /* Mobile responsive label */
+    @media (max-width: 640px) {
+        .custom-label {
+            font-size: 14px !important;
+            white-space: nowrap !important;
+        }
+        .custom-heading,
+        h1.custom-heading,
+        h2.custom-heading,
+        h3.custom-heading {
+            font-size: 28px !important;
+        }
+        .dark .custom-heading,
+        .dark h1.custom-heading,
+        .dark h2.custom-heading,
+        .dark h3.custom-heading {
+            font-size: 28px !important;
+        }
+        .custom-input {
+            font-size: 14px !important;
+            padding: 8px 12px !important;
+        }
+    }
+    
+    /* Regular input placeholder */
+    .custom-input::placeholder {
+        color: #198f51 !important;
+        opacity: 1 !important;
+    }
+    .dark .custom-input::placeholder {
+        color: #f9fafb !important;
+        opacity: 1 !important;
+    }
+    
+    /* For empty date inputs - this shows the dd/mm/yyyy in green */
+    .custom-input::-webkit-datetime-edit-fields-wrapper {
+        color: #198f51 !important;
+    }
+    .dark .custom-input::-webkit-datetime-edit-fields-wrapper {
+        color: #2bb16b !important; /* Lighter green for dark mode */
+    }
+
+    /* Date input when it has a value - this makes the actual date black */
+    .custom-input[type="date"]:valid::-webkit-datetime-edit-fields-wrapper {
+        color: #000000 !important; /* Black when date is selected */
+    }
+    .dark .custom-input[type="date"]:valid::-webkit-datetime-edit-fields-wrapper {
+        color: #ffffff !important; /* White when date is selected in dark mode */
+    }
+
+    /* Style individual date components when they have values */
+    .custom-input[type="date"]:valid::-webkit-datetime-edit-month-field,
+    .custom-input[type="date"]:valid::-webkit-datetime-edit-day-field,
+    .custom-input[type="date"]:valid::-webkit-datetime-edit-year-field {
+        color: #000000 !important; /* Black when filled */
+    }
+    
+    .dark .custom-input[type="date"]:valid::-webkit-datetime-edit-month-field,
+    .dark .custom-input[type="date"]:valid::-webkit-datetime-edit-day-field,
+    .dark .custom-input[type="date"]:valid::-webkit-datetime-edit-year-field {
+        color: #ffffff !important; /* White when filled in dark mode */
+    }
+
+    /* Calendar icon styling */
+    .custom-input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+    }
+    
+    .custom-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        background-color: rgba(25, 143, 81, 0.1);
+        opacity: 1;
+    }
+    
+    .dark .custom-input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        opacity: 0.8;
+        filter: brightness(1.2);
+    }
+    
+    .dark .custom-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        background-color: rgba(43, 177, 107, 0.1);
+        opacity: 1;
+        filter: brightness(1.4);
+    }
+    
+    /* Custom submit button styling */
+    .custom-submit-btn {
+        background-color: #198f51 !important;
+        color: white !important;
+        transition: all 0.2s ease;
+    }
+    
+    .custom-submit-btn:hover {
+        background-color: #156b3f !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(25, 143, 81, 0.3);
+    }
+    
+    .dark .custom-submit-btn {
+        background-color: #2bb16b !important;
+    }
+    
+    .dark .custom-submit-btn:hover {
+        background-color: #22a55a !important;
+    }
+    
+    /* Center submit button */
+    .submit-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+/* Select dropdown option hover styling */
+select.input-field-border option:hover,
+select.input-field-border option:focus,
+select.input-field-border option:checked {
+    background-color: #198f51 !important;
+    color: white !important;
+}
+
+
+/* Webkit browsers (Chrome, Safari, Edge) select option styling */
+select.input-field-border option:hover {
+    background: #198f51 !important;
+    color: white !important;
+}
+
+select.input-field-border option:checked {
+    background: #198f51 !important;
+    color: white !important;
+}
+
+/* Dark mode select option styling */
+.dark select.input-field-border option:hover,
+.dark select.input-field-border option:focus,
+.dark select.input-field-border option:checked {
+    background-color: #2bb16b !important;
+    color: white !important;
+}
+
+/* Profile Page Styling */
+.heading-in-profile-page {
+    color: #198f51 !important;
+    font-weight: 500 !important;
+}
+.dark .heading-in-profile-page {
+    color: white !important;
+}
+.description-in-profile-page {
+    color: black !important;
+}
+.dark .description-in-profile-page {
+    color: white !important;
+}
+.profile-border {
+            border: 2px solid #198f51 !important;
+            border-radius: 6px !important;
+        }
+        @media (min-width: 640px) {
+            .profile-border {
+                border-radius: 8px !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .profile-border {
+                border-radius: 12px !important;
+            }
+        }
+
+/* File Input */
+input[type="file"] {
+    border: 1px solid #198f51 !important;
+}
+
+input[type="file"]:focus {
+    border-color: #198f51 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(25, 143, 81, 0.2) !important;
+}
+
