@@ -40,54 +40,6 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h2 class="text-xl font-bold mb-4">Employees</h2>
 
-                    <!-- Add Employee Button -->
-                    <div class="mb-4">
-                        <button id="addEmployeeButton" class="bg-green-600 text-white px-4 py-2 rounded-md">Add Employee</button>
-                    </div>
-
-                    <!-- Add Employee Form -->
-                    <div id="addEmployeeForm" class="hidden mb-4">
-                        <form method="POST" action="{{ route('employees.store') }}">
-                            @csrf
-
-                            <div class="mb-4">
-                                <label for="name" class="block text-sm font-medium text-gray-200">Name</label>
-                                <input type="text" name="name" id="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="department" class="block text-sm font-medium text-gray-200">Department</label>
-                                <input type="text" name="department" id="department" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="job_title" class="block text-sm font-medium text-gray-200">Job Title</label>
-                                <input type="text" name="job_title" id="job_title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="start_date" class="block text-sm font-medium text-gray-200">Start Date</label>
-                                <input type="date" name="start_date" id="start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="status" class="block text-sm font-medium text-gray-200">Status</label>
-                                <input type="text" name="status" id="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="sex" class="block text-sm font-medium text-gray-200">Sex</label>
-                                <select name="sex" id="sex" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-gray-900">
-                                    <option value="Male" {{ old('sex') === 'Male' ? 'selected' : '' }}>Male</option>
-                                    <option value="Female" {{ old('sex') === 'Female' ? 'selected' : '' }}>Female</option>
-                                </select>
-                            </div>
-
-                            <div class="flex justify-end">
-                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Submit</button>
-                            </div>
-                        </form>
-                    </div>
 
                     <!-- Filter Input -->
                     <div class="mb-4">

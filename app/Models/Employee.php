@@ -16,6 +16,12 @@ class Employee extends Model
         'start_date',
         'status',
         'sex',
+        'age',
+        'date_of_birth',
+        'place_of_birth',
+        'salary',
+        'designation',
+        'place_of_assignment',
     ];
 
     protected $table = 'employee';
