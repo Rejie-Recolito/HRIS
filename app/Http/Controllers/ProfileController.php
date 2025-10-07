@@ -24,7 +24,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request)
     {
         $request->user()->fill($request->validated());
 
@@ -33,6 +33,15 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+
+        // Check if request expects JSON (AJAX request)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile information updated successfully!',
+                'user' => $request->user()
+            ]);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -72,11 +81,19 @@ class ProfileController extends Controller
         $filename = 'profile_' . $user->id . '.' . $file->getClientOriginalExtension();
         $path = $file->storeAs('profile_pictures', $filename, 'public');
 
-
         // Save the path to the user's profile (assuming a 'profile_picture' column exists)
         $user->profile_picture = $filename;
         $user->save();
 
-        return redirect()->route('profile.edit')->with('status', 'Profile picture updated!');
+        // Check if request expects JSON (AJAX request)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture updated successfully!',
+                'profile_picture_url' => asset('storage/profile_pictures/' . $filename)
+            ]);
+        }
+
+        return redirect()->route('profile.edit')->with('status', 'Profile picture added!');
     }
 }
