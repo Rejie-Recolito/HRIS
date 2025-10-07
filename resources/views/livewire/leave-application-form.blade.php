@@ -9,9 +9,9 @@
         <div class="form-container">
             <form x-ref="leaveForm" method="POST" action="{{ route('leave.user.submit') }}" @submit.prevent="showOverlay = true">
                 @csrf
-                <x-primary-text-input name="lastname" label="Lastname" />
-                <x-primary-text-input name="firstname" label="Firstname"/>
-                <x-primary-text-input name="middlename" label="Middlename"/>
+                <x-primary-text-input name="lastname" label="Last Name" />
+                <x-primary-text-input name="firstname" label="First Name"/>
+                <x-primary-text-input name="middlename" label="Middle Name"/>
                 <x-primary-text-input name="date_of_filing" type="date" label="Date"/>
                 <x-primary-text-input name="position" label="Position" />
                 <x-primary-text-input name="salary" type="number" label="Salary" /> 
@@ -32,7 +32,7 @@
                         'Special Leave Benefits for Women',
                         'Special Emergency(Calamity) Leave',
                         'Adoption Leave',
-                        'others'
+                        'Others'
                     ]"
                     label="Type of Leave"
                     

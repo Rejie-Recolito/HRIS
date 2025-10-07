@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-4">Admin Dashboard</h1>
-    <p>Welcome, Admin! This is your dashboard.</p>
+<div class="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Admin Dashboard</h1>
+    <p class="text-gray-700 dark:text-gray-300">Welcome, Admin! This is your dashboard.</p>
 
     <div class="grid grid-cols-2 gap-4 mt-8">
         <!-- Total Employees Widget -->

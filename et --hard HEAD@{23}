@@ -1,0 +1,44 @@
+[33mb0282ac[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32menhance-UI[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: pull origin master: Fast-forward
+[33m558a135[m HEAD@{1}: reset: moving to HEAD
+[33m558a135[m HEAD@{2}: pull origin master: Fast-forward
+[33mbb84563[m[33m ([m[1;31morigin/enhance-UI[m[33m)[m HEAD@{3}: commit (merge): Merge branch 'master' of https://github.com/Rejie-Recolito/HRIS into enhance-UI
+[33m054c862[m HEAD@{4}: commit: Updated commit message
+[33m561f5cd[m[33m ([m[1;31morigin/update-UI-design[m[33m, [m[1;32mupdate-UI-design[m[33m)[m HEAD@{5}: reset: moving to HEAD~1
+[33m0377ec8[m HEAD@{6}: reset: moving to HEAD~1
+[33mef50ea8[m HEAD@{7}: commit: centered the button
+[33m0377ec8[m HEAD@{8}: commit: enhanced UI design for leave and service form
+[33m561f5cd[m[33m ([m[1;31morigin/update-UI-design[m[33m, [m[1;32mupdate-UI-design[m[33m)[m HEAD@{9}: checkout: moving from update-UI-design to enhance-UI
+[33m561f5cd[m[33m ([m[1;31morigin/update-UI-design[m[33m, [m[1;32mupdate-UI-design[m[33m)[m HEAD@{10}: reset: moving to HEAD~1
+[33m8700dfb[m HEAD@{11}: commit: enhanced UI design for leave and service forms
+[33m561f5cd[m[33m ([m[1;31morigin/update-UI-design[m[33m, [m[1;32mupdate-UI-design[m[33m)[m HEAD@{12}: reset: moving to HEAD~1
+[33m4985521[m HEAD@{13}: commit (merge): Merge branch 'master' of https://github.com/Rejie-Recolito/HRIS into update-UI-design
+[33m561f5cd[m[33m ([m[1;31morigin/update-UI-design[m[33m, [m[1;32mupdate-UI-design[m[33m)[m HEAD@{14}: commit: Resolve merge conflict: separate greeting images and leave form into proper components
+[33m025c9da[m HEAD@{15}: commit: added app name/title, enhanced styling of login/register buttons, added statement to check existence of notifications in the table
+[33md8295cd[m HEAD@{16}: commit: added app name/title
+[33m6e94926[m HEAD@{17}: commit: enhanced styling of login/register buttons
+[33m616f915[m HEAD@{18}: reset: moving to HEAD~1
+[33m2b01325[m HEAD@{19}: checkout: moving from update-UI-design to update-UI-design
+[33m2b01325[m HEAD@{20}: pull origin master: Merge made by the 'ort' strategy.
+[33m616f915[m HEAD@{21}: checkout: moving from master to update-UI-design
+[33m6be8ef8[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{22}: pull origin master: Fast-forward
+[33mb8648c6[m HEAD@{23}: checkout: moving from update-UI-design to master
+[33m616f915[m HEAD@{24}: commit: added statement to check existence of notifications in the table
+[33m9b677ce[m HEAD@{25}: pull origin master: Merge made by the 'ort' strategy.
+[33ma7fa3d3[m HEAD@{26}: commit: enhance UI design
+[33m3479fa2[m HEAD@{27}: checkout: moving from added-favicon to update-UI-design
+[33ma40f193[m[33m ([m[1;31morigin/added-favicon[m[33m, [m[1;32madded-favicon[m[33m)[m HEAD@{28}: commit: changed the favicon with the lgu logo
+[33m3479fa2[m HEAD@{29}: checkout: moving from update-UI-design to added-favicon
+[33m3479fa2[m HEAD@{30}: commit: enhanced navigation design
+[33mb2925fb[m HEAD@{31}: commit: enhanced UI for user's dashboard/or home page
+[33mf6024f4[m[33m ([m[1;31morigin/update-welcomePage-UI[m[33m, [m[1;32mupdate-welcomePage-UI[m[33m)[m HEAD@{32}: checkout: moving from update-welcomePage-UI to update-UI-design
+[33mf6024f4[m[33m ([m[1;31morigin/update-welcomePage-UI[m[33m, [m[1;32mupdate-welcomePage-UI[m[33m)[m HEAD@{33}: commit: enhanced UI -Welcome Page
+[33m9d65bee[m[33m ([m[1;31morigin/enhanced-service-record-form-interface[m[33m, [m[1;32menhanced-service-record-form-interface[m[33m)[m HEAD@{34}: checkout: moving from enhanced-service-record-form-interface to update-welcomePage-UI
+[33m9d65bee[m[33m ([m[1;31morigin/enhanced-service-record-form-interface[m[33m, [m[1;32menhanced-service-record-form-interface[m[33m)[m HEAD@{35}: commit: enhanced UI for service record request page
+[33m4586986[m HEAD@{36}: commit: updated composer for my environment
+[33mb8648c6[m HEAD@{37}: reset: moving to HEAD~1
+[33m4961ea7[m HEAD@{38}: commit: enhanced UI for service-record-form
+[33mb8648c6[m HEAD@{39}: checkout: moving from master to enhanced-service-record-form-interface
+[33mb8648c6[m HEAD@{40}: commit: Merge remote changes and resolve composer.lock conflict
+[33m2c74235[m HEAD@{41}: pull origin master: Fast-forward
+[33m2cdfde9[m HEAD@{42}: reset: moving to HEAD
+[33m2cdfde9[m HEAD@{43}: clone: from https://github.com/Rejie-Recolito/HRIS.git
