@@ -42,7 +42,7 @@
                         @elseif($leave->status === 'Under Review')
                             <button type="button" wire:click="approve({{ $leave->id }})" class="bg-green-600 text-white px-2 py-1 rounded">Approve</button>
                             <button type="button" wire:click="deny({{ $leave->id }})" class="bg-red-600 text-white px-2 py-1 rounded">Deny</button>
-                            <form method="GET" action="{{ route('leave.download-pdf', $leave->id) }}" style="display:inline-block; margin-left: 5px;">
+                            <form method="GET" action="{{ route('leave.generate-docx', $leave->id) }}" style="display:inline-block; margin-left: 5px;">
                                 @csrf
                                 <button type="submit" class="bg-yellow-600 text-white px-2 py-1 rounded">Download PDF</button>
                             </form>

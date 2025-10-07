@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade as PDF;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Barryvdh\DomPDF\PDF as DomPDFPDF;
+use PhpOffice\PhpWord\TemplateProcessor;
+use Illuminate\Support\Facades\Storage;
 
 class LeaveApplicationController extends Controller
 {
@@ -124,5 +126,37 @@ class LeaveApplicationController extends Controller
 
         // Return the PDF for download
         return $pdf->download('leave_application_' . $id . '.pdf');
+    }
+
+    public function generateDocx($id)
+    {
+        // Load the template
+        if (!file_exists(storage_path('app/templates/leave_application_template.docx'))) {
+            throw new \Exception('Template file not found at: ' . storage_path('app/templates/leave_application_template.docx'));
+        }
+        $templateProcessor = new TemplateProcessor(storage_path('app/templates/leave_application_template.docx'));
+
+        // Fetch data from the database
+        $leaveApplication = LeaveApplication::findOrFail($id);
+
+        // Replace placeholders with actual data
+        $templateProcessor->setValue('lastname', $leaveApplication->lastname);
+        $templateProcessor->setValue('firstname', $leaveApplication->firstname);
+        $templateProcessor->setValue('middlename', $leaveApplication->middlename);
+        $templateProcessor->setValue('date_of_filing', $leaveApplication->date_of_filing);
+        $templateProcessor->setValue('position', $leaveApplication->position);
+        $templateProcessor->setValue('salary', $leaveApplication->salary);
+        $templateProcessor->setValue('type_of_leave', $leaveApplication->type_of_leave);
+        $templateProcessor->setValue('others', $leaveApplication->others ?? 'N/A');
+        $templateProcessor->setValue('number_of_days', $leaveApplication->number_of_days);
+        $templateProcessor->setValue('inclusive_dates', $leaveApplication->inclusive_dates);
+
+        // Save the populated file
+        $fileName = 'Leave_Application_' . $leaveApplication->id . '.docx';
+        $filePath = storage_path('app/public/' . $fileName);
+        $templateProcessor->saveAs($filePath);
+
+        // Return the file as a download
+        return response()->download($filePath)->deleteFileAfterSend(true);
     }
 }

@@ -5,7 +5,9 @@
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
         <div class="form-container">
-            <form x-ref="leaveForm" method="POST" action="{{ route('leave.user.submit') }}" @submit.prevent="showOverlay = true">
+            {{-- x-ref="leaveForm" --}}
+            <form x-ref="leaveForm"  method="POST" action="{{ route('leave.user.submit') }}" >
+                @method('POST')
                 @csrf
                 <x-primary-text-input name="lastname" label="Last Name" />
                 <x-primary-text-input name="firstname" label="First Name"/>
@@ -34,13 +36,13 @@
                 </div>
 
                 <div x-show="showOtherField" class="mt-4">
-                    <x-primary-text-input name="others" label="Others" />
+                    <x-primary-text-input name="others" label="Others" @required(false) />
                 </div>
 
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
                 <x-primary-text-input name="inclusive_dates" type="text" label="Inclusive Dates" />
                 <div class="submit-container">
-                    <button type="submit" class="custom-submit-btn px-6 py-2 rounded-md font-medium">
+                    <button type="submit"  class="custom-submit-btn px-6 py-2 rounded-md font-medium">
                         Submit Leave Application
                     </button>
                 </div>
@@ -50,11 +52,5 @@
 
 
 
-    <div x-show="showOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-lg text-center">
-            <h2 class="text-lg font-semibold text-green-600 mb-4">Leave application submitted</h2>
-            <button @click="submitForm" class="bg-green-600 text-white px-4 py-2 rounded">OK</button>
-        </div>
-    </div>
-
+    
 </div>

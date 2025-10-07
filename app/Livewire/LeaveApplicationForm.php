@@ -52,6 +52,7 @@ class LeaveApplicationForm extends Component
 
     public function submit()
     {
+
         // Check if the user has a pending leave application
         if ($this->lastApplication && in_array($this->lastApplication->status, ['Under Review', 'Submitted'])) {
             session()->flash('error', 'You already have a pending leave application. Please wait for it to be approved or denied.');
