@@ -27,4 +27,9 @@ class ServiceRecord extends Model
         'place_of_assignment',
         'user_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
