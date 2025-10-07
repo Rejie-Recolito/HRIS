@@ -3,18 +3,22 @@
     openUserNotifications: false,
     isDark: localStorage.getItem('darkMode') === 'true' || false,
     init() {
+        console.log('Dark mode initialized:', this.isDark);
         this.updateDarkMode();
     },
     toggleDarkMode() {
         this.isDark = !this.isDark;
         localStorage.setItem('darkMode', this.isDark);
+        console.log('Dark mode toggled to:', this.isDark);
         this.updateDarkMode();
     },
     updateDarkMode() {
         if (this.isDark) {
             document.documentElement.classList.add('dark');
+            console.log('Dark mode enabled');
         } else {
             document.documentElement.classList.remove('dark');
+            console.log('Dark mode disabled');
         }
     }
 }" class="bg-[#198f51] dark:bg-[#198F51] border-b border-gray-100 dark:border-gray-700">
