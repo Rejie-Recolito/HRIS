@@ -3,22 +3,18 @@
     openUserNotifications: false,
     isDark: localStorage.getItem('darkMode') === 'true' || false,
     init() {
-        console.log('Dark mode initialized:', this.isDark);
         this.updateDarkMode();
     },
     toggleDarkMode() {
         this.isDark = !this.isDark;
         localStorage.setItem('darkMode', this.isDark);
-        console.log('Dark mode toggled to:', this.isDark);
         this.updateDarkMode();
     },
     updateDarkMode() {
         if (this.isDark) {
             document.documentElement.classList.add('dark');
-            console.log('Dark mode enabled');
         } else {
             document.documentElement.classList.remove('dark');
-            console.log('Dark mode disabled');
         }
     }
 }" class="bg-[#198f51] dark:bg-[#198F51] border-b border-gray-100 dark:border-gray-700">
@@ -171,22 +167,19 @@
                 @if(Auth::user() && Auth::user()->profile_picture)
                     <img src="{{ asset('storage/profile_pictures/' . Auth::user()->profile_picture) }}" alt="Profile Picture" class="h-8 w-8 rounded-full object-cover me-2">
                 @endif
-                <div class="pt-2 pb-3 space-y-1">
-            <div class="relative">
-                <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
-                    <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                </button>
-                <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
-                    <x-notification-component :notifications="$notifications" />
-
                 
+                <div class="relative">
+                    <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none me-2">
+                        <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
+                    <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                        <x-notification-component :notifications="$notifications" />
+                    </div>
                 </div>
-            </div>
-        </div>
 
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-white dark:text-white hover:text-white dark:hover:text-white hover:bg-green-600 dark:hover:bg-green-600 focus:outline-none focus:bg-green-600 dark:focus:bg-green-600 focus:text-white dark:focus:text-white transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -196,8 +189,39 @@
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <!-- Mobile menu full screen overlay - completely covers content -->
+    <div x-show="open" 
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-[#198f51] dark:bg-[#198F51] z-50 sm:hidden flex flex-col"
+         style="display: none;">
+         
+        <!-- Top bar with dark mode toggle and close button -->
+        <div class="flex justify-between items-center p-4">
+            <!-- Dark Mode Toggle at top left -->
+            <button @click="toggleDarkMode()" class="flex items-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-green-600 focus:outline-none focus:bg-green-600 transition duration-150 ease-in-out">
+                <svg x-show="!isDark" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+                <svg x-show="isDark" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <span class="text-sm" x-text="isDark ? 'Light' : 'Dark'"></span>
+            </button>
+            
+            <!-- Close button at top right -->
+            <button @click="open = false" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-green-600 focus:outline-none focus:bg-green-600 transition duration-150 ease-in-out">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+         
+        <!-- Menu content inside the overlay -->
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
@@ -216,14 +240,11 @@
             </x-responsive-nav-link>
         </div>
 
-        
-
-   
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
+        <div class="pt-4 pb-1 border-t border-white dark:border-gray-600">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user() ? Auth::user()->email : '' }}</div>
+                <div class="font-medium text-base text-white dark:text-gray-200">{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
+                <div class="font-medium text-sm text-white dark:text-gray-400">{{ Auth::user() ? Auth::user()->email : '' }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
@@ -243,5 +264,8 @@
                 </form>
             </div>
         </div>
+        
+        <div class="flex-1" @click="open = false"></div>
     </div>
+
 </nav>
