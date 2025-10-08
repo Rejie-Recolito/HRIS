@@ -197,13 +197,14 @@
          x-transition:leave="transition-opacity ease-linear duration-300"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-[#198f51] dark:bg-[#198F51] z-50 sm:hidden flex flex-col"
+         class="fixed inset-0 bg-[#198f51] dark:bg-black z-50 sm:hidden flex flex-col"
          style="display: none;">
          
-        <!-- Top bar with dark mode toggle and close button -->
-        <div class="flex justify-between items-center p-4">
-            <!-- Dark Mode Toggle at top left -->
-            <button @click="toggleDarkMode()" class="flex items-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-green-600 focus:outline-none focus:bg-green-600 transition duration-150 ease-in-out">
+        <!-- Top container with visibility toggle and close button -->
+        <div class="bg-[#198f51] dark:bg-[#198f51]">
+            <div class="flex justify-between items-center p-4">
+                <!-- Dark Mode Toggle at top left -->
+                <button @click="toggleDarkMode()" class="flex items-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-green-600 focus:outline-none focus:bg-green-600 transition duration-150 ease-in-out">
                 <svg x-show="!isDark" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                 </svg>
@@ -213,15 +214,14 @@
                 <span class="text-sm" x-text="isDark ? 'Light' : 'Dark'"></span>
             </button>
             
-            <!-- Close button at top right -->
-            <button @click="open = false" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-green-600 focus:outline-none focus:bg-green-600 transition duration-150 ease-in-out">
-                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-         
-        <!-- Menu content inside the overlay -->
+                <!-- Close button at top right -->
+                <button @click="open = false" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-200 hover:bg-green-600 focus:outline-none focus:bg-green-600 transition duration-150 ease-in-out">
+                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>        <!-- Menu content inside the overlay -->
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
