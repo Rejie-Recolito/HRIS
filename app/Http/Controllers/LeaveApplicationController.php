@@ -48,6 +48,16 @@ class LeaveApplicationController extends Controller
             'others' => 'nullable|string|max:255',
             'number_of_days' => 'required|integer|min:1',
             'inclusive_dates' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'commutation' => 'required|string|max:255',
+            'inCaseVacation' => 'nullable|string|max:255',
+            'inCaseSick' => 'nullable|string|max:255',
+            'inHospital' => 'nullable|string|max:255',
+            'outPatient' => 'nullable|string|max:255',
+            'inCaseSpecialLeaveBenefits' => 'nullable|string|max:255',
+            'inCaseStudyLeave' => 'nullable|string|max:255',
+            'withinPhilippines' => 'nullable|string|max:255',
+            'abroad' => 'nullable|string|max:255',
         ]);
 
         $validated['user_id'] = Auth::id();
@@ -146,7 +156,20 @@ class LeaveApplicationController extends Controller
         $templateProcessor->setValue('date_of_filing', $leaveApplication->date_of_filing);
         $templateProcessor->setValue('position', $leaveApplication->position);
         $templateProcessor->setValue('salary', $leaveApplication->salary);
-        $templateProcessor->setValue('type_of_leave', $leaveApplication->type_of_leave);
+        // Set checkboxes based on type_of_leave
+        $templateProcessor->setValue('vacation_leave', $leaveApplication->type_of_leave === 'Vacation leave' ? '☑' : '☐');
+        $templateProcessor->setValue('mandatory_leave', $leaveApplication->type_of_leave === 'Mandatory/Forced leave' ? '☑' : '☐');
+        $templateProcessor->setValue('sick_leave', $leaveApplication->type_of_leave === 'Sick leave' ? '☑' : '☐');
+        $templateProcessor->setValue('maternity_leave', $leaveApplication->type_of_leave === 'Maternity leave' ? '☑' : '☐');
+        $templateProcessor->setValue('paternity_leave', $leaveApplication->type_of_leave === 'Paternity leave' ? '☑' : '☐');
+        $templateProcessor->setValue('special_privilege_leave', $leaveApplication->type_of_leave === 'Special Privilege Leave' ? '☑' : '☐');
+        $templateProcessor->setValue('solo_parent_leave', $leaveApplication->type_of_leave === 'Solo Parent leave' ? '☑' : '☐');
+        $templateProcessor->setValue('study_leave', $leaveApplication->type_of_leave === 'Study leave' ? '☑' : '☐');
+        $templateProcessor->setValue('10_day_vawc_leave', $leaveApplication->type_of_leave === '10-Day VAWC leave' ? '☑' : '☐');
+        $templateProcessor->setValue('rehabilitation_privilege', $leaveApplication->type_of_leave === 'Rehabilitation Privilege' ? '☑' : '☐');
+        $templateProcessor->setValue('special_leave_benefits_for_women', $leaveApplication->type_of_leave === 'Special Leave Benefits for Women' ? '☑' : '☐');
+        $templateProcessor->setValue('special_emergency_calamity_leave', $leaveApplication->type_of_leave === 'Special Emergency(Calamity) Leave' ? '☑' : '☐');
+        $templateProcessor->setValue('adoption_leave', $leaveApplication->type_of_leave === 'Adoption Leave' ? '☑' : '☐');
         $templateProcessor->setValue('others', $leaveApplication->others ?? 'N/A');
         $templateProcessor->setValue('number_of_days', $leaveApplication->number_of_days);
         $templateProcessor->setValue('inclusive_dates', $leaveApplication->inclusive_dates);

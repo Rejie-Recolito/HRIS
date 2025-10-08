@@ -1,6 +1,5 @@
-<div x-data="{ showOtherField: false, showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
-
-    
+<div x-data="{ typeOfLeave: '', showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
+ 
 
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
@@ -15,19 +14,25 @@
                 <x-primary-text-input name="date_of_filing" type="date" label="Date"/>
                 <x-primary-text-input name="position" label="Position" />
                 <x-primary-text-input name="salary" type="number" label="Salary" /> 
-
+                <x-primary-text-input name="department" type="text" label="Office/Department" /> 
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
                     <label for="type_of_leave" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Type of Leave</label>
-                    <select name="type_of_leave" id="type_of_leave" @change="showOtherField = $event.target.value === 'others'" class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                    <select 
+                    name="type_of_leave"
+                    id="type_of_leave"
+                    x-model="typeOfLeave" 
+                    class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value="type of leave">Type of leave</option>
                         <option value="Vacation leave">Vacation leave</option>
                         <option value="Mandatory/Forced Leave">Mandatory/Forced Leave</option>
-                        <option value="Sick Leave">Sick Leave</option>
-                        <option value="Maternity Leave">Maternity Leave</option>
-                        <option value="Paternity Leave">Paternity Leave</option>
-                        <option value="Solo Parent Leave">Solo Parent Leave</option>
-                        <option value="Study Leave">Study Leave</option>
-                        <option value="10-Day VAWC Leave">10-Day VAWC Leave</option>
-                        <option value="Rehabilitation Privilage">Rehabilitation Privilage</option>
+                        <option value="Sick Leave">Sick leave</option>
+                        <option value="Maternity Leave">Maternity leave</option>
+                        <option value="Paternity Leave">Paternity leave</option>
+                        <option value="Special Privilege Leave">Special Privilege Leave</option>
+                        <option value="Solo Parent Leave">Solo Parent leave</option>
+                        <option value="Study Leave">Study leave</option>
+                        <option value="10-Day VAWC Leave">10-Day VAWC leave</option>
+                        <option value="Rehabilitation Privilege">Rehabilitation Privilege</option>
                         <option value="Special Leave Benefits for Women">Special Leave Benefits for Women</option>
                         <option value="Special Emergency(Calamity) Leave">Special Emergency(Calamity) Leave</option>
                         <option value="Adoption Leave">Adoption Leave</option>
@@ -35,9 +40,90 @@
                     </select>
                 </div>
 
-                <div x-show="showOtherField" class="mt-4">
-                    <x-primary-text-input name="others" label="Others" @required(false) />
+                <div
+                x-show="typeOfLeave === 'others'" >
+                    <x-primary-text-input 
+                    name="others" 
+                    type="text" 
+                    label="Others please specify" 
+                    :required="false" />
                 </div>
+
+                <div x-show="typeOfLeave === 'Vacation leave' || typeOfLeave === 'Special Privilege Leave'" >
+                    <div 
+                    class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                    <label 
+                    for="inCaseVacation"
+                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
+                    <select
+                    :disabled="typeOfLeave !== 'Vacation leave' || typeOfLeave !== 'Special Privilege Leave'"
+                    name="inCaseVacation"
+                    id="inCaseVacation"
+                    class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value="Within the Philippines">Within the Philippines </option>
+                        <option value="Abroad">Abroad</option>
+                    </select>
+                    </div>
+                </div>
+
+                <div x-show="typeOfLeave === 'Sick Leave'" >
+                    <div 
+                    class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                    <label 
+                    for="inCaseSick"
+                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
+                    <select 
+                    :disabled="typeOfLeave !== 'Sick Leave'"
+                    name="inCaseSick"
+                    id="inCaseSick"
+                    class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value="In Hospital">In Hospital </option>
+                        <option value="Out Patient">Out Patient</option>
+                    </select>
+                    </div>
+                </div>
+
+                <div x-show="typeOfLeave === 'Special Leave Benefits for Women'" >
+                    <x-primary-text-input 
+                    name="inCaseSpecialLeaveBenefits" 
+                    type="text" 
+                    label="(Specify Illness)" 
+                    :required="false" />
+                </div>
+
+                <div
+                x-show="typeOfLeave === 'Study Leave'" >
+                    <div 
+                    class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                    <label 
+                    for="inCaseStudyLeave"
+                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
+                    <select
+                    :disabled="typeOfLeave !== 'Study Leave'"
+                    name="inCaseStudyLeave"
+                    id="inCaseStudyLeave"
+                    class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value="Completion of Master's Degree">Completion of Master's Degree </option>
+                        <option value="BAR/Board Examination Review ">BAR/Board Examination Review </option>
+                        <option value="Terminal Leave ">Terminal Leave  </option>
+                        <option value="Monetization of Leave Credits ">Monetization of Leave Credits </option>
+                    </select>
+                    </div>
+                </div>
+
+                 <div 
+                    class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                    <label 
+                    for="commutation"
+                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Commutation</label>
+                    <select 
+                    name="commutation"
+                    id="commutation"
+                    class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value="Not Requested">Not Requested </option>
+                        <option value="Requested">Requested</option>
+                    </select>
+                    </div>
 
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
                 <x-primary-text-input name="inclusive_dates" type="text" label="Inclusive Dates" />
@@ -52,5 +138,5 @@
 
 
 
-    
+
 </div>
