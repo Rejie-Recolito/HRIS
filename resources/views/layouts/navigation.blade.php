@@ -82,6 +82,11 @@
                                 {{ __('SERVICE RECORD') }}
                             </x-nav-link>
                         </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('add-user-information.user')" :active="request()->routeIs('add-user-information.user')">
+                                {{ __('EMPLOYEE PROFILE') }}
+                            </x-nav-link>
+                        </div>
                     @endif
 
 

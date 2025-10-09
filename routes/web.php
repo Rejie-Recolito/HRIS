@@ -67,6 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/service-records', [ServiceRecordController::class, 'index'])->name('service-records.index');
     Route::post('/service-records/{id}/update-status', [ServiceRecordController::class, 'updateStatus'])->name('service-records.update-status');
     Route::get('/service-record-user', [ServiceRecordController::class, 'show'])->name('service-records.show');
+    Route::get('/add-user-information', function () {
+        return view('add-user-information');
+    })->name('add-user-information.user');
 });
 
 Route::get('/service_record/{id}', function ($id) {
