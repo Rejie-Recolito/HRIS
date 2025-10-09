@@ -17,21 +17,32 @@ use Illuminate\Support\Facades\Storage;
 class LeaveApplicationController extends Controller
 {
     // Admin: approve a leave application and download PDF
+    public $leaveApplications;
     public function approve($id)
     {
         $leave = LeaveApplication::findOrFail($id);
         if ($leave->status === 'Under Review') {
             $leave->status = 'Approved';
             $leave->save();
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_application_letter', compact('leave'));
-            return $pdf->download('leave_application_letter_'.$leave->lastname.'_'.$leave->firstname.'.pdf');
+            $this->leaveApplications = LeaveApplication::all();
+            return redirect()->back()->with('success');
         }
-        return redirect()->back()->with('error', 'Leave application must be Under Review to approve.');
     }
     public function create()
     {
         $lastApplication = Auth::user()->leaveApplications()->latest()->first();
         return view('leave_user', compact('lastApplication'));
+    }
+
+    public function deny($id)
+    {
+        $leave = LeaveApplication::findOrFail($id);
+        if ($leave->status === 'Under Review') {
+            $leave->status = 'Denied';
+            $leave->save();
+            $this->leaveApplications = LeaveApplication::all();
+            return redirect()->back()->with('success');
+        }
     }
 
     public function store(Request $request)
@@ -100,15 +111,12 @@ class LeaveApplicationController extends Controller
     public function accept($id)
     {
         $leave = LeaveApplication::findOrFail($id);
-
-        // Generate PDF
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_application_letter', compact('leave'));
-
-        // Delete after generating PDF
-        $leave->delete();
-
-        // Download PDF
-        return $pdf->download('leave_application_letter_'.$leave->lastname.'_'.$leave->firstname.'.pdf');
+        if ($leave->status === 'Submitted') {
+            $leave->status = 'Under Review';
+            $leave->save();
+            $this->leaveApplications = LeaveApplication::all();
+            return redirect()->back()->with('success');
+        }
     }
 
     // Admin: delete a leave application
@@ -116,7 +124,7 @@ class LeaveApplicationController extends Controller
     {
         $leave = LeaveApplication::findOrFail($id);
         $leave->delete();
-        return redirect()->back()->with('success', 'Leave application deleted.');
+        return view('admin.leave')->with('success', 'Leave application deleted successfully.');
     }
 
     public function downloadAllPdf()
