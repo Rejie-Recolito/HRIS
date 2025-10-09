@@ -156,6 +156,7 @@ class LeaveApplicationController extends Controller
         $templateProcessor->setValue('date_of_filing', $leaveApplication->date_of_filing);
         $templateProcessor->setValue('position', $leaveApplication->position);
         $templateProcessor->setValue('salary', $leaveApplication->salary);
+        $templateProcessor->setValue('department', $leaveApplication->department);
         // Set checkboxes based on type_of_leave
         $templateProcessor->setValue('vacation_leave', $leaveApplication->type_of_leave === 'Vacation leave' ? '☑' : '☐');
         $templateProcessor->setValue('mandatory_leave', $leaveApplication->type_of_leave === 'Mandatory/Forced leave' ? '☑' : '☐');
@@ -170,9 +171,34 @@ class LeaveApplicationController extends Controller
         $templateProcessor->setValue('special_leave_benefits_for_women', $leaveApplication->type_of_leave === 'Special Leave Benefits for Women' ? '☑' : '☐');
         $templateProcessor->setValue('special_emergency_calamity_leave', $leaveApplication->type_of_leave === 'Special Emergency(Calamity) Leave' ? '☑' : '☐');
         $templateProcessor->setValue('adoption_leave', $leaveApplication->type_of_leave === 'Adoption Leave' ? '☑' : '☐');
-        $templateProcessor->setValue('others', $leaveApplication->others ?? 'N/A');
+        $templateProcessor->setValue('others', $leaveApplication->others ?? '');
         $templateProcessor->setValue('number_of_days', $leaveApplication->number_of_days);
         $templateProcessor->setValue('inclusive_dates', $leaveApplication->inclusive_dates);
+
+        //vacation details
+        $templateProcessor->setValue('checkPhilippines', $leaveApplication->inCaseVacation === 'Within the Philippines' ? '☑' : '☐');
+        $templateProcessor->setValue('checkAbroad', $leaveApplication->inCaseVacation === 'Abroad' ? '☑' : '☐');
+        $templateProcessor->setValue('withinPhilippines', $leaveApplication->withinPhilippines);
+        $templateProcessor->setValue('abroad', $leaveApplication->abroad);
+
+        // Sick leave details
+        $templateProcessor->setValue('checkInHospital', $leaveApplication->inCaseSick === 'In Hospital' ? '☑' : '☐');
+        $templateProcessor->setValue('checkOutPatient', $leaveApplication->inCaseSick === 'Out Patient' ? '☑' : '☐');
+        $templateProcessor->setValue('inHospital', $leaveApplication->inHospital);
+        $templateProcessor->setValue('outPatient', $leaveApplication->outPatient);
+
+        // Special Leave Benefits for Women
+        $templateProcessor->setValue('sPLBW', $leaveApplication->inCaseSpecialLeaveBenefits);
+
+        // Study Leave
+        $templateProcessor->setValue('checkCMD', $leaveApplication->inCaseStudyLeave === 'Completion of Master\'s Degree' ? '☑' : '☐');
+        $templateProcessor->setValue('checkBAR', $leaveApplication->inCaseStudyLeave === 'BAR/Board Examination Review' ? '☑' : '☐');
+        $templateProcessor->setValue('checkTL', $leaveApplication->inCaseStudyLeave === 'Terminal Leave' ? '☑' : '☐');
+        $templateProcessor->setValue('checkMLC', $leaveApplication->inCaseStudyLeave === 'Monetization of Leave Credits' ? '☑' : '☐');
+
+        // Commutation
+        $templateProcessor->setValue('checkNotRequested', $leaveApplication->commutation === 'Not Requested' ? '☑' : '☐');
+        $templateProcessor->setValue('checkRequested', $leaveApplication->commutation === 'Requested' ? '☑' : '☐');
 
         // Save the populated file
         $fileName = 'Leave_Application_' . $leaveApplication->id . '.docx';

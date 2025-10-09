@@ -1,4 +1,4 @@
-<div x-data="{ typeOfLeave: '', showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
+<div x-data="{ typeOfLeave: '', showSickDetails: '', vacationDetails: '', showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
  
 
     {{-- Leave Application Form Section --}}
@@ -21,8 +21,9 @@
                     name="type_of_leave"
                     id="type_of_leave"
                     x-model="typeOfLeave" 
+                    :required="true"
                     class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
-                        <option value="type of leave">Type of leave</option>
+                        <option value="">Type of leave</option>
                         <option value="Vacation leave">Vacation leave</option>
                         <option value="Mandatory/Forced Leave">Mandatory/Forced Leave</option>
                         <option value="Sick Leave">Sick leave</option>
@@ -54,16 +55,35 @@
                     class="mb-4 flex flex-col sm:flex-row sm:items-center">
                     <label 
                     for="inCaseVacation"
-                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
+                    class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
                     <select
-                    :disabled="typeOfLeave !== 'Vacation leave' || typeOfLeave !== 'Special Privilege Leave'"
                     name="inCaseVacation"
                     id="inCaseVacation"
+                    x-model="vacationDetails"
                     class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value="">Select an option</option>
                         <option value="Within the Philippines">Within the Philippines </option>
                         <option value="Abroad">Abroad</option>
                     </select>
                     </div>
+                </div>
+
+                <div
+                x-show="vacationDetails === 'Within the Philippines'" >
+                    <x-primary-text-input 
+                    name="withinPhilippines" 
+                    type="text" 
+                    label="Specify" 
+                    :required="false" />
+                </div>
+
+                <div
+                x-show="vacationDetails === 'Abroad'" >
+                    <x-primary-text-input 
+                    name="abroad" 
+                    type="text" 
+                    label="Specify" 
+                    :required="false" />
                 </div>
 
                 <div x-show="typeOfLeave === 'Sick Leave'" >
@@ -73,14 +93,34 @@
                     for="inCaseSick"
                      class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
                     <select 
-                    :disabled="typeOfLeave !== 'Sick Leave'"
+                    
                     name="inCaseSick"
                     id="inCaseSick"
+                    x-model="showSickDetails"
                     class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
+                        <option value=" ">Select an option</option>
                         <option value="In Hospital">In Hospital </option>
                         <option value="Out Patient">Out Patient</option>
                     </select>
                     </div>
+                </div>
+
+                <div
+                x-show="showSickDetails === 'In Hospital'" >
+                    <x-primary-text-input 
+                    name="inHospital" 
+                    type="text" 
+                    label="Specify illness:" 
+                    :required="false" />
+                </div>
+
+                <div
+                x-show="showSickDetails === 'Out Patient'" >
+                    <x-primary-text-input 
+                    name="outPatient" 
+                    type="text" 
+                    label="Specify illness:" 
+                    :required="false" />
                 </div>
 
                 <div x-show="typeOfLeave === 'Special Leave Benefits for Women'" >
