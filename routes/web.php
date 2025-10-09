@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServiceRecordController;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Http\Controllers\LeaveApplicationController;
+use App\Livewire\LeaveApplicationView;
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/leave', [\App\Http\Controllers\LeaveApplicationController::class, 'index'])->name('leave');
     Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
     Route::post('/leave/{id}/approve', [\App\Http\Controllers\LeaveApplicationController::class, 'approve'])->name('leave.approve');
+    Route::post('/leave/{id}/deny', [\App\Http\Controllers\LeaveApplicationController::class, 'deny'])->name('leave.deny');
     Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
     Route::get('/leave/generateDocx/{id}', [\App\Http\Controllers\LeaveApplicationController::class, 'generateDocx'])->name('leave.generate-docx');
 });
@@ -79,3 +82,9 @@ Route::post('/service_record/{id}/generate', function ($id) {
 })->name('service_record.generate');
 
 Route::post('/profile/picture', [ProfileController::class, 'uploadPicture'])->name('profile.picture.upload');
+
+Route::get('/leave-application/{id}/view', \App\Livewire\LeaveApplicationView::class)
+    ->name('leave_application.view');
+
+
+Route::get('/leave-applications', [LeaveApplicationController::class, 'index'])->name('leave_applications.index');

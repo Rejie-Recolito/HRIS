@@ -208,4 +208,11 @@ class LeaveApplicationController extends Controller
         // Return the file as a download
         return response()->download($filePath)->deleteFileAfterSend(true);
     }
+
+  public function view($id)
+{
+    $leaveApplication = LeaveApplication::findOrFail($id);
+    return view('livewire.leave-application-view', compact('leaveApplication'));
+}
+
 }

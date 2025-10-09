@@ -74,6 +74,8 @@ class LeaveApplicationForm extends Component
         session()->flash('success', $this->submitStatus);
     }
 
+
+
     public function getLastApplicationProperty()
     {
         return LeaveApplication::where('user_id', Auth::id()) // Filter by logged-in user
