@@ -1,12 +1,10 @@
-# -----------------------------------------------------
-# ✅ Laravel + PHP-FPM + Nginx + LibreOffice (Render-Ready)
-# -----------------------------------------------------
+# === Stage 1: Base PHP environment ===
 FROM php:8.2-fpm
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies and extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     nginx \
     libfreetype6-dev \
@@ -18,31 +16,27 @@ RUN apt-get update && apt-get install -y \
     curl \
     libreoffice \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip bcmath \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install gd pdo pdo_mysql zip bcmath
 
-# Copy Composer from official image
+# Copy Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy app files
+# Copy Laravel files
 COPY . .
 
-# Ensure directories exist and set correct permissions
-RUN mkdir -p storage bootstrap/cache database \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# ✅ Create SQLite file if not exists
-RUN touch database/database.sqlite && chmod 666 database/database.sqlite
+# Copy Nginx config
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Install PHP dependencies (safe for root)
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
+# Set permissions
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# Copy Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose HTTP port
+# Expose port 80
 EXPOSE 80
 
-# Start both Nginx and PHP-FPM together
+# Start both Nginx and PHP-FPM
 CMD service nginx start && php-fpm
+# === End of Dockerfile ===
