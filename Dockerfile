@@ -1,33 +1,27 @@
-# Use official PHP 8.3 with Composer and common extensions
-FROM php:8.3-cli
+# Stage 1: Build dependencies
+FROM composer:2 AS vendor
 
-# Set working directory
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --no-scripts --prefer-dist --optimize-autoloader
+
+# Stage 2: Final runtime image
+FROM php:8.2-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libzip-dev unzip git curl libreoffice \
+    && docker-php-ext-install pdo pdo_mysql zip bcmath
+
 WORKDIR /var/www/html
 
-# Install system packages and PHP extensions
-RUN apt-get update && apt-get install -y \
-    libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    unzip git curl libreoffice fonts-dejavu-core \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql zip gd
-
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Copy project files
+# Copy the application files
 COPY . .
 
-# Ensure correct permissions for Laravel
-RUN chmod -R 777 storage bootstrap/cache
+# Copy vendor files from build stage
+COPY --from=vendor /app/vendor ./vendor
 
-# Install dependencies (with memory limit)
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader
+# Expose port for PHP-FPM
+EXPOSE 9000
 
-# Generate Laravel key (optional: you can set manually in env)
-RUN php artisan key:generate --force || true
-
-# Expose port 10000
-EXPOSE 10000
-
-# Start Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
+CMD ["php-fpm"]
