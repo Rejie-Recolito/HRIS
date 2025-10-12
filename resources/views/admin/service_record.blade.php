@@ -29,7 +29,7 @@
                                 <tr>
                                     <td class="border border-gray-300 px-4 py-2">{{ $record->name }} requested for Service Record</td>
                                     <td class="border border-gray-300 px-4 py-2">
-                                        <select class="border border-gray-300 rounded-md text-black" onchange="updateStatus(this, {{ $record->id }})">
+                                        <select class="border border-gray-300 rounded-md text-black" onchange="updateStatus(this, '{{ $record->id }}')">
                                             <option value="pending" {{ $record->request_status === 'pending' ? 'selected' : '' }}>Pending</option>
                                             <option value="ready" {{ $record->request_status === 'ready' ? 'selected' : '' }}>Ready To Claim</option>
                                         </select>
