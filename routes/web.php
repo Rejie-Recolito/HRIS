@@ -47,6 +47,11 @@ Route::middleware('auth')->group(function () {
     
      // Admin dashboard route
      Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard');
+     
+     // User information/employee profile route
+     Route::get('/add-user-information', function () {
+         return view('profile.partials.add-user-information');
+     })->name('add-user-information.user');
 });
 
 require __DIR__.'/auth.php';
