@@ -1,15 +1,14 @@
 # -----------------------------------------------------
-# Stage 1: Build Laravel App with LibreOffice and SQLite
+# ✅ Laravel + PHP-FPM + Nginx + LibreOffice (Render-Ready)
 # -----------------------------------------------------
 FROM php:8.2-fpm
 
 # Set working directory
 WORKDIR /var/www/html
 
-# -----------------------------------------------------
-# Install system dependencies and PHP extensions
-# -----------------------------------------------------
+# Install system dependencies and extensions
 RUN apt-get update && apt-get install -y \
+    nginx \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
@@ -17,47 +16,33 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    vim \
     libreoffice \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip bcmath
+    && docker-php-ext-install gd pdo pdo_mysql zip bcmath \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# -----------------------------------------------------
-# Copy Composer binary from official image
-# -----------------------------------------------------
+# Copy Composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# -----------------------------------------------------
-# Copy project files to container
-# -----------------------------------------------------
+# Copy app files
 COPY . .
 
-# -----------------------------------------------------
-# Ensure storage and cache directories exist and are writable
-# -----------------------------------------------------
-RUN mkdir -p storage bootstrap/cache \
+# Ensure directories exist and set correct permissions
+RUN mkdir -p storage bootstrap/cache database \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-# -----------------------------------------------------
-# Create SQLite database file if using sqlite
-# -----------------------------------------------------
-RUN mkdir -p /var/www/html/database \
-    && touch /var/www/html/database/database.sqlite \
-    && chmod 666 /var/www/html/database/database.sqlite
+# ✅ Create SQLite file if not exists
+RUN touch database/database.sqlite && chmod 666 database/database.sqlite
 
-# -----------------------------------------------------
-# Install PHP dependencies (no dev)
-# -----------------------------------------------------
+# Install PHP dependencies (safe for root)
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
-# -----------------------------------------------------
-# Generate Laravel key (optional: safe to skip if you provide .env)
-# -----------------------------------------------------
-RUN php artisan key:generate --force || true
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# -----------------------------------------------------
-# Expose PHP-FPM port and run
-# -----------------------------------------------------
-EXPOSE 9000
-CMD ["php-fpm"]
+# Expose HTTP port
+EXPOSE 80
+
+# Start both Nginx and PHP-FPM together
+CMD service nginx start && php-fpm
