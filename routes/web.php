@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServiceRecordController;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Http\Controllers\LeaveApplicationController;
+use App\Livewire\LeaveApplicationView;
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,8 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/leave', [\App\Http\Controllers\LeaveApplicationController::class, 'index'])->name('leave');
     Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
     Route::post('/leave/{id}/approve', [\App\Http\Controllers\LeaveApplicationController::class, 'approve'])->name('leave.approve');
+    Route::post('/leave/{id}/deny', [\App\Http\Controllers\LeaveApplicationController::class, 'deny'])->name('leave.deny');
     Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
-    Route::get('/leave/download-pdf/{id}', [\App\Http\Controllers\LeaveApplicationController::class, 'downloadPdf'])->name('leave.download-pdf');
+    Route::get('/leave/generateDocx/{id}', [\App\Http\Controllers\LeaveApplicationController::class, 'generateDocx'])->name('leave.generate-docx');
 });
 
 Route::get('/dtr', function () {
@@ -47,11 +50,6 @@ Route::middleware('auth')->group(function () {
     
      // Admin dashboard route
      Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard');
-     
-     // User information/employee profile route
-     Route::get('/add-user-information', function () {
-         return view('profile.partials.add-user-information');
-     })->name('add-user-information.user');
 });
 
 require __DIR__.'/auth.php';
@@ -69,6 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/service-records', [ServiceRecordController::class, 'index'])->name('service-records.index');
     Route::post('/service-records/{id}/update-status', [ServiceRecordController::class, 'updateStatus'])->name('service-records.update-status');
     Route::get('/service-record-user', [ServiceRecordController::class, 'show'])->name('service-records.show');
+    Route::get('/add-user-information', function () {
+        return view('add-user-information');
+    })->name('add-user-information.user');
 });
 
 Route::get('/service_record/{id}', function ($id) {
@@ -84,3 +85,9 @@ Route::post('/service_record/{id}/generate', function ($id) {
 })->name('service_record.generate');
 
 Route::post('/profile/picture', [ProfileController::class, 'uploadPicture'])->name('profile.picture.upload');
+
+Route::get('/leave-application/{id}/view', \App\Livewire\LeaveApplicationView::class)
+    ->name('leave_application.view');
+
+
+Route::get('/leave-applications', [LeaveApplicationController::class, 'index'])->name('leave_applications.index');

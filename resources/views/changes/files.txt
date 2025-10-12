@@ -1,0 +1,8 @@
+resources/views/dashboard_user.blade.php
+    #set bg of greeting container to transparent
+
+resources/views/components/responsive-nav-link.blade.php
+resources/views/layouts/navigation.blade.php
+    #remove page content in menu display
+    #added styling
+    # added light/dark mode toggle visibility for mobile
