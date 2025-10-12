@@ -22,6 +22,16 @@ class LeaveApplication extends Model
         'inclusive_dates',
         'status',
         'user_id',
+        'department',
+        'inCaseVacation',
+        'withinPhilippines',
+        'abroad',
+        'inCaseSick',
+        'inHospital',
+        'outPatient',
+        'inCaseSpecialLeaveBenefits',
+        'inCaseStudyLeave',
+        'commutation',
     ];
 
     public function user()

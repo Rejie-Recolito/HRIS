@@ -22,6 +22,7 @@ class Employee extends Model
         'salary',
         'designation',
         'place_of_assignment',
+        'user_id',
     ];
 
     protected $table = 'employee';
