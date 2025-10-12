@@ -110,7 +110,7 @@
                 @endif
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-black dark:text-white bg-white dark:bg-[#282828] hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
                             <div>{{ Auth::user() ? Auth::user()->name : 'Guest' }}</div>
 
                             <div class="ms-1">
@@ -142,8 +142,8 @@
                 @if(Auth::user() && Auth::user()->is_admin)
                     <!-- Admin Notification Bell -->
                     <div class="relative ms-4">
-                        <button @click="open = !open" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
-                            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button @click="open = !open" class="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-white dark:bg-[#282828] focus:outline-none">
+                            <svg class="h-5 w-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </button>
@@ -154,8 +154,8 @@
                 @else
                     <!-- User Notification Bell -->
                     <div class="relative ms-4">
-                        <button @click="openUserNotifications = !openUserNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none">
-                            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button @click="openUserNotifications = !openUserNotifications" class="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-white dark:bg-[#282828] focus:outline-none">
+                            <svg class="h-5 w-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </button>
@@ -174,8 +174,8 @@
                 @endif
                 
                 <div class="relative">
-                    <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 block h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none me-2">
-                        <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button @click="openResponsiveNotifications = !openResponsiveNotifications" class="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-white dark:bg-[#282828] focus:outline-none me-2">
+                        <svg class="h-5 w-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                     </button>
@@ -202,7 +202,7 @@
          x-transition:leave="transition-opacity ease-linear duration-300"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-[#198f51] dark:bg-black z-50 sm:hidden flex flex-col"
+         class="fixed inset-0 bg-[#198f51] dark:bg-[#1c1c1d] z-50 sm:hidden flex flex-col"
          style="display: none;">
          
         <!-- Top container with visibility toggle and close button -->
@@ -229,19 +229,34 @@
         </div>        <!-- Menu content inside the overlay -->
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    {{ __('Dashboard') }}
+                </div>
             </x-responsive-nav-link>
         </div>
 
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">
-                {{ __('Service Record') }}
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                    </svg>
+                    {{ __('Service Record') }}
+                </div>
             </x-responsive-nav-link>
         </div>
 
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')">
-                {{ __('Leave') }}
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    {{ __('Leave') }}
+                </div>
             </x-responsive-nav-link>
         </div>
 
