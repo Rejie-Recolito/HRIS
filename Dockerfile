@@ -6,13 +6,16 @@ WORKDIR /var/www/html
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     libzip-dev \
     unzip \
     git \
     curl \
     libreoffice \
-    && docker-php-ext-install zip pdo pdo_mysql
-
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql zip bcmath
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
