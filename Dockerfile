@@ -1,22 +1,30 @@
-# Use PHP 8.3 image with required extensions
+# Use official PHP 8.3 with Composer and common extensions
 FROM php:8.3-cli
-
-# Install system dependencies, LibreOffice, and extensions
-RUN apt-get update && apt-get install -y \
-    libzip-dev unzip git curl libreoffice \
-    && docker-php-ext-install pdo pdo_mysql zip
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy project files
-COPY . .
+# Install system packages and PHP extensions
+RUN apt-get update && apt-get install -y \
+    libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
+    unzip git curl libreoffice fonts-dejavu-core \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip gd
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Copy project files
+COPY . .
+
+# Ensure correct permissions for Laravel
+RUN chmod -R 777 storage bootstrap/cache
+
+# Install dependencies (with memory limit)
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader
+
+# Generate Laravel key (optional: you can set manually in env)
+RUN php artisan key:generate --force || true
 
 # Expose port 10000
 EXPOSE 10000
