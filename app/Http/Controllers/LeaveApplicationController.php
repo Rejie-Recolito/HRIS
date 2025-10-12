@@ -12,6 +12,8 @@ use Barryvdh\DomPDF\Facade as PDF;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Barryvdh\DomPDF\PDF as DomPDFPDF;
 use PhpOffice\PhpWord\TemplateProcessor;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\Settings;
 use Illuminate\Support\Facades\Storage;
 
 class LeaveApplicationController extends Controller
@@ -146,44 +148,45 @@ class LeaveApplicationController extends Controller
         return $pdf->download('leave_application_' . $id . '.pdf');
     }
 
-    public function generateDocx($id)
-    {
-        // Load the template
-        if (!file_exists(storage_path('app/templates/leave_application_template.docx'))) {
-            throw new \Exception('Template file not found at: ' . storage_path('app/templates/leave_application_template.docx'));
-        }
-        $templateProcessor = new TemplateProcessor(storage_path('app/templates/leave_application_template.docx'));
+   public function generateDocx($id)
+{
+    // Load the template
+    $templatePath = storage_path('app/templates/leave_application_template.docx');
+    if (!file_exists($templatePath)) {
+        throw new \Exception('Template file not found at: ' . $templatePath);
+    }
 
-        // Fetch data from the database
-        $leaveApplication = LeaveApplication::findOrFail($id);
+    $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+    $leaveApplication = \App\Models\LeaveApplication::findOrFail($id);
 
-        // Replace placeholders with actual data
-        $templateProcessor->setValue('lastname', $leaveApplication->lastname);
-        $templateProcessor->setValue('firstname', $leaveApplication->firstname);
-        $templateProcessor->setValue('middlename', $leaveApplication->middlename);
-        $templateProcessor->setValue('date_of_filing', $leaveApplication->date_of_filing);
-        $templateProcessor->setValue('position', $leaveApplication->position);
-        $templateProcessor->setValue('salary', $leaveApplication->salary);
-        $templateProcessor->setValue('department', $leaveApplication->department);
-        // Set checkboxes based on type_of_leave
-        $templateProcessor->setValue('vacation_leave', $leaveApplication->type_of_leave === 'Vacation leave' ? '☑' : '☐');
-        $templateProcessor->setValue('mandatory_leave', $leaveApplication->type_of_leave === 'Mandatory/Forced leave' ? '☑' : '☐');
-        $templateProcessor->setValue('sick_leave', $leaveApplication->type_of_leave === 'Sick leave' ? '☑' : '☐');
-        $templateProcessor->setValue('maternity_leave', $leaveApplication->type_of_leave === 'Maternity leave' ? '☑' : '☐');
-        $templateProcessor->setValue('paternity_leave', $leaveApplication->type_of_leave === 'Paternity leave' ? '☑' : '☐');
-        $templateProcessor->setValue('special_privilege_leave', $leaveApplication->type_of_leave === 'Special Privilege Leave' ? '☑' : '☐');
-        $templateProcessor->setValue('solo_parent_leave', $leaveApplication->type_of_leave === 'Solo Parent leave' ? '☑' : '☐');
-        $templateProcessor->setValue('study_leave', $leaveApplication->type_of_leave === 'Study leave' ? '☑' : '☐');
-        $templateProcessor->setValue('10_day_vawc_leave', $leaveApplication->type_of_leave === '10-Day VAWC leave' ? '☑' : '☐');
-        $templateProcessor->setValue('rehabilitation_privilege', $leaveApplication->type_of_leave === 'Rehabilitation Privilege' ? '☑' : '☐');
-        $templateProcessor->setValue('special_leave_benefits_for_women', $leaveApplication->type_of_leave === 'Special Leave Benefits for Women' ? '☑' : '☐');
-        $templateProcessor->setValue('special_emergency_calamity_leave', $leaveApplication->type_of_leave === 'Special Emergency(Calamity) Leave' ? '☑' : '☐');
-        $templateProcessor->setValue('adoption_leave', $leaveApplication->type_of_leave === 'Adoption Leave' ? '☑' : '☐');
-        $templateProcessor->setValue('others', $leaveApplication->others ?? '');
-        $templateProcessor->setValue('number_of_days', $leaveApplication->number_of_days);
-        $templateProcessor->setValue('inclusive_dates', $leaveApplication->inclusive_dates);
+    // Fill placeholders
+    $templateProcessor->setValue('lastname', $leaveApplication->lastname);
+    $templateProcessor->setValue('firstname', $leaveApplication->firstname);
+    $templateProcessor->setValue('middlename', $leaveApplication->middlename);
+    $templateProcessor->setValue('date_of_filing', $leaveApplication->date_of_filing);
+    $templateProcessor->setValue('position', $leaveApplication->position);
+    $templateProcessor->setValue('salary', $leaveApplication->salary);
+    $templateProcessor->setValue('department', $leaveApplication->department);
+    $templateProcessor->setValue('number_of_days', $leaveApplication->number_of_days);
+    $templateProcessor->setValue('inclusive_dates', $leaveApplication->inclusive_dates);
+    $templateProcessor->setValue('others', $leaveApplication->others ?? '');
 
-        //vacation details
+    // Checkbox logic
+    $templateProcessor->setValue('vacation_leave', $leaveApplication->type_of_leave === 'Vacation leave' ? '☑' : '☐');
+    $templateProcessor->setValue('mandatory_leave', $leaveApplication->type_of_leave === 'Mandatory/Forced leave' ? '☑' : '☐');
+    $templateProcessor->setValue('sick_leave', $leaveApplication->type_of_leave === 'Sick leave' ? '☑' : '☐');
+    $templateProcessor->setValue('maternity_leave', $leaveApplication->type_of_leave === 'Maternity leave' ? '☑' : '☐');
+    $templateProcessor->setValue('paternity_leave', $leaveApplication->type_of_leave === 'Paternity leave' ? '☑' : '☐');
+    $templateProcessor->setValue('special_privilege_leave', $leaveApplication->type_of_leave === 'Special Privilege Leave' ? '☑' : '☐');
+    $templateProcessor->setValue('solo_parent_leave', $leaveApplication->type_of_leave === 'Solo Parent leave' ? '☑' : '☐');
+    $templateProcessor->setValue('study_leave', $leaveApplication->type_of_leave === 'Study leave' ? '☑' : '☐');
+    $templateProcessor->setValue('10_day_vawc_leave', $leaveApplication->type_of_leave === '10-Day VAWC leave' ? '☑' : '☐');
+    $templateProcessor->setValue('rehabilitation_privilege', $leaveApplication->type_of_leave === 'Rehabilitation Privilege' ? '☑' : '☐');
+    $templateProcessor->setValue('special_leave_benefits_for_women', $leaveApplication->type_of_leave === 'Special Leave Benefits for Women' ? '☑' : '☐');
+    $templateProcessor->setValue('special_emergency_calamity_leave', $leaveApplication->type_of_leave === 'Special Emergency(Calamity) Leave' ? '☑' : '☐');
+    $templateProcessor->setValue('adoption_leave', $leaveApplication->type_of_leave === 'Adoption Leave' ? '☑' : '☐');
+
+    //vacation details
         $templateProcessor->setValue('checkPhilippines', $leaveApplication->inCaseVacation === 'Within the Philippines' ? '☑' : '☐');
         $templateProcessor->setValue('checkAbroad', $leaveApplication->inCaseVacation === 'Abroad' ? '☑' : '☐');
         $templateProcessor->setValue('withinPhilippines', $leaveApplication->withinPhilippines);
@@ -208,14 +211,49 @@ class LeaveApplicationController extends Controller
         $templateProcessor->setValue('checkNotRequested', $leaveApplication->commutation === 'Not Requested' ? '☑' : '☐');
         $templateProcessor->setValue('checkRequested', $leaveApplication->commutation === 'Requested' ? '☑' : '☐');
 
-        // Save the populated file
-        $fileName = 'Leave_Application_' . $leaveApplication->id . '.docx';
-        $filePath = storage_path('app/public/' . $fileName);
-        $templateProcessor->saveAs($filePath);
+    // Save DOCX
+    $fileName = 'Leave_Application_' . $leaveApplication->id . '.docx';
+    $filePath = storage_path('app/public/' . $fileName);
+    $templateProcessor->saveAs($filePath);
+    
 
-        // Return the file as a download
-        return response()->download($filePath)->deleteFileAfterSend(true);
+    // Convert DOCX → PDF using LibreOffice (auto path detection)
+    $pdfFilePath = storage_path('app/public/Leave_Application_' . $leaveApplication->id . '.pdf');
+
+    // 🔍 Detect OS and set LibreOffice path accordingly
+    if (stripos(PHP_OS, 'WIN') === 0) {
+        // Windows default path
+        $libreOfficePath = '"C:\Program Files\LibreOffice\program\soffice.exe"';
+    } elseif (stripos(PHP_OS, 'DAR') === 0) {
+        // macOS (Homebrew or app path)
+        $libreOfficePath = '/Applications/LibreOffice.app/Contents/MacOS/soffice';
+        if (!file_exists($libreOfficePath)) {
+            $libreOfficePath = 'libreoffice'; // fallback if in PATH
+        }
+    } else {
+        // Linux or others
+        $libreOfficePath = 'libreoffice';
     }
+
+    $command = "{$libreOfficePath} --headless --convert-to pdf --outdir " . escapeshellarg(dirname($pdfFilePath)) . " " . escapeshellarg($filePath);
+    exec($command, $output, $resultCode);
+
+    if ($resultCode !== 0) {
+        return response()->json(['error' => 'Failed to convert DOCX to PDF', 'details' => $output], 500);
+    }
+
+    // Wait until the PDF is generated
+    if (file_exists($pdfFilePath)) {
+    // Safe to delete the DOCX now
+    unlink($filePath);
+    }
+
+
+
+    // Return the PDF for download, then delete after sending
+    return response()->download($pdfFilePath)->deleteFileAfterSend(true);
+}
+
 
   public function view($id)
 {
