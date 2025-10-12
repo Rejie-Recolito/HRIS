@@ -11,13 +11,30 @@
         border-color: #198f51 !important;
         box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
     }
+    input.custom-input,
+    select.custom-input,
+    textarea.custom-input,
     .custom-input {
         color: #000000 !important; /* Black text in light mode */
         background-color: #ffffff !important; /* White background in light mode */
+        border-color: #198f51 !important;
     }
+    
+    html:not(.dark) input.custom-input,
+    html:not(.dark) select.custom-input,
+    html:not(.dark) textarea.custom-input,
+    html:not(.dark) .custom-input {
+        color: #000000 !important; /* Black text in light mode */
+        background-color: #ffffff !important; /* White background in light mode */
+        border-color: #198f51 !important;
+    }
+    
+    .dark input.custom-input,
+    .dark select.custom-input, 
+    .dark textarea.custom-input,
     .dark .custom-input {
         color: #ffffff !important; /* White text in dark mode */
-        background-color: #374151 !important; /* Dark background in dark mode */
+        background-color: #282828 !important; /* Dark background in dark mode */
     }
     /* Add specific label styling */
     .custom-label {
@@ -25,7 +42,7 @@
         font-size: 16px !important; /* Change this value to your desired size */
     }
     .dark .custom-label {
-        color: #f9fafb !important; /* White in dark mode */
+        color: #ffffff !important; /* White in dark mode */
         font-size: 16px !important; /* Change this value to your desired size */
     }
     
@@ -210,15 +227,19 @@ select.input-field-border option:checked {
 .profile-border {
             border: 2px solid #198f51 !important;
             border-radius: 6px !important;
+            margin-bottom: 1.5rem !important;
         }
         @media (min-width: 640px) {
             .profile-border {
                 border-radius: 8px !important;
+                margin-bottom: 2rem !important;
             }
         }
         @media (min-width: 1024px) {
             .profile-border {
                 border-radius: 12px !important;
+                width: 60% !important;
+                margin: 0 auto 2.5rem auto !important;
             }
         }
 
@@ -231,5 +252,129 @@ input[type="file"]:focus {
     border-color: #198f51 !important;
     outline: none !important;
     box-shadow: 0 0 0 2px rgba(25, 143, 81, 0.2) !important;
+}
+
+/* Profile and Password Form Input Fields - Light Mode Default */
+.border-gray-300,
+input.border-gray-300,
+select.border-gray-300,
+textarea.border-gray-300 {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #198f51 !important;
+}
+
+.border-gray-300:focus,
+input.border-gray-300:focus,
+select.border-gray-300:focus,
+textarea.border-gray-300:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #198f51 !important;
+    box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
+}
+
+/* Profile and Password Form Input Fields - Dark Mode Only */
+.dark .border-gray-300,
+.dark input.border-gray-300,
+.dark select.border-gray-300,
+.dark textarea.border-gray-300 {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+}
+
+.dark .border-gray-300:focus,
+.dark input.border-gray-300:focus,
+.dark select.border-gray-300:focus,
+.dark textarea.border-gray-300:focus {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+    box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
+}
+
+/* Laravel Breeze input component overrides - Dark Mode Only */
+.dark input[class*="border-gray-300"],
+.dark select[class*="border-gray-300"],
+.dark textarea[class*="border-gray-300"] {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+}
+
+.dark input[class*="border-gray-300"]:focus,
+.dark select[class*="border-gray-300"]:focus,
+.dark textarea[class*="border-gray-300"]:focus {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+    box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
+}
+
+/* Profile and Password Form Input Fields */
+.border-gray-300,
+input.border-gray-300,
+select.border-gray-300,
+textarea.border-gray-300 {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+}
+
+.border-gray-300:focus,
+input.border-gray-300:focus,
+select.border-gray-300:focus,
+textarea.border-gray-300:focus {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+    box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
+}
+
+/* Dark mode specific overrides */
+.dark .border-gray-300,
+.dark input.border-gray-300,
+.dark select.border-gray-300,
+.dark textarea.border-gray-300 {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+}
+
+/* Laravel Breeze input component overrides - Light Mode Default */
+input[class*="border-gray-300"],
+select[class*="border-gray-300"],
+textarea[class*="border-gray-300"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #198f51 !important;
+}
+
+input[class*="border-gray-300"]:focus,
+select[class*="border-gray-300"]:focus,
+textarea[class*="border-gray-300"]:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #198f51 !important;
+    box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
+}
+
+/* Laravel Breeze input component overrides - Dark Mode Only */
+.dark input[class*="border-gray-300"],
+.dark select[class*="border-gray-300"],
+.dark textarea[class*="border-gray-300"] {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+}
+
+.dark input[class*="border-gray-300"]:focus,
+.dark select[class*="border-gray-300"]:focus,
+.dark textarea[class*="border-gray-300"]:focus {
+    background-color: #282828 !important;
+    color: #ffffff !important;
+    border-color: #198f51 !important;
+    box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
 }
 

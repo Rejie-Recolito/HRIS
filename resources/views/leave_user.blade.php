@@ -26,7 +26,7 @@
     }
     /* Add specific label styling */
     .custom-label {
-        color: #000000ff !important; /* Dark gray/black in light mode */
+        color: #000000 !important; /* Dark gray/black in light mode */
         font-size: 16px !important; /* Change this value to your desired size */
     }
     .dark .custom-label {

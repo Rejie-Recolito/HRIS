@@ -21,7 +21,7 @@
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-[#000000]">
+        <div class="min-h-screen bg-gray-100 dark:bg-[#282828]">
             
             @include('layouts.navigation')
 
