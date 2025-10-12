@@ -24,6 +24,16 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Copy Laravel files
 COPY . .
 
+# Ensure directories exist and set correct permissions
+RUN mkdir -p storage bootstrap/cache database \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+# ✅ Create SQLite file if not exists
+RUN touch database/database.sqlite && chmod 666 database/database.sqlite
+
+
+
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
