@@ -38,11 +38,9 @@ RUN touch database/database.sqlite && chmod 666 database/database.sqlite
 # Install PHP dependencies (safe for root)
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
-# Copy Nginx configuration
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose HTTP port
 EXPOSE 80
 
 # Start both Nginx and PHP-FPM together
-CMD service nginx start && php-fpm
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080
