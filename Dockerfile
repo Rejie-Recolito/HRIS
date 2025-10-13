@@ -16,12 +16,19 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # .dockerignore excludes vendor, node_modules, and other heavy files
 COPY . ./
 
-# Ensure Laravel directories exist and are writable so composer scripts (package:discover) can run
-RUN mkdir -p storage bootstrap/cache \
+# Ensure Laravel storage subdirectories exist and are writable so composer scripts (package:discover) can run
+RUN mkdir -p \
+		storage/framework/cache/data \
+		storage/framework/sessions \
+		storage/framework/views \
+		storage/logs \
+		bootstrap/cache \
 	&& chmod -R 0777 storage bootstrap/cache || true
 
 # Allow composer to run as root inside the container and run install (this executes artisan scripts)
+ENV APP_KEY=base64:temporarykey000000000000000000000000000=
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+ENV APP_KEY=
 
 FROM node:20 AS assets
 WORKDIR /app
@@ -35,27 +42,37 @@ COPY resources resources
 COPY public public
 RUN npm run build
 
-FROM php:8.2-fpm-alpine
-# system deps and runtime libs
-RUN apk add --no-cache bash git freetype libpng libjpeg-turbo icu-libs zlib libzip oniguruma shadow curl
-# build deps for compiling extensions
-RUN apk add --no-cache --virtual .build-deps build-base autoconf freetype-dev libpng-dev libjpeg-turbo-dev icu-dev zlib-dev libzip-dev oniguruma-dev \
+FROM php:8.2-fpm
+# Use Debian-based image so we can install LibreOffice (alpine LibreOffice is not practical)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		ca-certificates curl gnupg2 git unzip procps lsb-release \
+		# LibreOffice and helpers for docx -> pdf
+		libreoffice-core libreoffice-writer libreoffice-common libreoffice-java-common \
+		poppler-utils ghostscript fonts-dejavu-core fonts-liberation \
+		# runtime libs for php extensions
+		libpng-dev libjpeg-dev libfreetype-dev libzip-dev zlib1g-dev libicu-dev \
+	&& rm -rf /var/lib/apt/lists/*
+
+# build deps for compiling php extensions
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential autoconf pkg-config \
 	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
 	&& docker-php-ext-install gd pdo_mysql zip intl mbstring \
-	&& apk del .build-deps || true
+	&& apt-get purge -y --auto-remove build-essential autoconf pkg-config \
+	&& rm -rf /var/lib/apt/lists/*
 
-# Install composer (already available in vendor stage, but keep composer for artisan commands)
-COPY --from=vendor /usr/bin/composer /usr/bin/composer
+# Install composer binary from vendor stage (was installed to /usr/local/bin)
+COPY --from=vendor /usr/local/bin/composer /usr/local/bin/composer
 
 WORKDIR /var/www/html
-# copy application files
+# copy vendor and built assets from previous stages
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
+# copy remaining app files from context (keeps same layout as during build)
 COPY . .
 
-# permissions
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
+# ensure permissions and runtime writable dirs
+RUN chown -R www-data:www-data /var/www/html \
+	&& chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 EXPOSE 9000
 CMD ["php-fpm"]
