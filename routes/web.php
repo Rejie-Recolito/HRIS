@@ -1,10 +1,18 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServiceRecordController;
 use Barryvdh\DomPDF\Facade\Pdf;
+<<<<<<< Updated upstream
+=======
+
+// Route for employee profile menu link
+Route::middleware(['auth', 'verified'])->get('/employee-profile', function () {
+    return view('add-user-information');
+})->name('employee.profile');
+>>>>>>> Stashed changes
 
 Route::get('/', function () {
     return view('welcome');
@@ -47,14 +55,10 @@ Route::middleware('auth')->group(function () {
     
      // Admin dashboard route
      Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard');
-     
-     // User information/employee profile route
-     Route::get('/add-user-information', function () {
-         return view('profile.partials.add-user-information');
-     })->name('add-user-information.user');
 });
 
 require __DIR__.'/auth.php';
+
 
 // User-only routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -69,6 +73,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/service-records', [ServiceRecordController::class, 'index'])->name('service-records.index');
     Route::post('/service-records/{id}/update-status', [ServiceRecordController::class, 'updateStatus'])->name('service-records.update-status');
     Route::get('/service-record-user', [ServiceRecordController::class, 'show'])->name('service-records.show');
+<<<<<<< Updated upstream
+=======
+
+    Route::get('/add-user-information', [EmployeeController::class, 'showUserForm'])->name('add-user-information.user');
+>>>>>>> Stashed changes
 });
 
 Route::get('/service_record/{id}', function ($id) {
