@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
 {
@@ -31,7 +31,17 @@ class EmployeeController extends Controller
             'place_of_assignment' => 'required|string|max:255',
         ]);
 
-        Employee::create($request->all());
+        $data = $request->all();
+        $data['user_id'] = Auth::id();
+        Employee::create($data);
+        $employee = Employee::latest()->first();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'employee' => $employee
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Employee added successfully.');
     }
@@ -71,5 +81,11 @@ class EmployeeController extends Controller
         $employee->delete();
 
         return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
+    }
+
+    public function showUserForm()
+    {
+        $employee = Employee::where('user_id', Auth::id())->first();
+        return view('add-user-information', compact('employee'));
     }
 }
