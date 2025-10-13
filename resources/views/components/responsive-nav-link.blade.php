@@ -7,5 +7,5 @@ $classes = ($active ?? false)
 @endphp
 
 <a {{ $attributes->merge(['class' => $classes]) }}>
-    {{ $slot }}
+    <span class="flex items-center gap-1">{{ $slot }}</span>
 </a>
