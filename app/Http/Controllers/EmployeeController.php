@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
 {
+    /**
+     * Show the user-facing employee information form.
+     */
+    public function showUserForm()
+    {
+    return view('profile.partials.add-user-information');
+    }
     public function index()
     {
         $employees = Employee::all(); // Fetch data using the Employee model
