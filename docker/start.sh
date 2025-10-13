@@ -36,11 +36,21 @@ if [ -z "${APP_KEY:-}" ]; then
 fi
 
 # Clear any cached config/routes/views to ensure runtime uses current env
-echo "Clearing Laravel caches (config, route, view, cache)"
+echo "Clearing Laravel caches (config, route, view)"
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
-php artisan cache:clear || true
+
+# Only run cache:clear when cache driver is not database-backed. If the app uses
+# a database cache store and the cache table hasn't been migrated yet, running
+# cache:clear will throw "no such table: cache" and fail startup.
+CACHE_DRIVER=${CACHE_DRIVER:-${CACHE_STORE:-}}
+if [ "${CACHE_DRIVER}" = "database" ]; then
+  echo "Skipping php artisan cache:clear because CACHE_DRIVER/CACHE_STORE is set to 'database'.\nIf you haven't run migrations yet, run 'php artisan cache:table' then 'php artisan migrate' or set CACHE_DRIVER=file temporarily."
+else
+  echo "Clearing cache repository"
+  php artisan cache:clear || true
+fi
 
 # Substitute nginx template and start services
 : ${PORT:=8080}
