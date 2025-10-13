@@ -12,7 +12,11 @@ RUN apk add --no-cache --virtual .build-deps \
 # Install composer so we can run composer install in this stage
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY composer.json composer.lock ./
+## Copy application files so composer scripts (which call artisan) can run
+# .dockerignore excludes vendor, node_modules, and other heavy files
+COPY . ./
+
+# Now install PHP dependencies (composer will find artisan and run scripts)
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
 FROM node:20 AS assets
