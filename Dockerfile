@@ -16,8 +16,12 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # .dockerignore excludes vendor, node_modules, and other heavy files
 COPY . ./
 
-# Now install PHP dependencies (composer will find artisan and run scripts)
-RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+# Ensure Laravel directories exist and are writable so composer scripts (package:discover) can run
+RUN mkdir -p storage bootstrap/cache \
+	&& chmod -R 0777 storage bootstrap/cache || true
+
+# Allow composer to run as root inside the container and run install (this executes artisan scripts)
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
 FROM node:20 AS assets
 WORKDIR /app
