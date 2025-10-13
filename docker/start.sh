@@ -35,11 +35,24 @@ if [ -z "${APP_KEY:-}" ]; then
   fi
 fi
 
+# Clear any cached config/routes/views to ensure runtime uses current env
+echo "Clearing Laravel caches (config, route, view, cache)"
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan cache:clear || true
+
 # Substitute nginx template and start services
 : ${PORT:=8080}
 export PORT
 envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf || true
 
+# Dump last lines of Laravel log to stdout to help debugging when LOG_CHANNEL isn't configured
+if [ -f storage/logs/laravel.log ]; then
+  echo "--- Laravel log (last 200 lines) ---"
+  tail -n 200 storage/logs/laravel.log || true
+  echo "--- end laravel.log ---"
+fi
 # Start php-fpm (daemon) then nginx in foreground
 php-fpm -D
 nginx -g 'daemon off;'
