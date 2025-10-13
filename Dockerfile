@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
 # build deps for compiling php extensions
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential autoconf pkg-config \
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential autoconf pkg-config libonig-dev \
 	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
 	&& docker-php-ext-install gd pdo_mysql zip intl mbstring \
 	&& apt-get purge -y --auto-remove build-essential autoconf pkg-config \
