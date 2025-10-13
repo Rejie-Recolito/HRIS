@@ -88,4 +88,4 @@ RUN mkdir -p /var/www/html/storage /var/www/html/storage/framework/cache/data /v
 	&& chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 EXPOSE 8080 9000
-CMD ["/bin/sh","-lc","envsubst '$$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && php-fpm -D && nginx -g 'daemon off;'"]
+CMD ["/bin/sh","-lc",": ${PORT:=8080} ; export PORT ; envsubst '$$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && php-fpm -D && nginx -g 'daemon off;'"]
