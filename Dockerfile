@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		# LibreOffice and helpers for docx -> pdf
 		libreoffice-core libreoffice-writer libreoffice-common libreoffice-java-common \
 		poppler-utils ghostscript fonts-dejavu-core fonts-liberation \
+		gettext \
 		# nginx so the container serves HTTP
 		nginx \
 		# runtime libs for php extensions
@@ -81,8 +82,9 @@ COPY . .
 ## copy nginx config template and start both services (php-fpm + nginx)
 COPY docker/nginx/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# ensure permissions and runtime writable dirs
-RUN chown -R www-data:www-data /var/www/html \
+## ensure storage and cache dirs exist and are writable at runtime
+RUN mkdir -p /var/www/html/storage /var/www/html/storage/framework/cache/data /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/logs /var/www/html/bootstrap/cache \
+	&& chown -R www-data:www-data /var/www/html \
 	&& chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 EXPOSE 8080 9000
