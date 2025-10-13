@@ -23,11 +23,17 @@ RUN mkdir -p \
 		storage/framework/views \
 		storage/logs \
 		bootstrap/cache \
-	&& chmod -R 0777 storage bootstrap/cache || true
+		database \
+	&& chmod -R 0777 storage bootstrap/cache database || true
+
+# Create sqlite database file so artisan (run by composer scripts) can access it during build
+RUN touch database/database.sqlite \
+	&& chmod 666 database/database.sqlite || true
 
 # Allow composer to run as root inside the container and run install (this executes artisan scripts)
 ENV APP_KEY=base64:temporarykey000000000000000000000000000=
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+# Provide DB env vars for the install step so artisan uses the sqlite file we created
+RUN DB_CONNECTION=sqlite DB_DATABASE=/app/database/database.sqlite COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 ENV APP_KEY=
 
 FROM node:20 AS assets
