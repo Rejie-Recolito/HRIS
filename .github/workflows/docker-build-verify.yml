@@ -1,0 +1,38 @@
+name: Docker build and verify assets
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t hris-ci-test:latest .
+
+      - name: Inspect image for public/build
+        run: |
+          id=$(docker create hris-ci-test:latest)
+          docker cp ${id}:/var/www/html/public ./public_from_image || true
+          docker rm -v ${id} > /dev/null || true
+          if [ -d "./public_from_image/build" ]; then
+            echo "public/build exists"
+            ls -la ./public_from_image/build
+          else
+            echo "ERROR: public/build not found in image" >&2
+            ls -la ./public_from_image || true
+            exit 1
+          fi
