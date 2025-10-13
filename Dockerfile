@@ -86,6 +86,9 @@ COPY docker/nginx/default.conf.template /etc/nginx/conf.d/default.conf.template
 RUN mkdir -p /var/www/html/storage /var/www/html/storage/framework/cache/data /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/logs /var/www/html/bootstrap/cache \
 	&& chown -R www-data:www-data /var/www/html \
 	&& chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
+## copy startup helper
+COPY docker/start.sh /usr/local/bin/docker-start.sh
+RUN chmod +x /usr/local/bin/docker-start.sh
 
 EXPOSE 8080 9000
-CMD ["/bin/sh","-lc",": ${PORT:=8080} ; export PORT ; envsubst '$$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && php-fpm -D && nginx -g 'daemon off;'"]
+CMD ["/usr/local/bin/docker-start.sh"]
