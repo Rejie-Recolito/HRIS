@@ -53,7 +53,7 @@ Route::middleware('auth')->group(function () {
      
      // User information/employee profile route
      Route::get('/add-user-information', function () {
-         return view('profile.partials.add-user-information');
+         return view('add-user-information');
      })->name('add-user-information.user');
 });
 

@@ -1,43 +1,35 @@
-FROM php:8.2-fpm
+# Multi-stage Dockerfile for Laravel + Vite
+
+FROM composer:2.6 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+FROM node:18-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --silent --no-audit --no-fund || true
+COPY . ./
+RUN npm run build
+
+FROM php:8.2-fpm-alpine
+# system deps
+RUN apk add --no-cache bash git icu-dev zlib-dev libzip-dev libpng-dev oniguruma-dev shadow curl
+# php extensions
+RUN docker-php-ext-install pdo_mysql zip intl
+
+# Install composer (already available in vendor stage, but keep composer for artisan commands)
+COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev \
-    libzip-dev \
-    unzip \
-    git \
-    curl \
-    libreoffice
-
-# Install Node.js and npm
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
-
-# PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip bcmath \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
+# copy application files
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=assets /app/public/build ./public/build
 COPY . .
 
-RUN mkdir -p storage bootstrap/cache database \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+# permissions
+RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
-RUN touch database/database.sqlite && chmod 666 database/database.sqlite
-
-# Install PHP dependencies
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
-
-# Build frontend assets
-RUN npm install && npm run build
-
-EXPOSE 8080
-
-CMD php artisan migrate --force && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=8080
+EXPOSE 9000
+CMD ["php-fpm"]
