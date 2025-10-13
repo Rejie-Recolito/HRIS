@@ -55,6 +55,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		# LibreOffice and helpers for docx -> pdf
 		libreoffice-core libreoffice-writer libreoffice-common libreoffice-java-common \
 		poppler-utils ghostscript fonts-dejavu-core fonts-liberation \
+		# nginx so the container serves HTTP
+		nginx \
 		# runtime libs for php extensions
 		libpng-dev libjpeg-dev libfreetype-dev libzip-dev zlib1g-dev libicu-dev \
 	&& rm -rf /var/lib/apt/lists/*
@@ -76,9 +78,12 @@ COPY --from=assets /app/public/build ./public/build
 # copy remaining app files from context (keeps same layout as during build)
 COPY . .
 
+## copy nginx config template and start both services (php-fpm + nginx)
+COPY docker/nginx/default.conf.template /etc/nginx/conf.d/default.conf.template
+
 # ensure permissions and runtime writable dirs
 RUN chown -R www-data:www-data /var/www/html \
 	&& chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
-EXPOSE 9000
-CMD ["php-fpm"]
+EXPOSE 8080 9000
+CMD ["/bin/sh","-lc","envsubst '$$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && php-fpm -D && nginx -g 'daemon off;'"]
