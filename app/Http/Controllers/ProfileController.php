@@ -82,8 +82,10 @@ class ProfileController extends Controller
         $path = $file->storeAs('profile_pictures', $filename, 'public');
 
         // Save the path to the user's profile (assuming a 'profile_picture' column exists)
-        $user->profile_picture = $filename;
-        $user->save();
+    $user->profile_picture = $filename;
+    $user->save();
+    // Refresh user in session
+    Auth::setUser($user->fresh());
 
         // Check if request expects JSON (AJAX request)
         if ($request->expectsJson()) {

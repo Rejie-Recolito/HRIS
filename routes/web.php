@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\EmployeeController;
@@ -7,6 +8,8 @@ use App\Http\Controllers\ServiceRecordController;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\LeaveApplicationController;
 use App\Livewire\LeaveApplicationView;
+
+Route::post('/add-user-information/update', [EmployeeController::class, 'updateUserInfo'])->name('employee.updateUserInfo');
 
 Route::get('/', function () {
     return view('welcome');
@@ -52,9 +55,7 @@ Route::middleware('auth')->group(function () {
      Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard');
      
      // User information/employee profile route
-     Route::get('/add-user-information', function () {
-         return view('add-user-information');
-     })->name('add-user-information.user');
+     Route::get('/add-user-information', [\App\Http\Controllers\EmployeeController::class, 'showUserForm'])->name('add-user-information.user');
 });
 
 require __DIR__.'/auth.php';
@@ -72,9 +73,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/service-records', [ServiceRecordController::class, 'index'])->name('service-records.index');
     Route::post('/service-records/{id}/update-status', [ServiceRecordController::class, 'updateStatus'])->name('service-records.update-status');
     Route::get('/service-record-user', [ServiceRecordController::class, 'show'])->name('service-records.show');
-    Route::get('/add-user-information', function () {
-        return view('add-user-information');
-    })->name('add-user-information.user');
 });
 
 Route::get('/service_record/{id}', function ($id) {

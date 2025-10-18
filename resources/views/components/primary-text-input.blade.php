@@ -1,10 +1,10 @@
 @props([
-'label' => 'label',
-'name' => 'name',
-// 'error'=> "",
-'type'=> 'text',
-'required'=> true,
-'options' =>[]
+    'label' => 'label',
+    'name' => 'name',
+    'value' => '',
+    'type'=> 'text',
+    'required'=> true,
+    'options' =>[]
 ])
 
 @if ($type==='select')
@@ -26,8 +26,9 @@
         type="{{ $type }}" 
         name="{{ $name }}"
         id="{{ $name }}"
-        class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" 
-        :required="{{ $required }}">
+           value="{{ old($name, $value) }}"
+           class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" 
+           @if($required) required @endif>
     @error($name) <span class="text-red-600 mt-2">{{ $message }}</span> @enderror
 </div>
 @endif

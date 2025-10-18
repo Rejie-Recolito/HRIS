@@ -11,7 +11,35 @@ class EmployeeController extends Controller
     /**
      * Show the user-facing employee information form.
      */
-
+    public function showUserForm(Request $request)
+    {
+    $employee = Employee::where('user_id', Auth::id())->first();
+    $edit = $request->boolean('edit', false);
+    return view('add-user-information', compact('employee', 'edit'));
+    }
+    public function updateUserInfo(Request $request)
+    {
+        $employee = Employee::where('user_id', Auth::id())->first();
+        if (!$employee) {
+            return redirect()->route('add-user-information.user')->with('error', 'No employee record found.');
+        }
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'job_title' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'status' => 'required|string|max:255',
+            'sex' => 'required|string|max:255',
+            'age' => 'required|integer|min:0',
+            'date_of_birth' => 'required|date',
+            'place_of_birth' => 'required|string|max:255',
+            'salary' => 'required|numeric|min:0',
+            'designation' => 'required|string|max:255',
+            'place_of_assignment' => 'required|string|max:255',
+        ]);
+        $employee->update($request->all());
+        return redirect()->route('add-user-information.user')->with('success', 'Employee information updated successfully.');
+    }
     public function index()
     {
         $employees = Employee::all(); // Fetch data using the Employee model
@@ -38,16 +66,9 @@ class EmployeeController extends Controller
         $data = $request->all();
         $data['user_id'] = Auth::id();
         Employee::create($data);
-        $employee = Employee::latest()->first();
 
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'employee' => $employee
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Employee added successfully.');
+        // Redirect to the user profile page to show the saved info (form will be hidden)
+        return redirect()->route('add-user-information.user')->with('success', 'Employee added successfully.');
     }
 
     public function edit($id)
@@ -87,9 +108,4 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
     }
 
-    public function showUserForm()
-    {
-        $employee = Employee::where('user_id', Auth::id())->first();
-        return view('add-user-information', compact('employee'));
-    }
 }

@@ -28,7 +28,12 @@
         <!-- Profile Picture Section -->
         <div class="bg-white dark:bg-[#1c1c1d] overflow-hidden shadow-sm sm:rounded-lg border-2" style="border-color: #2bb16b;">
             <div class="p-4 sm:p-6">
-                @include('profile.partials.add-profile-picture')
+                @php
+                    $profileImageUrl = ($user->profile_picture)
+                        ? asset('storage/profile_pictures/' . $user->profile_picture)
+                        : null;
+                @endphp
+                @include('profile.partials.add-profile-picture', ['profileImageUrl' => $profileImageUrl])
             </div>
         </div>
 
