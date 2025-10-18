@@ -21,17 +21,20 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
-    {
-        View::composer('admin.service_record', function ($view) {
-            $view->with('serviceRecords', ServiceRecord::all());
-        });
-        
-        // Only query notifications if the table exists
-        if (Schema::hasTable('notifications')) {
-            View::share('notifications', Notification::latest()->get());
-        } else {
-            View::share('notifications', collect()); // Empty collection as fallback
-        }
+   public function boot(): void
+{
+    if ($this->app->runningInConsole()) {
+        return;
     }
+
+    View::composer('admin.service_record', function ($view) {
+        $view->with('serviceRecords', ServiceRecord::all());
+    });
+
+    if (Schema::hasTable('notifications')) {
+        View::share('notifications', Notification::latest()->get());
+    } else {
+        View::share('notifications', collect());
+    }
+}
 }
