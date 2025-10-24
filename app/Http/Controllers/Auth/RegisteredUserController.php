@@ -45,6 +45,8 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // After registration, redirect the user to the Add User Information form
+        // so they can complete their employee profile.
+        return redirect(route('add-user-information.user', absolute: false));
     }
 }

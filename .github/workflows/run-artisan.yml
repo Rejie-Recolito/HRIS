@@ -1,0 +1,56 @@
+name: Run Artisan (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commands:
+        description: 'Artisan commands to run (semicolon-separated)'
+        required: true
+        default: 'php artisan cache:table; php artisan migrate --force; php artisan storage:link'
+
+jobs:
+  run-artisan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub (optional)
+        if: secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          docker build -t hris-artisan:latest .
+
+      - name: Run artisan commands in container
+        env:
+          # Optional: you can set APP_ENV, APP_KEY, DB_CONNECTION, DATABASE_URL, etc. as repo secrets
+          APP_ENV: ${{ secrets.APP_ENV }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          set -e
+          # split the semicolon-separated commands and run inside the built image
+          IFS=';'
+          for cmd in ${{ github.event.inputs.commands }}; do
+            trimmed=$(echo "$cmd" | sed 's/^ *//;s/ *$//')
+            if [ -n "$trimmed" ]; then
+              echo "Running: $trimmed"
+              docker run --rm \
+                -e APP_ENV="$APP_ENV" -e APP_KEY="$APP_KEY" \
+                -e DB_CONNECTION="$DB_CONNECTION" -e DB_HOST="$DB_HOST" -e DB_PORT="$DB_PORT" -e DB_DATABASE="$DB_DATABASE" -e DB_USERNAME="$DB_USERNAME" -e DB_PASSWORD="$DB_PASSWORD" \
+                hris-artisan:latest sh -lc "$trimmed"
+            fi
+          done

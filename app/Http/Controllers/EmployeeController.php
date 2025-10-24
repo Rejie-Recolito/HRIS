@@ -37,8 +37,25 @@ class EmployeeController extends Controller
 
         $data = $request->all();
         $data['user_id'] = Auth::id();
-        Employee::create($data);
-        $employee = Employee::latest()->first();
+
+        // Prevent duplicate employee records for the same user.
+        $existing = Employee::where('user_id', Auth::id())->first();
+        if ($existing) {
+            // Update existing record instead of creating a new one
+            $existing->update($data);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'employee' => $existing,
+                    'message' => 'Employee updated instead of creating duplicate.'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Employee updated successfully.');
+        }
+
+        $employee = Employee::create($data);
 
         if ($request->ajax()) {
             return response()->json([
