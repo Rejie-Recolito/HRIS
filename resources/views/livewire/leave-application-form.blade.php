@@ -1,3 +1,14 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+    use App\Models\Employee;
+
+    $employee = null;
+    if (Auth::check()) {
+        // try to load related employee by user_id
+        $employee = Employee::where('user_id', Auth::id())->first();
+    }
+@endphp
+
 <div x-data="{ typeOfLeave: '', showSickDetails: '', vacationDetails: '', showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
  
 
@@ -8,13 +19,13 @@
             <form x-ref="leaveForm"  method="POST" action="{{ route('leave.user.submit') }}" >
                 @method('POST')
                 @csrf
-                <x-primary-text-input name="lastname" label="Last Name" />
-                <x-primary-text-input name="firstname" label="First Name"/>
-                <x-primary-text-input name="middlename" label="Middle Name"/>
-                <x-primary-text-input name="date_of_filing" type="date" label="Date"/>
+                <x-primary-text-input name="lastname" label="Last Name" value="{{ old('lastname', $employee->lastname ?? '') }}" />
+                <x-primary-text-input name="firstname" label="First Name" value="{{ old('firstname', $employee->firstname ?? '') }}" />
+                <x-primary-text-input name="middlename" label="Middle Name" value="{{ old('middlename', $employee->middlename ?? '') }}" />
+                <x-primary-text-input name="date_of_filing" type="date" label="Date" />
                 <x-primary-text-input name="position" label="Position" />
-                <x-primary-text-input name="salary" type="number" label="Salary" /> 
-                <x-primary-text-input name="department" type="text" label="Office/Department" /> 
+                <x-primary-text-input name="salary" type="number" label="Salary" value="{{ old('salary', $employee->salary ?? '') }}" />
+                <x-primary-text-input name="department" type="text" label="Office/Department" value="{{ old('department', $employee->department ?? '') }}" />
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
                     <label for="type_of_leave" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Type of Leave</label>
                     <select 
@@ -25,14 +36,14 @@
                     class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
                         <option value="">Type of leave</option>
                         <option value="Vacation leave">Vacation leave</option>
-                        <option value="Mandatory/Forced Leave">Mandatory/Forced Leave</option>
-                        <option value="Sick Leave">Sick leave</option>
-                        <option value="Maternity Leave">Maternity leave</option>
-                        <option value="Paternity Leave">Paternity leave</option>
+                        <option value="Mandatory/Forced leave">Mandatory/Forced Leave</option>
+                        <option value="Sick leave">Sick leave</option>
+                        <option value="Maternity leave">Maternity leave</option>
+                        <option value="Paternity leave">Paternity leave</option>
                         <option value="Special Privilege Leave">Special Privilege Leave</option>
-                        <option value="Solo Parent Leave">Solo Parent leave</option>
-                        <option value="Study Leave">Study leave</option>
-                        <option value="10-Day VAWC Leave">10-Day VAWC leave</option>
+                        <option value="Solo Parent leave">Solo Parent leave</option>
+                        <option value="Study leave">Study leave</option>
+                        <option value="10-Day VAWC leave">10-Day VAWC leave</option>
                         <option value="Rehabilitation Privilege">Rehabilitation Privilege</option>
                         <option value="Special Leave Benefits for Women">Special Leave Benefits for Women</option>
                         <option value="Special Emergency(Calamity) Leave">Special Emergency(Calamity) Leave</option>
@@ -166,7 +177,7 @@
                     </div>
 
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
-                <x-primary-text-input name="inclusive_dates" type="text" label="Inclusive Dates" />
+                <x-primary-text-input name="inclusive_dates" type="date" label="Inclusive Dates" />
                 <div class="submit-container">
                     <button type="submit"  class="custom-submit-btn px-6 py-2 rounded-md font-medium">
                         Submit Leave Application
