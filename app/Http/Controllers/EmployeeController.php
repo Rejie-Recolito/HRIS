@@ -21,7 +21,9 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'firstname' => 'required|string|max:255',
+            'middlename' => 'required|string|max:255',
             'department' => 'required|string|max:255',
             'job_title' => 'required|string|max:255',
             'start_date' => 'required|date',
@@ -76,7 +78,9 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'firstname' => 'required|string|max:255',
+            'middlename' => 'required|string|max:255',
             'department' => 'required|string|max:255',
             'job_title' => 'required|string|max:255',
             'start_date' => 'required|date',

@@ -64,7 +64,7 @@
                         <tbody id="employeeTable">
                             @foreach($employees as $employee)
                                 <tr>
-                                    <td class="border px-2 py-1">{{ $employee->name }}</td>
+                                    <td class="border px-2 py-1">{{ $employee->lastname }} {{ $employee->firstname }} {{ $employee->middlename }}</td>
                                     <td class="border px-2 py-1">{{ $employee->department }}</td>
                                     <td class="border px-2 py-1">{{ $employee->job_title }}</td>
                                     <td class="border px-2 py-1">{{ $employee->start_date }}</td>

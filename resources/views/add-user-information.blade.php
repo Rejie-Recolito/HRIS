@@ -48,7 +48,9 @@
                     <!-- Personal Information Section -->
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold text-green-600 dark:text-green-400 mb-4">Personal Information</h3>
-                        <x-primary-text-input name="name" label="Full Name" :value="old('name', $employee->name ?? '')" />
+                        <x-primary-text-input name="lastname" label="Last Name" :value="old('lastname', $employee->lastname ?? '')" />
+                        <x-primary-text-input name="firstname" label="First Name" :value="old('firstname', $employee->firstname ?? '')" />
+                        <x-primary-text-input name="middlename" label="Middle Name" :value="old('middlename', $employee->middlename ?? '')" />
                         <x-primary-text-input name="age" type="number" label="Age" :value="old('age', $employee->age ?? '')" />
                         <x-primary-text-input name="date_of_birth" type="date" label="Date of Birth" :value="old('date_of_birth', $employee->date_of_birth ?? '')" />
                         <x-primary-text-input name="place_of_birth" label="Place of Birth" :value="old('place_of_birth', $employee->place_of_birth ?? '')" />
