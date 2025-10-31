@@ -32,10 +32,49 @@ class LeaveApplication extends Model
         'inCaseSpecialLeaveBenefits',
         'inCaseStudyLeave',
         'commutation',
+        'cert_as_of',
+        'cert_vacation',
+        'cert_sick',
+        'recommendation',
+        'recommendation_reason',
+        'approved_days_with_pay',
+        'approved_days_without_pay',
+        'approved_others',
+        'disapproved_reason',
+        'authorized_officer',
+    'authorized_officer_leave_cred',
+    'authorized_officer_recommendation',
+        'vacation_total_earned',
+        'vacation_less_this_application',
+        'vacation_balance',
+        'sick_total_earned',
+        'sick_less_this_application',
+        'sick_balance',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Attribute casting.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'total_earned' => 'integer',
+        'less_this_application' => 'integer',
+        'balance' => 'integer',
+    'vacation_total_earned' => 'integer',
+    'vacation_less_this_application' => 'integer',
+    'vacation_balance' => 'integer',
+    'sick_total_earned' => 'integer',
+    'sick_less_this_application' => 'integer',
+    'sick_balance' => 'integer',
+        'cert_as_of' => 'date',
+        'action_date' => 'date',
+        'inclusive_from' => 'date',
+        'inclusive_to' => 'date',
+    ];
 }

@@ -171,6 +171,28 @@ class LeaveApplicationController extends Controller
     $templateProcessor->setValue('inclusive_dates', $leaveApplication->inclusive_dates);
     $templateProcessor->setValue('others', $leaveApplication->others ?? '');
 
+    // New admin/action fields
+    $templateProcessor->setValue('cert_as_of', $leaveApplication->cert_as_of ? $leaveApplication->cert_as_of->format('Y-m-d') : '');
+    // Recommendation checkboxes: use separate placeholders so one doesn't overwrite the other
+    $templateProcessor->setValue('recommendation_for_approval', $leaveApplication->recommendation === 'For approval' ? '☑' : '☐');
+    $templateProcessor->setValue('recommendation_for_disapproval', $leaveApplication->recommendation === 'For disapproval' ? '☑' : '☐');
+    $templateProcessor->setValue('recommendation_reason', $leaveApplication->recommendation_reason ?? '');
+    $templateProcessor->setValue('authorized_officer_leave_cred', $leaveApplication->authorized_officer_leave_cred ?? '');
+    $templateProcessor->setValue('authorized_officer_recommendation', $leaveApplication->authorized_officer_recommendation ?? '');
+    // Separate vacation/sick placeholders
+    $templateProcessor->setValue('vacation_total_earned', isset($leaveApplication->vacation_total_earned) ? $leaveApplication->vacation_total_earned : '');
+    $templateProcessor->setValue('vacation_less_this_application', isset($leaveApplication->vacation_less_this_application) ? $leaveApplication->vacation_less_this_application : '');
+    $templateProcessor->setValue('vacation_balance', isset($leaveApplication->vacation_balance) ? $leaveApplication->vacation_balance : '');
+    $templateProcessor->setValue('sick_total_earned', isset($leaveApplication->sick_total_earned) ? $leaveApplication->sick_total_earned : '');
+    $templateProcessor->setValue('sick_less_this_application', isset($leaveApplication->sick_less_this_application) ? $leaveApplication->sick_less_this_application : '');
+    $templateProcessor->setValue('sick_balance', isset($leaveApplication->sick_balance) ? $leaveApplication->sick_balance : '');
+    $templateProcessor->setValue('approved_days_with_pay', $leaveApplication->approved_days_with_pay ?? '');
+    $templateProcessor->setValue('approved_days_without_pay', $leaveApplication->approved_days_without_pay ?? '');
+    $templateProcessor->setValue('approved_others', $leaveApplication->approved_others ?? '');
+    $templateProcessor->setValue('disapproved_reason', $leaveApplication->disapproved_reason ?? '');
+    $templateProcessor->setValue('authorized_officer', $leaveApplication->authorized_officer ?? '');
+    $templateProcessor->setValue('action_date', $leaveApplication->action_date ? $leaveApplication->action_date->format('Y-m-d') : '');
+
     // Checkbox logic
     $templateProcessor->setValue('vacation_leave', $leaveApplication->type_of_leave === 'Vacation leave' ? '☑' : '☐');
     $templateProcessor->setValue('mandatory_leave', $leaveApplication->type_of_leave === 'Mandatory/Forced leave' ? '☑' : '☐');
@@ -260,5 +282,87 @@ class LeaveApplicationController extends Controller
     $leaveApplication = LeaveApplication::findOrFail($id);
     return view('livewire.leave-application-view', compact('leaveApplication'));
 }
+
+    /**
+     * Store admin action fields for a leave application.
+     */
+    public function storeAction(Request $request, $id)
+    {
+        $leave = LeaveApplication::findOrFail($id);
+        $baseRules = [
+            'cert_as_of' => 'nullable|date',
+            'cert_vacation' => 'nullable|string|max:255',
+            'cert_sick' => 'nullable|string|max:255',
+            'authorized_officer_leave_cred' => 'nullable|string|max:255',
+            'authorized_officer_recommendation' => 'nullable|string|max:255',
+            'recommendation' => 'nullable|string|max:255',
+            'recommendation_reason' => 'nullable|string',
+            'approved_days_with_pay' => 'nullable|string|max:255',
+            'approved_days_without_pay' => 'nullable|string|max:255',
+            'approved_others' => 'nullable|string|max:255',
+            'disapproved_reason' => 'nullable|string',
+            'authorized_officer' => 'nullable|string|max:255',
+            'action_date' => 'nullable|date',
+            'inclusive_from' => 'nullable|date',
+            'inclusive_to' => 'nullable|date',
+            'cert_leave_type' => 'nullable|string|in:vacation,sick',
+        ];
+
+        $vacationRules = [
+            'vacation_total_earned' => 'nullable|integer',
+            'vacation_less_this_application' => 'nullable|integer',
+            'vacation_balance' => 'nullable|integer',
+        ];
+
+        $sickRules = [
+            'sick_total_earned' => 'nullable|integer',
+            'sick_less_this_application' => 'nullable|integer',
+            'sick_balance' => 'nullable|integer',
+        ];
+
+        // Merge rules depending on what was submitted
+        $rules = $baseRules;
+        if ($request->input('cert_leave_type') === 'vacation') {
+            $rules = array_merge($rules, $vacationRules);
+        } elseif ($request->input('cert_leave_type') === 'sick') {
+            $rules = array_merge($rules, $sickRules);
+        } else {
+            // allow legacy fields as fallback
+            $rules = array_merge($rules, [
+                'total_earned' => 'nullable|integer',
+                'less_this_application' => 'nullable|integer',
+                'balance' => 'nullable|integer',
+            ]);
+        }
+
+        $validated = $request->validate($rules);
+
+        // Fill base fields
+    $leave->fill(collect($validated)->only(array_keys($baseRules))->toArray());
+
+        // Fill appropriate credit group
+        if (!empty($validated['vacation_total_earned']) || !empty($validated['vacation_less_this_application']) || isset($validated['vacation_balance'])) {
+            $leave->vacation_total_earned = $validated['vacation_total_earned'] ?? null;
+            $leave->vacation_less_this_application = $validated['vacation_less_this_application'] ?? null;
+            $leave->vacation_balance = $validated['vacation_balance'] ?? null;
+        }
+
+        if (!empty($validated['sick_total_earned']) || !empty($validated['sick_less_this_application']) || isset($validated['sick_balance'])) {
+            $leave->sick_total_earned = $validated['sick_total_earned'] ?? null;
+            $leave->sick_less_this_application = $validated['sick_less_this_application'] ?? null;
+            $leave->sick_balance = $validated['sick_balance'] ?? null;
+        }
+
+        // Legacy fallback
+        if (isset($validated['total_earned']) || isset($validated['less_this_application']) || isset($validated['balance'])) {
+            $leave->total_earned = $validated['total_earned'] ?? $leave->total_earned;
+            $leave->less_this_application = $validated['less_this_application'] ?? $leave->less_this_application;
+            $leave->balance = $validated['balance'] ?? $leave->balance;
+        }
+
+        $leave->save();
+
+        return redirect()->back()->with('success', 'Action details saved.');
+    }
 
 }

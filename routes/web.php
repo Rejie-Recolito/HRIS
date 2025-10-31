@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/leave/{id}/accept', [\App\Http\Controllers\LeaveApplicationController::class, 'accept'])->name('leave.accept');
     Route::post('/leave/{id}/approve', [\App\Http\Controllers\LeaveApplicationController::class, 'approve'])->name('leave.approve');
     Route::post('/leave/{id}/deny', [\App\Http\Controllers\LeaveApplicationController::class, 'deny'])->name('leave.deny');
+    Route::post('/leave/{id}/action', [\App\Http\Controllers\LeaveApplicationController::class, 'storeAction'])->name('leave.action.update');
     Route::delete('/leave/{id}/delete', [\App\Http\Controllers\LeaveApplicationController::class, 'delete'])->name('leave.delete');
     Route::get('/leave/generateDocx/{id}', [\App\Http\Controllers\LeaveApplicationController::class, 'generateDocx'])->name('leave.generate-docx');
 });

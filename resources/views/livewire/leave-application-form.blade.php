@@ -9,7 +9,7 @@
     }
 @endphp
 
-<div x-data="{ typeOfLeave: '', showSickDetails: '', vacationDetails: '', showOverlay: false, submitForm() { this.$refs.leaveForm.submit(); } }">
+<div x-data="{ typeOfLeave: '', showSickDetails: '', vacationDetails: '', showOverlay: false, inclusiveFrom: '', inclusiveTo: '', formatInclusive() { return (this.inclusiveFrom || this.inclusiveTo) ? `From:${this.inclusiveFrom} - To:${this.inclusiveTo}` : '' }, submitForm() { this.$refs.leaveForm.submit(); } }">
  
 
     {{-- Leave Application Form Section --}}
@@ -177,7 +177,19 @@
                     </div>
 
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
-                <x-primary-text-input name="inclusive_dates" type="date" label="Inclusive Dates" />
+
+                <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                    <label for="inclusive_from" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Inclusive Dates</label>
+                    <div class="flex-1 flex gap-2 items-center">
+                        <span class="mx-1">From:</span>
+                        <input id="inclusive_from" name="inclusive_from" type="date" x-model="inclusiveFrom" class="border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                        <span class="mx-1">To:</span>
+                        <input id="inclusive_to" name="inclusive_to" type="date" x-model="inclusiveTo" class="border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                    </div>
+                </div>
+
+                <!-- hidden combined field submitted as inclusive_dates -->
+                <input type="hidden" name="inclusive_dates" :value="formatInclusive()" />
                 <div class="submit-container">
                     <button type="submit"  class="custom-submit-btn px-6 py-2 rounded-md font-medium">
                         Submit Leave Application
