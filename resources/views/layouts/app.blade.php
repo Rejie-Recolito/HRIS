@@ -25,6 +25,9 @@
             
             @include('layouts.navigation')
 
+            <!-- Spacer to offset fixed navigation height -->
+            <div class="h-16"></div>
+
             <!-- Page Heading -->
             @hasSection('header')
                 <header class="bg-[#198f51] text-white dark:bg-[#198F51] shadow">
