@@ -27,23 +27,23 @@
                 <x-primary-text-input name="salary" type="number" label="Salary" value="{{ old('salary', $employee->salary ?? '') }}" />
                 <x-primary-text-input name="department" type="text" label="Office/Department" value="{{ old('department', $employee->department ?? '') }}" />
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
-                    <label for="type_of_leave" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Type of Leave</label>
+                    <label for="type_of_leave" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Leave Type :</label>
                     <select 
                     name="type_of_leave"
                     id="type_of_leave"
                     x-model="typeOfLeave" 
                     :required="true"
                     class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
-                        <option value="">Type of leave</option>
-                        <option value="Vacation leave">Vacation leave</option>
+                        <option value="">Select Type of Leave</option>
+                        <option value="Vacation leave">Vacation Leave</option>
                         <option value="Mandatory/Forced leave">Mandatory/Forced Leave</option>
-                        <option value="Sick leave">Sick leave</option>
-                        <option value="Maternity leave">Maternity leave</option>
-                        <option value="Paternity leave">Paternity leave</option>
+                        <option value="Sick leave">Sick Leave</option>
+                        <option value="Maternity leave">Maternity Leave</option>
+                        <option value="Paternity leave">Paternity Leave</option>
                         <option value="Special Privilege Leave">Special Privilege Leave</option>
-                        <option value="Solo Parent leave">Solo Parent leave</option>
-                        <option value="Study leave">Study leave</option>
-                        <option value="10-Day VAWC leave">10-Day VAWC leave</option>
+                        <option value="Solo Parent leave">Solo Parent Leave</option>
+                        <option value="Study leave">Study Leave</option>
+                        <option value="10-Day VAWC leave">10-Day VAWC Leave</option>
                         <option value="Rehabilitation Privilege">Rehabilitation Privilege</option>
                         <option value="Special Leave Benefits for Women">Special Leave Benefits for Women</option>
                         <option value="Special Emergency(Calamity) Leave">Special Emergency(Calamity) Leave</option>
@@ -166,7 +166,7 @@
                     class="mb-4 flex flex-col sm:flex-row sm:items-center">
                     <label 
                     for="commutation"
-                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Commutation</label>
+                     class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Commutation :</label>
                     <select 
                     name="commutation"
                     id="commutation"
@@ -178,13 +178,21 @@
 
                 <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
 
-                <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
-                    <label for="inclusive_from" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Inclusive Dates</label>
-                    <div class="flex-1 flex gap-2 items-center">
-                        <span class="mx-1">From:</span>
-                        <input id="inclusive_from" name="inclusive_from" type="date" x-model="inclusiveFrom" class="border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
-                        <span class="mx-1">To:</span>
-                        <input id="inclusive_to" name="inclusive_to" type="date" x-model="inclusiveTo" class="border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                <div class="mb-4">
+                    <label for="inclusive_from" class="w-full font-bold custom-label mb-2 whitespace-nowrap">Inclusive Dates</label>
+
+                    <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                            <label for="inclusive_from" class="w-full sm:w-1/3 font-medium custom-label sm:pr-12 sm:text-left mb-1 sm:mb-0">From :</label>
+                        <div class="flex-1">
+                            <input id="inclusive_from" name="inclusive_from" type="date" x-model="inclusiveFrom" class="w-full border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                        </div>
+                    </div>
+
+                    <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
+                            <label for="inclusive_to" class="w-full sm:w-1/3 font-medium custom-label sm:pr-12 sm:text-left mb-1 sm:mb-0">To :</label>
+                        <div class="flex-1">
+                            <input id="inclusive_to" name="inclusive_to" type="date" x-model="inclusiveTo" class="w-full border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                        </div>
                     </div>
                 </div>
 
