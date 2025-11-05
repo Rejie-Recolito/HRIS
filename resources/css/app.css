@@ -312,6 +312,77 @@ textarea.border-gray-300:focus {
     box-shadow: 0 0 0 3px rgba(25, 143, 81, 0.1) !important;
 }
 
+/* Shared admin table styling (moved from inline view styles) */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+.admin-table th,
+.admin-table td {
+    border: 1px solid #198f51;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: middle;
+}
+.admin-table thead tr {
+    background-color: #198f51;
+    color: #ffffff;
+    font-weight: 600;
+}
+.admin-table tbody tr:nth-child(even) {
+         background-color: transparent; 
+}
+.admin-table tbody tr:hover {
+    background-color: #e3f9ec;
+}
+
+/* Dark mode adjustments for admin tables */
+.dark .admin-table {
+    color: #ffffff; 
+}
+.dark .admin-table th,
+.dark .admin-table td {
+    border-color: #198f51;
+    color: #ffffff;
+}
+.dark .admin-table thead tr {
+    background-color: #198f51; 
+    color: #ffffff;
+}
+
+.dark .admin-table tbody tr:hover {
+    background-color: #486da90f; /* subtle hover highlight in dark */
+}
+
+/* Action buttons for admin tables (Edit/Delete) */
+.btn-edit {
+    @apply text-white px-2 py-0.5 mr-2 rounded-xl inline-block;
+    background-color: #253D90;
+}
+.btn-edit:hover {
+    filter: brightness(0.95);
+}
+
+.btn-delete {
+    @apply text-white px-2 py-0.5 rounded-xl inline-block;
+    background-color: #8f1928;
+}
+.btn-delete:hover {
+    filter: brightness(0.95);
+}
+
+/* Utility spacing for admin tables when needed */
+.admin-table.mb-6 { margin-bottom: 1.5rem; }
+
+/* Card background utility for admin/content cards */
+.card-bg {
+    @apply bg-white overflow-hidden shadow-sm sm:rounded-lg;
+}
+.dark .card-bg {
+    background-color: #282828 !important;
+}
+
 /* Profile and Password Form Input Fields */
 .border-gray-300,
 input.border-gray-300,
