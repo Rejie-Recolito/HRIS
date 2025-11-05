@@ -39,43 +39,42 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="card-bg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h2 class="text-xl font-bold mb-4">Employees</h2>
+                    <h2 class="text-xl font-bold mb-4">LGU-Bulusan Employees</h2>
 
 
                     <!-- Filter Input -->
                     <div class="mb-4">
                         <input type="text" id="employeeFilter" placeholder="Search employees..." class="w-full border-gray-300 rounded-md shadow-sm text-gray-900">
                     </div>
-
-                    <table class="min-w-full border text-sm mb-6">
+                    <table class="admin-table mb-6">
                         <thead>
-                            <tr class="bg-gray-200 dark:bg-gray-700">
-                                <th class="border px-2 py-1">Name</th>
-                                <th class="border px-2 py-1">Department</th>
-                                <th class="border px-2 py-1">Job Title</th>
-                                <th class="border px-2 py-1">Start Date</th>
-                                <th class="border px-2 py-1">Status</th>
-                                <th class="border px-2 py-1">Sex</th>
-                                <th class="border px-2 py-1">Actions</th>
+                            <tr>
+                                <th>NAME</th>
+                                <th>DEPARTMENT</th>
+                                <th>JOB TITLE</th>
+                                <th>START DATE</th>
+                                <th>STATUS</th>
+                                <th>SEX</th>
+                                <th>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="employeeTable">
                             @foreach($employees as $employee)
                                 <tr>
-                                    <td class="border px-2 py-1">{{ $employee->lastname }} {{ $employee->firstname }} {{ $employee->middlename }}</td>
-                                    <td class="border px-2 py-1">{{ $employee->department }}</td>
-                                    <td class="border px-2 py-1">{{ $employee->job_title }}</td>
-                                    <td class="border px-2 py-1">{{ $employee->start_date }}</td>
-                                    <td class="border px-2 py-1">{{ $employee->status }}</td>
-                                    <td class="border px-2 py-1">{{ $employee->sex }}</td>
-                                    <td class="border px-2 py-1">
-                                        <a href="{{ route('employees.edit', $employee->id) }}" class="bg-blue-600 text-white px-2 py-1 rounded">Edit</a>
+                                    <td>{{ $employee->lastname }} {{ $employee->firstname }} {{ $employee->middlename }}</td>
+                                    <td>{{ $employee->department }}</td>
+                                    <td>{{ $employee->job_title }}</td>
+                                    <td>{{ $employee->start_date }}</td>
+                                    <td>{{ $employee->status }}</td>
+                                    <td>{{ $employee->sex }}</td>
+                                    <td>
+                                            <a href="{{ route('employees.edit', $employee->id) }}" class="btn-edit">Edit</a>
                                         <form method="POST" action="{{ route('employees.destroy', $employee->id) }}" style="display:inline-block;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
+                                                <button type="submit" class="btn-delete">Delete</button>
                                         </form>
                                     </td>
                                 </tr>
