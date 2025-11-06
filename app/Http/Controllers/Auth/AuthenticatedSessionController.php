@@ -26,14 +26,24 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // If the user is not approved, log them out and return with error
+        $user = Auth::user();
+        if ($user && ! $user->is_approved) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Your account is not yet approved by an administrator.',
+            ]);
+        }
+
         $request->session()->regenerate();
 
-            // Redirect admin users to admin dashboard
-            $user = Auth::user();
-            if ($user && $user->is_admin) {
-                return redirect()->intended(route('admin.dashboard'));
-            }
-            return redirect()->intended(route('dashboard', absolute: false));
+        // Redirect admin users to admin dashboard
+        if ($user && $user->is_admin) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

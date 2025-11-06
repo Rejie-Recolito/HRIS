@@ -51,6 +51,10 @@ Route::middleware('auth')->group(function () {
     
      // Admin dashboard route
      Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+    // Admin user approval routes
+    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserApprovalController::class, 'index'])->name('admin.users');
+    Route::post('/admin/users/{user}/approve', [\App\Http\Controllers\Admin\UserApprovalController::class, 'approve'])->name('admin.users.approve');
      
      // User information/employee profile route (shows the form with existing data if present)
      Route::get('/add-user-information', [\App\Http\Controllers\EmployeeController::class, 'showUserForm'])

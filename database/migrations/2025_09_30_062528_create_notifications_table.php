@@ -12,10 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->id(); // Change UUID to auto-incrementing integer
+            // Use UUID id to match Laravel's notifications implementation
+            $table->uuid('id')->primary();
             $table->string('type');
             $table->morphs('notifiable');
-            $table->text('data');
+            // Store notification payload as JSON
+            $table->json('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });

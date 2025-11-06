@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\NewUserForApproval;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,14 +41,18 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_approved' => false,
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // Notify all admins that a new user needs approval
+        $admins = User::where('is_admin', true)->get();
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, new NewUserForApproval($user));
+        }
 
-        // After registration, redirect the user to the Add User Information form
-        // so they can complete their employee profile.
-        return redirect(route('add-user-information.user', absolute: false));
+        // Don't auto-login - user must be approved first
+        return redirect()->route('login')->with('status', 'Registration successful. Your account must be approved by an administrator before you can sign in.');
     }
 }

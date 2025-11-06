@@ -36,5 +36,17 @@ class AppServiceProvider extends ServiceProvider
     } else {
         View::share('notifications', collect());
     }
+
+    // Share pending users count for admin approval badge
+    if (Schema::hasTable('users')) {
+        try {
+            $pendingCount = \App\Models\User::where('is_approved', false)->count();
+            View::share('pendingUsersCount', $pendingCount);
+        } catch (\Throwable $e) {
+            View::share('pendingUsersCount', 0);
+        }
+    } else {
+        View::share('pendingUsersCount', 0);
+    }
 }
 }

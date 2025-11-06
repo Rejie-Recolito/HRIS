@@ -61,6 +61,16 @@
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.users')">
+                                <div class="flex items-center">
+                                    <span>{{ __('APPROVE ACCOUNTS') }}</span>
+                                    @if(!empty($pendingUsersCount) && $pendingUsersCount > 0)
+                                        <span class="ms-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">{{ $pendingUsersCount }}</span>
+                                    @endif
+                                </div>
+                            </x-nav-link>
+                        </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('dtr')" :active="request()->routeIs('dtr')">
                                 {{ __('DTR') }}
                             </x-nav-link>
@@ -237,6 +247,22 @@
                 </div>
             </x-responsive-nav-link>
         </div>
+
+        @if(Auth::user() && Auth::user()->is_admin)
+            <div class="pt-2 pb-3 space-y-1">
+                <x-responsive-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.users')">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>{{ __('Approve Accounts') }}</span>
+                        @if(!empty($pendingUsersCount) && $pendingUsersCount > 0)
+                            <span class="ms-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">{{ $pendingUsersCount }}</span>
+                        @endif
+                    </div>
+                </x-responsive-nav-link>
+            </div>
+        @endif
 
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">

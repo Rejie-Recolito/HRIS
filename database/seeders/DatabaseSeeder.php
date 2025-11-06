@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'admin@example.com',
                 'password' => bcrypt('admin123'), // Default password
                     'is_admin' => true,
+                    'is_approved' => true,
             ]);
     }
 }
