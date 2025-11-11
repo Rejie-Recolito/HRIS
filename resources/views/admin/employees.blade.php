@@ -71,6 +71,7 @@
                                     <td>{{ $employee->sex }}</td>
                                     <td>
                                             <a href="{{ route('employees.edit', $employee->id) }}" class="btn-edit">Edit</a>
+                                            <a href="{{ route('employees.leave_card', $employee->id) }}" class="btn-view ml-2">View Leave Card</a>
                                         <form method="POST" action="{{ route('employees.destroy', $employee->id) }}" style="display:inline-block;">
                                             @csrf
                                             @method('DELETE')

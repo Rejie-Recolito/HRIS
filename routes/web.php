@@ -55,6 +55,10 @@ Route::middleware('auth')->group(function () {
     // Admin user approval routes
     Route::get('/admin/users', [\App\Http\Controllers\Admin\UserApprovalController::class, 'index'])->name('admin.users');
     Route::post('/admin/users/{user}/approve', [\App\Http\Controllers\Admin\UserApprovalController::class, 'approve'])->name('admin.users.approve');
+    
+    // Leave card (assign/view leave credits for employees)
+    Route::get('/employees/{id}/leave-card', [\App\Http\Controllers\LeaveCreditController::class, 'show'])->name('employees.leave_card');
+    Route::post('/employees/{id}/leave-card', [\App\Http\Controllers\LeaveCreditController::class, 'store'])->name('employees.leave_card.store');
      
      // User information/employee profile route (shows the form with existing data if present)
      Route::get('/add-user-information', [\App\Http\Controllers\EmployeeController::class, 'showUserForm'])
