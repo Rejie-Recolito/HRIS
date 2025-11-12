@@ -6,6 +6,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\LeaveApplication;
 use Illuminate\Support\Facades\Auth;
+use App\Models\LeaveCredit;
+use App\Models\Employee;
 
 
 class LeaveApplicationForm extends Component
@@ -48,6 +50,24 @@ class LeaveApplicationForm extends Component
 
         // Debugging: Log the last application
         logger()->info('Last Application:', ['lastApplication' => $this->lastApplication]);
+    }
+
+    /**
+     * Get the current leave credits totals for the authenticated user's employee record.
+     * Returns an array with 'vacation' and 'sick' integer totals.
+     */
+    public function getLeaveTotalsProperty()
+    {
+        $employee = Employee::where('user_id', Auth::id())->first();
+        if (! $employee) {
+            return ['vacation' => 0, 'sick' => 0];
+        }
+
+        $credits = LeaveCredit::where('employee_id', $employee->id)->get();
+        return [
+            'vacation' => (int) $credits->where('type', 'vacation')->sum('amount'),
+            'sick' => (int) $credits->where('type', 'sick')->sum('amount'),
+        ];
     }
 
     public function submit()

@@ -15,6 +15,18 @@
     {{-- Leave Application Form Section --}}
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
         <div class="form-container">
+            @if($employee)
+                <div class="mb-4 p-4 bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-gray-500">Current Leave Credits</div>
+                            <div class="text-lg font-semibold">Vacation: <span class="text-green-600">{{ $this->leaveTotals['vacation'] }}</span></div>
+                            <div class="text-lg font-semibold">Sick: <span class="text-green-600">{{ $this->leaveTotals['sick'] }}</span></div>
+                        </div>
+                        <div class="text-sm text-gray-400">(Totals include past assignments and consumption)</div>
+                    </div>
+                </div>
+            @endif
             {{-- x-ref="leaveForm" --}}
             <form x-ref="leaveForm"  method="POST" action="{{ route('leave.user.submit') }}" >
                 @method('POST')

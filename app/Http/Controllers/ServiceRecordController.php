@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\AdminNotification;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ServiceRecordController extends Controller
 {
@@ -38,6 +39,7 @@ class ServiceRecordController extends Controller
         $admin = User::where('is_admin', true)->first();
         if ($admin) {
             $admin->notifications()->create([
+                'id' => (string) Str::uuid(),
                 'type' => AdminNotification::class,
                 'data' => [
                     'message' => Auth::user()->name . ' has requested a service record.',

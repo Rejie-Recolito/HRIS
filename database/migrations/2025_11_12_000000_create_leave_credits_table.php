@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            // optional FK - employee table is named 'employee' in this app
+            // optional FK - refer to the existing 'employee' table (singular)
             $table->foreign('employee_id')->references('id')->on('employee')->onDelete('cascade');
         });
     }

@@ -8,6 +8,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\AdminNotification;
 use Illuminate\Support\Facades\Auth;
+use App\Models\LeaveCredit;
+use App\Models\Employee;
+use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade as PDF;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Barryvdh\DomPDF\PDF as DomPDFPDF;
@@ -24,9 +27,15 @@ class LeaveApplicationController extends Controller
     {
         $leave = LeaveApplication::findOrFail($id);
         if ($leave->status === 'Under Review') {
+            // Ensure consumption is performed (idempotent). If specific per-category
+            // "less_this_application" fields are not set, fall back to the
+            // request's number_of_days when appropriate.
+            $this->performConsumption($leave);
+
             $leave->status = 'Approved';
             $leave->save();
             $this->leaveApplications = LeaveApplication::all();
+
             return redirect()->back()->with('success');
         }
     }
@@ -39,7 +48,10 @@ class LeaveApplicationController extends Controller
     public function deny($id)
     {
         $leave = LeaveApplication::findOrFail($id);
-        if ($leave->status === 'Under Review') {
+        if ($leave->status === 'Under Review' || $leave->status === 'Approved') {
+            // If already approved, restore consumed credits
+            $this->restoreConsumedCredits($leave);
+
             $leave->status = 'Denied';
             $leave->save();
             $this->leaveApplications = LeaveApplication::all();
@@ -91,6 +103,7 @@ class LeaveApplicationController extends Controller
         if ($admin) {
             
             $admin->notifications()->create([
+                'id' => (string) Str::uuid(),
                 'type' => AdminNotification::class,
                 'data' => [
                     'message' => Auth::user()->name . ' has requested a leave.',
@@ -125,8 +138,149 @@ class LeaveApplicationController extends Controller
     public function delete($id)
     {
         $leave = LeaveApplication::findOrFail($id);
+        // restore any consumed credits before deleting
+        $this->restoreConsumedCredits($leave);
         $leave->delete();
         return view('admin.leave')->with('success', 'Leave application deleted successfully.');
+    }
+
+    /**
+     * Restore consumed credits that were created when a leave was approved.
+     * This creates compensating positive LeaveCredit rows tied to the same leave application
+     * to keep an audit trail instead of removing the original consumption rows.
+     */
+    protected function restoreConsumedCredits(LeaveApplication $leave)
+    {
+        if (! $leave->user_id) return;
+
+        $employee = Employee::where('user_id', $leave->user_id)->first();
+        if (! $employee) return;
+
+        $consumptions = LeaveCredit::where('employee_id', $employee->id)
+            ->where('source_type', LeaveApplication::class)
+            ->where('source_id', $leave->id)
+            ->where('amount', '<', 0)
+            ->get();
+
+        foreach ($consumptions as $c) {
+            // skip if a reversal already exists for this source/type
+            $exists = LeaveCredit::where('employee_id', $employee->id)
+                ->where('source_type', LeaveApplication::class)
+                ->where('source_id', $leave->id)
+                ->where('type', $c->type)
+                ->where('amount', '>', 0)
+                ->where('notes', 'like', '%Reversal for leave_application:%')
+                ->exists();
+
+            if ($exists) continue;
+
+            LeaveCredit::create([
+                'employee_id' => $employee->id,
+                'type' => $c->type,
+                'amount' => -1 * $c->amount, // negate the negative consumption -> positive restore
+                'assigned_by' => Auth::id(),
+                'notes' => 'Reversal for leave_application:' . $leave->id,
+                'source_type' => LeaveApplication::class,
+                'source_id' => $leave->id,
+            ]);
+        }
+    }
+
+    /**
+     * Perform consumption of leave credits for the given leave application.
+     * Creates negative LeaveCredit entries for vacation and/or sick as needed.
+     * Idempotent: it won't create duplicate consumption rows for the same leave.
+     */
+    protected function performConsumption(LeaveApplication $leave)
+    {
+        if (! $leave->user_id) {
+            return;
+        }
+
+        $employee = Employee::where('user_id', $leave->user_id)->first();
+        if (! $employee) {
+            return;
+        }
+
+        $marker = 'leave_application:' . $leave->id;
+
+        // Determine how many days to consume per category.
+        // Prefer explicit per-category fields. If neither explicit field is set,
+        // only apply the fallback number_of_days to the category that matches
+        // the leave's type (e.g. 'Vacation leave' -> vacation). This avoids
+        // consuming sick leave when the user did not request sick leave.
+        $fallbackDays = (int) ($leave->number_of_days ?? 0);
+
+        $vacationExplicit = isset($leave->vacation_less_this_application) && $leave->vacation_less_this_application !== null;
+        $sickExplicit = isset($leave->sick_less_this_application) && $leave->sick_less_this_application !== null;
+
+        $appliesVacation = false;
+        $appliesSick = false;
+
+        if ($vacationExplicit) {
+            $appliesVacation = true;
+        }
+        if ($sickExplicit) {
+            $appliesSick = true;
+        }
+
+        if (! $vacationExplicit && ! $sickExplicit) {
+            // decide based on leave type string
+            $type = strtolower((string) $leave->type_of_leave);
+            if (strpos($type, 'vacation') !== false) {
+                $appliesVacation = true;
+            } elseif (strpos($type, 'sick') !== false) {
+                $appliesSick = true;
+            } else {
+                // unknown/other leave type: default to vacation only (safer)
+                $appliesVacation = true;
+            }
+        }
+
+        $consumedVac = $vacationExplicit ? (int) $leave->vacation_less_this_application : ($appliesVacation ? $fallbackDays : 0);
+        $consumedSick = $sickExplicit ? (int) $leave->sick_less_this_application : ($appliesSick ? $fallbackDays : 0);
+
+        // Vacation consumption
+        if ($consumedVac > 0) {
+            $exists = LeaveCredit::where('employee_id', $employee->id)
+                ->where('source_type', LeaveApplication::class)
+                ->where('source_id', $leave->id)
+                ->where('type', 'vacation')
+                ->exists();
+
+            if (! $exists) {
+                LeaveCredit::create([
+                    'employee_id' => $employee->id,
+                    'type' => 'vacation',
+                    'amount' => -1 * $consumedVac,
+                    'assigned_by' => Auth::id(),
+                    'notes' => 'Consumed for ' . $marker,
+                    'source_type' => LeaveApplication::class,
+                    'source_id' => $leave->id,
+                ]);
+            }
+        }
+
+        // Sick consumption
+        if ($consumedSick > 0) {
+            $exists = LeaveCredit::where('employee_id', $employee->id)
+                ->where('source_type', LeaveApplication::class)
+                ->where('source_id', $leave->id)
+                ->where('type', 'sick')
+                ->exists();
+
+            if (! $exists) {
+                LeaveCredit::create([
+                    'employee_id' => $employee->id,
+                    'type' => 'sick',
+                    'amount' => -1 * $consumedSick,
+                    'assigned_by' => Auth::id(),
+                    'notes' => 'Consumed for ' . $marker,
+                    'source_type' => LeaveApplication::class,
+                    'source_id' => $leave->id,
+                ]);
+            }
+        }
     }
 
     public function downloadAllPdf()
@@ -136,17 +290,7 @@ class LeaveApplicationController extends Controller
         return $pdf->download('leave_applications.pdf');
     }
 
-    public function downloadPdf($id)
-    {
-        // Fetch the specific leave application by ID
-        $leave = LeaveApplication::findOrFail($id);
-
-        // Generate the PDF using the view and the leave application data
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.leave_applications', compact('leave'));
-
-        // Return the PDF for download
-        return $pdf->download('leave_application_' . $id . '.pdf');
-    }
+    
 
    public function generateDocx($id)
 {
@@ -158,6 +302,12 @@ class LeaveApplicationController extends Controller
 
     $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
     $leaveApplication = \App\Models\LeaveApplication::findOrFail($id);
+
+    // Perform consumption when generating the document. This is idempotent
+    // so repeated downloads won't duplicate consumption.
+    if (method_exists($this, 'performConsumption')) {
+        $this->performConsumption($leaveApplication);
+    }
 
     // Fill placeholders
     $templateProcessor->setValue('lastname', $leaveApplication->lastname);
@@ -340,17 +490,45 @@ class LeaveApplicationController extends Controller
         // Fill base fields
     $leave->fill(collect($validated)->only(array_keys($baseRules))->toArray());
 
-        // Fill appropriate credit group
-        if (!empty($validated['vacation_total_earned']) || !empty($validated['vacation_less_this_application']) || isset($validated['vacation_balance'])) {
-            $leave->vacation_total_earned = $validated['vacation_total_earned'] ?? null;
-            $leave->vacation_less_this_application = $validated['vacation_less_this_application'] ?? null;
-            $leave->vacation_balance = $validated['vacation_balance'] ?? null;
+        // Fill appropriate credit group (we'll compute balances server-side)
+        if ($request->input('cert_leave_type') === 'vacation' || isset($validated['vacation_total_earned']) || isset($validated['vacation_less_this_application'])) {
+            // determine total earned: prefer validated value, fall back to existing leave record or employee leave credits
+            $totalVacation = isset($validated['vacation_total_earned']) ? (int) $validated['vacation_total_earned'] : ($leave->vacation_total_earned ?? 0);
+
+            // if there's an associated employee, derive current total from leave_credits
+            if ($leave->user_id) {
+                $employee = Employee::where('user_id', $leave->user_id)->first();
+                if ($employee) {
+                    $credits = LeaveCredit::where('employee_id', $employee->id)->get();
+                    $totalVacation = (int) $credits->where('type', 'vacation')->sum('amount');
+                }
+            }
+
+            $lessVacation = isset($validated['vacation_less_this_application']) ? (int) $validated['vacation_less_this_application'] : ($leave->vacation_less_this_application ?? 0);
+            $balanceVacation = max(0, $totalVacation - $lessVacation);
+
+            $leave->vacation_total_earned = $totalVacation;
+            $leave->vacation_less_this_application = $lessVacation;
+            $leave->vacation_balance = $balanceVacation;
         }
 
-        if (!empty($validated['sick_total_earned']) || !empty($validated['sick_less_this_application']) || isset($validated['sick_balance'])) {
-            $leave->sick_total_earned = $validated['sick_total_earned'] ?? null;
-            $leave->sick_less_this_application = $validated['sick_less_this_application'] ?? null;
-            $leave->sick_balance = $validated['sick_balance'] ?? null;
+        if ($request->input('cert_leave_type') === 'sick' || isset($validated['sick_total_earned']) || isset($validated['sick_less_this_application'])) {
+            $totalSick = isset($validated['sick_total_earned']) ? (int) $validated['sick_total_earned'] : ($leave->sick_total_earned ?? 0);
+
+            if ($leave->user_id) {
+                $employee = Employee::where('user_id', $leave->user_id)->first();
+                if ($employee) {
+                    $credits = LeaveCredit::where('employee_id', $employee->id)->get();
+                    $totalSick = (int) $credits->where('type', 'sick')->sum('amount');
+                }
+            }
+
+            $lessSick = isset($validated['sick_less_this_application']) ? (int) $validated['sick_less_this_application'] : ($leave->sick_less_this_application ?? 0);
+            $balanceSick = max(0, $totalSick - $lessSick);
+
+            $leave->sick_total_earned = $totalSick;
+            $leave->sick_less_this_application = $lessSick;
+            $leave->sick_balance = $balanceSick;
         }
 
         // Legacy fallback

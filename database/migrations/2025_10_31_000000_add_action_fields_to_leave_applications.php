@@ -41,7 +41,7 @@ class AddActionFieldsToLeaveApplications extends Migration
     public function down()
     {
         Schema::table('leave_applications', function (Blueprint $table) {
-            $table->dropColumn([
+            $cols = [
                 'cert_as_of',
                 'cert_vacation',
                 'cert_sick',
@@ -58,7 +58,17 @@ class AddActionFieldsToLeaveApplications extends Migration
                 'action_date',
                 'inclusive_from',
                 'inclusive_to',
-            ]);
+            ];
+
+            foreach ($cols as $c) {
+                if (Schema::hasColumn('leave_applications', $c)) {
+                    try {
+                        $table->dropColumn($c);
+                    } catch (\Exception $e) {
+                        // SQLite may not support dropping columns directly; ignore and continue
+                    }
+                }
+            }
         });
     }
 }

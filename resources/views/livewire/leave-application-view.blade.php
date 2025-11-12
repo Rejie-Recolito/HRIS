@@ -109,7 +109,14 @@
                         </div>
 
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="border p-3">
+                            <div class="border p-3" x-data="{
+                                vacationTotal: {{ $vacationTotal ?? 0 }},
+                                sickTotal: {{ $sickTotal ?? 0 }},
+                                vacationLess: Number('{{ old('vacation_less_this_application', $leaveApplication->vacation_less_this_application ?? 0) }}'),
+                                sickLess: Number('{{ old('sick_less_this_application', $leaveApplication->sick_less_this_application ?? 0) }}'),
+                                get vacationBalance() { return this.vacationTotal - (Number(this.vacationLess) || 0) },
+                                get sickBalance() { return this.sickTotal - (Number(this.sickLess) || 0) }
+                            }">
                                 <h4 class="font-medium mb-2">Leave Credits</h4>
 
                                 <!-- Vacation credits panel -->
@@ -117,15 +124,15 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2">Total Earned (Vacation)</td>
-                                            <td><input type="number" name="vacation_total_earned" class="border-gray-300 input-field-border custom-input rounded-md w-full" value="{{ old('vacation_total_earned', $leaveApplication->vacation_total_earned) }}" /></td>
+                                            <td><input type="number" name="vacation_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100" x-bind:value="vacationTotal" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2">Less this application (Vacation)</td>
-                                            <td><input type="number" name="vacation_less_this_application" class="border-gray-300 input-field-border custom-input rounded-md w-full" value="{{ old('vacation_less_this_application', $leaveApplication->vacation_less_this_application) }}" /></td>
+                                            <td><input type="number" name="vacation_less_this_application" x-model.number="vacationLess" class="border-gray-300 input-field-border custom-input rounded-md w-full" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2">Balance (Vacation)</td>
-                                            <td><input type="number" name="vacation_balance" class="border-gray-300 input-field-border custom-input rounded-md w-full" value="{{ old('vacation_balance', $leaveApplication->vacation_balance) }}" /></td>
+                                            <td><input type="number" name="vacation_balance" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100" x-bind:value="vacationBalance" /></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -135,15 +142,15 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2">Total Earned (Sick)</td>
-                                            <td><input type="number" name="sick_total_earned" class="border-gray-300 input-field-border custom-input rounded-md w-full" value="{{ old('sick_total_earned', $leaveApplication->sick_total_earned) }}" /></td>
+                                            <td><input type="number" name="sick_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100" x-bind:value="sickTotal" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2">Less this application (Sick)</td>
-                                            <td><input type="number" name="sick_less_this_application" class="border-gray-300 input-field-border custom-input rounded-md w-full" value="{{ old('sick_less_this_application', $leaveApplication->sick_less_this_application) }}" /></td>
+                                            <td><input type="number" name="sick_less_this_application" x-model.number="sickLess" class="border-gray-300 input-field-border custom-input rounded-md w-full" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2">Balance (Sick)</td>
-                                            <td><input type="number" name="sick_balance" class="border-gray-300 input-field-border custom-input rounded-md w-full" value="{{ old('sick_balance', $leaveApplication->sick_balance) }}" /></td>
+                                            <td><input type="number" name="sick_balance" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100" x-bind:value="sickBalance" /></td>
                                         </tr>
                                     </table>
                                 </div>

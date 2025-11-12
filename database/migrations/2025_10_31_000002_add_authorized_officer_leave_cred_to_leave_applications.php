@@ -27,7 +27,9 @@ class AddAuthorizedOfficerLeaveCredToLeaveApplications extends Migration
     public function down()
     {
         Schema::table('leave_applications', function (Blueprint $table) {
-            $table->dropColumn('authorized_officer_leave_cred');
+            if (Schema::hasColumn('leave_applications', 'authorized_officer_leave_cred')) {
+                $table->dropColumn('authorized_officer_leave_cred');
+            }
             
         });
     }

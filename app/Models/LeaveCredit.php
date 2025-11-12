@@ -17,6 +17,8 @@ class LeaveCredit extends Model
         'amount',
         'assigned_by',
         'notes',
+        'source_type',
+        'source_id',
     ];
 
     public function employee()
@@ -27,5 +29,10 @@ class LeaveCredit extends Model
     public function assigner()
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function source()
+    {
+        return $this->morphTo(null, 'source_type', 'source_id');
     }
 }
