@@ -12,54 +12,102 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h2 class="text-xl font-bold mt-8 mb-4">Leave Application Details</h2>
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold mt-2 mb-4">Leave Application Details</h2>
+                        <div class="overflow-x-auto bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <table class="table-auto w-full border-collapse border border-gray-300">
+                                <tbody>
+                                    <tr>
+                                        <td class="w-1/3 border border-gray-300 px-4 py-2 font-bold">Last Name</td>
+                                        <td class="w-2/3 border border-gray-300 px-4 py-2">{{ $leaveApplication->lastname }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">First Name</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->firstname }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Middle Name</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->middlename }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Date of Filing</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->date_of_filing }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Position</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->position }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Salary</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->salary }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Type of Leave</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->type_of_leave }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Others</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->others }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Number of Days</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->number_of_days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2 font-bold">Inclusive Dates</td>
+                                        <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->inclusive_dates }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-                    <table class="table-auto w-full border-collapse border border-gray-300">
-                        <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Last Name</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->lastname }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">First Name</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->firstname }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Middle Name</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->middlename }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Date of Filing</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->date_of_filing }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Position</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->position }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Salary</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->salary }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Type of Leave</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->type_of_leave }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Others</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->others }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Number of Days</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->number_of_days }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 font-bold">Inclusive Dates</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $leaveApplication->inclusive_dates }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div x-data="{ showPanel: false }" class="md:flex md:items-start md:space-x-6">
+                        <div class="md:flex-1">
+                            <div class="mb-4 flex justify-end md:justify-end">
+                                <button type="button" @click="showPanel = !showPanel" class="text-sm px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                                    <span x-text="showPanel ? 'Hide Employee Info' : 'Show Employee Info'"></span>
+                                </button>
+                            </div>
 
-                    <!-- Action form matching the attached image -->
+                            <!-- Employee side panel (togglable) -->
+                            <aside x-cloak x-show="showPanel" x-transition id="employeePanel" class="md:w-80 mt-4 md:mt-0">
+                                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-start justify-between">
+                                        <h3 class="text-lg font-semibold mb-3">Employee</h3>
+                                        <button type="button" @click="showPanel = false" class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600">Close</button>
+                                    </div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                        <div><span class="font-medium">Name:</span> {{ $leaveApplication->lastname }}, {{ $leaveApplication->firstname }} {{ $leaveApplication->middlename }}</div>
+                                        <div><span class="font-medium">Position:</span> {{ $leaveApplication->position }}</div>
+                                        <div><span class="font-medium">Filed:</span> {{ $leaveApplication->date_of_filing }}</div>
+                                    </div>
+
+                                    <hr class="my-3 border-gray-200 dark:border-gray-700" />
+
+                                    <h4 class="text-md font-medium mb-2">Leave Card Totals</h4>
+                                    <div class="grid grid-cols-1 gap-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <div class="text-gray-600">Vacation</div>
+                                            <div class="font-semibold text-green-600">{{ $vacationTotal ?? 0 }}</div>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <div class="text-gray-600">Sick</div>
+                                            <div class="font-semibold text-green-600">{{ $sickTotal ?? 0 }}</div>
+                                        </div>
+                                    </div>
+
+                                    @if(isset($leaveApplication->cert_vacation) || isset($leaveApplication->cert_sick))
+                                        <hr class="my-3 border-gray-200 dark:border-gray-700" />
+                                        <div class="text-xs text-gray-500">Certification flags set: 
+                                            @if($leaveApplication->cert_vacation) Vacation @endif
+                                            @if($leaveApplication->cert_sick) Sick @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </aside>
+
+                    <!-- Action form  -->
                     <form x-data="{ certType: '{{ old('cert_leave_type', ($leaveApplication->cert_vacation ? 'vacation' : ($leaveApplication->cert_sick ? 'sick' : '')) ) }}' }" method="POST" action="{{ route('leave.action.update', $leaveApplication->id) }}" class="mt-6 p-4 border rounded bg-gray-50" >
                         @csrf
                         <!-- record which credit type the admin is setting -->
