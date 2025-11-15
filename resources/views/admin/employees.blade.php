@@ -1,40 +1,19 @@
 @extends('layouts.app')
 
 @section('header')
-        <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-            {{ __('EMPLOYEES') }}
-        </h2>
+    <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
+        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        {{ __('EMPLOYEES') }}
+    </h2>
 @endsection
 
 @section('content')
     <style>
-        body {
-            color: white;
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-        }
-
-        .overlay .form-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
+        body { color: white; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 50; }
+        .overlay .form-container { background-color: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; }
     </style>
 
     <div class="py-12">
@@ -43,12 +22,21 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h2 class="text-xl font-bold mb-4">LGU-Bulusan Employees</h2>
 
-
                     <!-- Filter Input -->
                     <div class="mb-4">
-                        <input type="text" id="employeeFilter" placeholder="Search employees..." class="w-full border-gray-300 rounded-md shadow-sm text-gray-900">
+                        <input type="text" id="employeeFilter" placeholder="Search employee..." class="border-gray-300 rounded-xl shadow-sm text-gray-900" style="width:30%">
                     </div>
-                    <table class="admin-table mb-6">
+
+                    <table class="admin-table table-auto mb-6">
+                        <colgroup>
+                            <col />
+                            <col />
+                            <col style="width:150px"/>
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>NAME</th>
@@ -63,33 +51,42 @@
                         <tbody id="employeeTable">
                             @foreach($employees as $employee)
                                 <tr>
-                                    <td>{{ $employee->lastname }} {{ $employee->firstname }} {{ $employee->middlename }}</td>
+                                    <td class="whitespace-nowrap">{{ $employee->lastname }} {{ $employee->firstname }} {{ $employee->middlename }}</td>
                                     <td>{{ $employee->department }}</td>
                                     <td>{{ $employee->job_title }}</td>
                                     <td>{{ $employee->start_date }}</td>
                                     <td>{{ $employee->status }}</td>
                                     <td>{{ $employee->sex }}</td>
                                     <td>
-                                            <a href="{{ route('employees.edit', $employee->id) }}" class="btn-edit">Edit</a>
-                                            <a href="{{ route('employees.leave_card', $employee->id) }}" class="btn-view ml-2">View Leave Card</a>
-                                        <form method="POST" action="{{ route('employees.destroy', $employee->id) }}" style="display:inline-block;">
-                                            @csrf
-                                            @method('DELETE')
-                                                <button type="submit" class="btn-delete">Delete</button>
-                                        </form>
+                                        <div class="flex items-center w-full">
+                                            <div class="w-8 flex justify-center">
+                                                <a href="{{ route('employees.edit', $employee->id) }}" aria-label="View/Edit employee profile" title="View/Edit Employee Info" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-blue-100">
+                                                    <span role="img" aria-hidden="true" class="inline-block w-5 h-5" style="background-color:#253D90; -webkit-mask-image: url({{ asset('images/icons/profile-icon.png') }}); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; mask-image: url({{ asset('images/icons/profile-icon.png') }}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></span>
+                                                </a>
+                                            </div>
+
+                                            <div class="px-2">
+                                                <a href="{{ route('employees.leave_card', $employee->id) }}" aria-label="View leave card for {{ $employee->lastname }}, {{ $employee->firstname }}" title="View/Add Leave Credits" class="inline-flex items-center justify-center px-3 py-1 bg-[#198f51] hover:bg-[#166534] text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#166534] whitespace-nowrap">Leave Card</a>
+                                            </div>
+
+                                            <div class="w-8 flex justify-center">
+                                                <form method="POST" action="{{ route('employees.destroy', $employee->id) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" aria-label="Delete employee" title="Delete Employee" class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-red-100 text-red-600">
+                                                        <!-- delete icon -->
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m4 0H5" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                    <div id="noMatchMessage" class="text-center text-gray-500" style="display:none;">There are no matching employees.</div>
-                    @if(empty($employees) || count($employees) === 0)
-                        <div class="text-center text-gray-500">No employees found.</div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="overlay" class="overlay">
         <div class="form-container">
@@ -138,49 +135,37 @@
     </div>
 
     <script>
-        document.getElementById('addEmployeeButton').addEventListener('click', function() {
-            const overlay = document.getElementById('overlay');
-            overlay.style.display = 'flex';
+        document.addEventListener('DOMContentLoaded', function () {
+            const addButton = document.getElementById('addEmployeeButton');
+            if (addButton) addButton.addEventListener('click', function() { document.getElementById('overlay').style.display = 'flex'; });
+            const closeOverlay = document.getElementById('closeOverlay');
+            if (closeOverlay) closeOverlay.addEventListener('click', function() { document.getElementById('overlay').style.display = 'none'; });
+
+            const employeeFilter = document.getElementById('employeeFilter');
+            const employeeTable = document.getElementById('employeeTable');
+            if (employeeFilter) {
+                employeeFilter.addEventListener('input', function() {
+                    const filter = this.value.toLowerCase();
+                    const rows = document.querySelectorAll('#employeeTable tr');
+                    let hasMatch = false;
+                    rows.forEach(row => {
+                        const name = row.querySelector('td:first-child').textContent.toLowerCase();
+                        const isVisible = name.includes(filter);
+                        row.style.display = isVisible ? '' : 'none';
+                        if (isVisible) hasMatch = true;
+                    });
+                    const noMatchMessage = document.getElementById('noMatchMessage');
+                    if (noMatchMessage) noMatchMessage.style.display = hasMatch ? 'none' : 'block';
+                });
+            }
+            // optional hover handlers were removed to avoid hiding the table accidentally
+            const noMatchElement = document.createElement('div');
+            noMatchElement.id = 'noMatchMessage';
+            noMatchElement.textContent = 'There are no matching employees.';
+            noMatchElement.style.display = 'none';
+            noMatchElement.className = 'text-center text-gray-500 mt-6 w-full';
+            const tableParent = document.querySelector('#employeeTable')?.parentElement;
+            if (tableParent) tableParent.appendChild(noMatchElement);
         });
-
-        document.getElementById('closeOverlay').addEventListener('click', function() {
-            const overlay = document.getElementById('overlay');
-            overlay.style.display = 'none';
-        });
-
-        document.getElementById('employeeFilter').addEventListener('input', function() {
-            const filter = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#employeeTable tr');
-            let hasMatch = false;
-
-            rows.forEach(row => {
-                const name = row.querySelector('td:first-child').textContent.toLowerCase();
-                const isVisible = name.includes(filter);
-                row.style.display = isVisible ? '' : 'none';
-                if (isVisible) hasMatch = true;
-            });
-
-            const noMatchMessage = document.getElementById('noMatchMessage');
-            noMatchMessage.style.display = hasMatch ? 'none' : 'block';
-        });
-
-        const employeeFilter = document.getElementById('employeeFilter');
-        const employeeTable = document.getElementById('employeeTable');
-
-        employeeFilter.addEventListener('mouseenter', function() {
-            employeeTable.style.display = 'none';
-        });
-
-        employeeFilter.addEventListener('mouseleave', function() {
-            employeeTable.style.display = '';
-        });
-
-        // Add this element to display the no match message
-        const noMatchElement = document.createElement('div');
-        noMatchElement.id = 'noMatchMessage';
-        noMatchElement.textContent = 'There are no matching employees.';
-        noMatchElement.style.display = 'none';
-        noMatchElement.className = 'text-center text-gray-500';
-        document.querySelector('#employeeTable').parentElement.appendChild(noMatchElement);
     </script>
 @endsection
