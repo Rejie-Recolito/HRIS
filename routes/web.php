@@ -3,6 +3,7 @@
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ServiceRecordController;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\LeaveApplicationController;
@@ -16,12 +17,54 @@ Route::get('/dashboard', function () {
     return view('dashboard_user');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-Route::get('/employees/{id}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
-Route::put('/employees/{id}', [EmployeeController::class, 'update'])->name('employees.update');
-Route::delete('/employees/{id}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
-Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
-Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+// Admin-only employee management routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Check if user is admin before allowing access
+    Route::get('/employees', function () {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+        return app(EmployeeController::class)->index();
+    })->name('employees.index');
+    
+    Route::get('/employees/{id}/edit', function ($id) {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+        return app(EmployeeController::class)->edit($id);
+    })->name('employees.edit');
+    
+    Route::put('/employees/{id}', function ($id) {
+        if (!Auth::check()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        // Allow users to update their own profile, or admins to update any profile
+        $employee = \App\Models\Employee::findOrFail($id);
+        if (!Auth::user()->is_admin && $employee->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access.');
+        }
+        
+        return app(EmployeeController::class)->update(request(), $id);
+    })->name('employees.update');
+    
+    Route::delete('/employees/{id}', function ($id) {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+        return app(EmployeeController::class)->destroy($id);
+    })->name('employees.destroy');
+    
+    Route::get('/employees/create', function () {
+        if (!Auth::check() || !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+        return app(EmployeeController::class)->create();
+    })->name('employees.create');
+});
+
+// User employee profile (store/update own profile)
+Route::post('/employees', [EmployeeController::class, 'store'])->middleware(['auth', 'verified'])->name('employees.store');
 
 Route::get('/service_record', function () {
     return view('admin.service_record');

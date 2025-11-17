@@ -21,9 +21,12 @@ class Employee extends Model
         'age',
         'date_of_birth',
         'place_of_birth',
+        'address',
         'salary',
         'designation',
         'place_of_assignment',
+        'phone_number',
+        'email_address',
         'user_id',
     ];
 

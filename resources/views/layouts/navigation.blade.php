@@ -1,6 +1,7 @@
 <nav x-data="{ 
     open: false, 
     openUserNotifications: false,
+    openResponsiveNotifications: false,
     isDark: localStorage.getItem('darkMode') === 'true' || false,
     init() {
         this.updateDarkMode();
