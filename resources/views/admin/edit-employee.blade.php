@@ -1,17 +1,10 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="flex items-center">
-        <a href="{{ route('employees.index') }}" class="mr-4 text-white dark:text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-        </a>
-        <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
-            <span role="img" aria-hidden="true" class="inline-block w-6 h-6 mr-2" style="background-color:#ffffff; -webkit-mask-image: url({{ asset('images/icons/profile-icon.png') }}); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; mask-image: url({{ asset('images/icons/profile-icon.png') }}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></span>
-            {{ __('EMPLOYEE INFORMATION') }}
-        </h2>
-    </div>
+    <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
+        <span role="img" aria-hidden="true" class="inline-block w-6 h-6 mr-2" style="background-color:#ffffff; -webkit-mask-image: url({{ asset('images/icons/profile-icon.png') }}); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; mask-image: url({{ asset('images/icons/profile-icon.png') }}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></span>
+        {{ __('EMPLOYEE INFORMATION') }}
+    </h2>
 @endsection
 
 @section('content')

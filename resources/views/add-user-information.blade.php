@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
+    <h2 class="font-semibold text-sm sm:text-xl text-white dark:text-white leading-tight flex items-center whitespace-nowrap">
         <span role="img" aria-hidden="true" class="inline-block w-6 h-6 mr-2" style="background-color:#ffffff; -webkit-mask-image: url({{ asset('images/icons/profile-icon.png') }}); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; mask-image: url({{ asset('images/icons/profile-icon.png') }}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></span>
         {{ __('EMPLOYEE INFORMATION') }}
     </h2>
