@@ -33,6 +33,6 @@ class LeaveCredit extends Model
 
     public function source()
     {
-        return $this->morphTo(null, 'source_type', 'source_id');
+        return $this->morphTo();
     }
 }
