@@ -15,6 +15,7 @@ class LeaveApplicationView extends Component
    public $leaveApplication;
     public $vacationTotal = 0;
     public $sickTotal = 0;
+    public $leaveCardDetails = [];
 
 public function mount($id)
 {
@@ -26,12 +27,69 @@ public function mount($id)
     }
 
     if ($employee) {
+        // Opening Balance
+        $openingBalance = [
+            'vacation' => 12,
+            'sick' => 15,
+        ];
+
+        // Sum of assigned credits
         $credits = LeaveCredit::where('employee_id', $employee->id)->get();
-        $this->vacationTotal = (int) $credits->where('type', 'vacation')->sum('amount');
-        $this->sickTotal = (int) $credits->where('type', 'sick')->sum('amount');
+        $earnedCredits = [
+            'vacation' => (int) $credits->where('type', 'vacation')->sum('amount'),
+            'sick' => (int) $credits->where('type', 'sick')->sum('amount'),
+        ];
+
+        // Total Earned = Opening Balance + Earned Credits
+        $totalEarned = [
+            'vacation' => $openingBalance['vacation'] + $earnedCredits['vacation'],
+            'sick' => $openingBalance['sick'] + $earnedCredits['sick'],
+        ];
+
+        // Calculate availed credits from approved leave applications
+        $approvedLeaves = LeaveApplication::where('user_id', $this->leaveApplication->user_id)
+            ->where('status', 'Approved')
+            ->get();
+
+        $availed = [
+            'vacation' => $approvedLeaves->where('type_of_leave', 'Vacation Leave')->sum('number_of_days'),
+            'sick' => $approvedLeaves->where('type_of_leave', 'Sick Leave')->sum('number_of_days'),
+        ];
+
+        // Balance = Total Earned - Availed
+        $balance = [
+            'vacation' => $totalEarned['vacation'] - $availed['vacation'],
+            'sick' => $totalEarned['sick'] - $availed['sick'],
+        ];
+
+        // Set totals for backward compatibility
+        $this->vacationTotal = $totalEarned['vacation'];
+        $this->sickTotal = $totalEarned['sick'];
+
+        // Store detailed breakdown for display
+        $this->leaveCardDetails = [
+            'vacation' => [
+                'opening' => $openingBalance['vacation'],
+                'earned' => $earnedCredits['vacation'],
+                'total' => $totalEarned['vacation'],
+                'availed' => $availed['vacation'],
+                'balance' => $balance['vacation'],
+            ],
+            'sick' => [
+                'opening' => $openingBalance['sick'],
+                'earned' => $earnedCredits['sick'],
+                'total' => $totalEarned['sick'],
+                'availed' => $availed['sick'],
+                'balance' => $balance['sick'],
+            ],
+        ];
     } else {
         $this->vacationTotal = 0;
         $this->sickTotal = 0;
+        $this->leaveCardDetails = [
+            'vacation' => ['opening' => 0, 'earned' => 0, 'total' => 0, 'availed' => 0, 'balance' => 0],
+            'sick' => ['opening' => 0, 'earned' => 0, 'total' => 0, 'availed' => 0, 'balance' => 0],
+        ];
     }
 
     // ensure the leaveApplication fields have defaults so Blade inputs show sensible values

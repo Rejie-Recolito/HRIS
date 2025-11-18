@@ -60,13 +60,62 @@ class LeaveApplicationForm extends Component
     {
         $employee = Employee::where('user_id', Auth::id())->first();
         if (! $employee) {
-            return ['vacation' => 0, 'sick' => 0];
+            return [
+                'vacation' => ['opening' => 0, 'earned' => 0, 'total' => 0, 'availed' => 0, 'balance' => 0],
+                'sick' => ['opening' => 0, 'earned' => 0, 'total' => 0, 'availed' => 0, 'balance' => 0],
+            ];
         }
 
+        // Opening Balance
+        $openingBalance = [
+            'vacation' => 12,
+            'sick' => 15,
+        ];
+
+        // Sum of assigned credits
         $credits = LeaveCredit::where('employee_id', $employee->id)->get();
-        return [
+        $earnedCredits = [
             'vacation' => (int) $credits->where('type', 'vacation')->sum('amount'),
             'sick' => (int) $credits->where('type', 'sick')->sum('amount'),
+        ];
+
+        // Total Earned = Opening Balance + Earned Credits
+        $totalEarned = [
+            'vacation' => $openingBalance['vacation'] + $earnedCredits['vacation'],
+            'sick' => $openingBalance['sick'] + $earnedCredits['sick'],
+        ];
+
+        // Calculate availed credits from approved leave applications
+        $approvedLeaves = \App\Models\LeaveApplication::where('user_id', Auth::id())
+            ->where('status', 'Approved')
+            ->get();
+
+        $availed = [
+            'vacation' => $approvedLeaves->where('type_of_leave', 'Vacation Leave')->sum('number_of_days'),
+            'sick' => $approvedLeaves->where('type_of_leave', 'Sick Leave')->sum('number_of_days'),
+        ];
+
+        // Balance = Total Earned - Availed
+        $balance = [
+            'vacation' => $totalEarned['vacation'] - $availed['vacation'],
+            'sick' => $totalEarned['sick'] - $availed['sick'],
+        ];
+
+        return [
+            'vacation' => [
+                'opening' => $openingBalance['vacation'],
+                'earned' => $earnedCredits['vacation'],
+                'total' => $totalEarned['vacation'],
+                'availed' => $availed['vacation'],
+                'balance' => $balance['vacation'],
+            ],
+            'sick' => [
+                'opening' => $openingBalance['sick'],
+                'earned' => $earnedCredits['sick'],
+                'total' => $totalEarned['sick'],
+                'availed' => $availed['sick'],
+                'balance' => $balance['sick'],
+            ],
         ];
     }
 

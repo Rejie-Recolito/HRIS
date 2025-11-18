@@ -17,13 +17,58 @@
         <div class="form-container">
             @if($employee)
                 <div class="mb-4 p-4 bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
+                    <h4 class="text-md font-semibold mb-3">Leave Card Summary</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <div class="text-sm text-gray-500">Current Leave Credits</div>
-                            <div class="text-lg font-semibold">Vacation: <span class="text-green-600">{{ $this->leaveTotals['vacation'] }}</span></div>
-                            <div class="text-lg font-semibold">Sick: <span class="text-green-600">{{ $this->leaveTotals['sick'] }}</span></div>
+                            <h5 class="text-sm font-medium text-green-700 mb-2">Vacation Leave</h5>
+                            <div class="text-xs space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Opening Balance:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['opening'] }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Earned Credits:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['earned'] }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Total Earned:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['total'] }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Availed:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['availed'] }}</span>
+                                </div>
+                                <div class="flex justify-between border-t pt-1 mt-1">
+                                    <span class="font-medium">Balance:</span>
+                                    <span class="font-bold text-green-600 text-sm">{{ $this->leaveTotals['vacation']['balance'] }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-sm text-gray-400">(Totals include past assignments and consumption)</div>
+                        <div>
+                            <h5 class="text-sm font-medium text-blue-700 mb-2">Sick Leave</h5>
+                            <div class="text-xs space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Opening Balance:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['opening'] }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Earned Credits:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['earned'] }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Total Earned:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['total'] }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Availed:</span>
+                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['availed'] }}</span>
+                                </div>
+                                <div class="flex justify-between border-t pt-1 mt-1">
+                                    <span class="font-medium">Balance:</span>
+                                    <span class="font-bold text-blue-600 text-sm">{{ $this->leaveTotals['sick']['balance'] }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif
