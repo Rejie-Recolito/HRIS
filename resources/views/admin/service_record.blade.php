@@ -1,12 +1,7 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
-        <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
-        </svg>
-        {{ __('SERVICE RECORD') }}
-    </h2>
+    <h2 class="font-semibold text-xl text-white dark:text-white leading-tight">Service Record Requests</h2>
 @endsection
 
 @section('content')
@@ -20,22 +15,25 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Status</th>
+                                <th>Requested At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($serviceRecords as $record)
+                            @forelse ($requests as $r)
                                 <tr>
-                                    <td>{{ $record->name }} requested for Service Record</td>
-                                    <td>
-                                        <select class="border border-gray-300 rounded-md text-black" onchange="updateStatus(this, '{{ $record->id }}')">
-                                            <option value="pending" {{ $record->request_status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                            <option value="ready" {{ $record->request_status === 'ready' ? 'selected' : '' }}>Ready To Claim</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('service_record.request_form', ['id' => $record->id]) }}" class="bg-green-500 text-white px-4 py-2 rounded-md">View Request Form</a>
+                                    <td>{{ $r->name }}</td>
+                                    <td>{{ $r->created_at->format('Y-m-d H:i') }}</td>
+                                    <td class="flex items-center space-x-2">
+                                        <form method="POST" action="{{ route('service-record-requests.accept', ['id' => $r->id]) }}" style="display:inline-block;">
+                                            @csrf
+                                            <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Accept</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('service-record-requests.destroy', ['id' => $r->id]) }}" style="display:inline-block;" onsubmit="return confirm('Delete this request?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @empty
@@ -45,33 +43,6 @@
                             @endforelse
                         </tbody>
                     </table>
-
-                    <script>
-                        function updateStatus(select, recordId) {
-                            const status = select.value;
-                            fetch(`/service-records/${recordId}/update-status`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({ status })
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Failed to update status');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                alert('Status updated successfully');
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                alert('Failed to update status');
-                            });
-                        }
-                    </script>
                 </div>
             </div>
         </div>

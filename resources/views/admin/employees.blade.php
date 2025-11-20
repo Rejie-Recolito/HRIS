@@ -20,7 +20,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="card-bg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h2 class="text-xl font-bold mb-4">LGU-Bulusan Employees</h2>
+                    <h2 class="text-xl font-bold mb-4">LGU-Bulusan Employees (@{{ $count ?? 0 }})</h2>
 
                     <!-- Filter Input -->
                     <div class="mb-4">

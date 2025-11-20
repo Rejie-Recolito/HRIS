@@ -47,6 +47,10 @@
                                     <option value="Male" {{ old('sex', $employee->sex ?? '') === 'Male' ? 'selected' : '' }}>Male</option>
                                     <option value="Female" {{ old('sex', $employee->sex ?? '') === 'Female' ? 'selected' : '' }}>Female</option>
                                 </select>
+                                @if(isset($employee))
+                                    <!-- When the select is disabled it won't be submitted, include a hidden input so validation receives the value -->
+                                    <input type="hidden" name="sex" value="{{ old('sex', $employee->sex ?? '') }}">
+                                @endif
                             </div>
 
                             <div class="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 flex-1">

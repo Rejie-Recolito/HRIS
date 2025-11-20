@@ -42,7 +42,7 @@ class AdminNotification extends Notification
                     ->line('Name: ' . $this->serviceRecord->name)
                     ->line('Job Title: ' . $this->serviceRecord->job_title)
                     ->line('Date of Service: ' . $this->serviceRecord->date_of_service)
-                    ->action('View Service Record', url('/service_record/' . $this->serviceRecord->id))
+                    ->action('View Service Record', route('service_record.request_form', ['id' => $this->serviceRecord->id]))
                     ->line('Thank you for using our application!');
     }
 

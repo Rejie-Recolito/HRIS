@@ -52,7 +52,7 @@
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('service_record')" :active="request()->routeIs('service_record')">
+                            <x-nav-link :href="route('service-record-requests.index')" :active="request()->routeIs('service-record-requests.index')">
                                 {{ __('SERVICE RECORD') }}
                             </x-nav-link>
                         </div>

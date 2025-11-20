@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class EmployeeController extends Controller
 {
@@ -14,8 +16,22 @@ class EmployeeController extends Controller
 
     public function index()
     {
-        $employees = Employee::all(); // Fetch data using the Employee model
-        return view('admin.employees', compact('employees'));
+        $employees = Employee::orderBy('lastname')->get(); // Fetch ordered employees
+        $count = $employees->count();
+        \Log::info('Admin viewing employees list', ['count' => $count]);
+
+        // Ensure the navigation view always has a $notifications variable.
+        if (Schema::hasTable('notifications')) {
+            try {
+                $notifications = Notification::latest()->get();
+            } catch (\Throwable $e) {
+                $notifications = collect();
+            }
+        } else {
+            $notifications = collect();
+        }
+
+        return view('admin.employees', compact('employees', 'count', 'notifications'));
     }
 
     public function store(Request $request)
@@ -29,6 +45,7 @@ class EmployeeController extends Controller
             'start_date' => 'required|date',
             'status' => 'required|string|max:255',
             'sex' => 'required|string|max:255',
+            'address' => 'required|string|max:500',
             'age' => 'required|integer|min:0',
             'date_of_birth' => 'required|date',
             'place_of_birth' => 'required|string|max:255',
@@ -59,7 +76,8 @@ class EmployeeController extends Controller
             return redirect()->back()->with('success', 'Employee updated successfully.');
         }
 
-        $employee = Employee::create($data);
+    $employee = Employee::create($data);
+    \Log::info('Employee created via store', ['employee_id' => $employee->id, 'user_id' => $employee->user_id]);
 
         if ($request->ajax()) {
             return response()->json([

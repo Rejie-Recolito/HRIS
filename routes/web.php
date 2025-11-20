@@ -67,8 +67,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::post('/employees', [EmployeeController::class, 'store'])->middleware(['auth', 'verified'])->name('employees.store');
 
 Route::get('/service_record', function () {
-    return view('admin.service_record');
+    // Legacy admin route: redirect to the service record requests board
+    return redirect()->route('service-record-requests.index');
 })->name('service_record');
+
+// Allow users to create a service record request (specific route must come before wildcard /service-records/{id})
+Route::post('/service-records/request', [ServiceRecordController::class, 'requestByUser'])->name('service-records.request');
+
+// Admin request board
+Route::get('/service-record-requests', [ServiceRecordController::class, 'requestsIndex'])->name('service-record-requests.index');
+Route::get('/service-record-requests/history', [ServiceRecordController::class, 'historyIndex'])->name('service-record-requests.history');
+Route::post('/service-record-requests/{id}/accept', [ServiceRecordController::class, 'acceptRequest'])->name('service-record-requests.accept');
+Route::delete('/service-record-requests/{id}', [ServiceRecordController::class, 'destroyRequest'])->name('service-record-requests.destroy');
+
+// Admin edit/update routes for service records
+Route::get('/service-records/{id}/edit', [ServiceRecordController::class, 'edit'])->name('service-records.edit');
+Route::post('/service-records/{id}', [ServiceRecordController::class, 'update'])->name('service-records.update');
+Route::post('/service-records/{id}/append', [ServiceRecordController::class, 'append'])->name('service-records.append');
+Route::post('/service-records/{id}/accept', [ServiceRecordController::class, 'accept'])->name('service-records.accept');
+Route::delete('/service-records/{id}', [ServiceRecordController::class, 'destroy'])->name('service-records.destroy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Admin leave management
@@ -115,9 +132,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/leave_user', [\App\Http\Controllers\LeaveApplicationController::class, 'create'])->name('leave.user');
     Route::post('/leave_user', [\App\Http\Controllers\LeaveApplicationController::class, 'store'])->name('leave.user.submit');
 
-    Route::get('/service_record_user', function () {
-        return view('service_record_user');
-    })->name('service_record.user');
+    Route::get('/service_record_user', [ServiceRecordController::class, 'show'])->name('service_record.user');
 
     Route::post('/service-records', [ServiceRecordController::class, 'store'])->name('service-records.store');
     Route::get('/service-records', [ServiceRecordController::class, 'index'])->name('service-records.index');
@@ -125,6 +140,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/service-record-user', [ServiceRecordController::class, 'show'])->name('service-records.show');
     Route::get('/add-user-information', [\App\Http\Controllers\EmployeeController::class, 'showUserForm'])
         ->name('add-user-information.user');
+    
+    // Export service records to DOCX for a user
+    Route::get('/service-records/{user}/export', [ServiceRecordController::class, 'exportDocx'])->name('service-records.export');
 });
 
 Route::get('/service_record/{id}', function ($id) {

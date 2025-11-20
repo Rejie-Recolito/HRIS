@@ -26,6 +26,18 @@ class ServiceRecord extends Model
         'date_of_service',
         'place_of_assignment',
         'user_id',
+        // New fields for admin-filled service record details
+        'service_from',
+        'service_to',
+        'appointment_rank',
+        'appointment_designation',
+        'appointment_status',
+        'appointment_monthly_base_pay',
+        'station',
+        'place',
+    'leave_of_absence',
+        'separation_date',
+        'separation_cause',
     ];
 
     public function user()
