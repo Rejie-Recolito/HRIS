@@ -16,60 +16,38 @@
     @if(!$this->lastApplication || in_array($this->lastApplication->status, ['Approved', 'Denied']))
         <div class="form-container">
             @if($employee)
-                <div class="mb-4 p-4 bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-gray-700">
-                    <h4 class="text-md font-semibold mb-3">Leave Card Summary</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <h5 class="text-sm font-medium text-green-700 mb-2">Vacation Leave</h5>
-                            <div class="text-xs space-y-1">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Opening Balance:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['opening'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Earned Credits:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['earned'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Total Earned:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['total'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Availed:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['vacation']['availed'] }}</span>
-                                </div>
-                                <div class="flex justify-between border-t pt-1 mt-1">
-                                    <span class="font-medium">Balance:</span>
-                                    <span class="font-bold text-green-600 text-sm">{{ $this->leaveTotals['vacation']['balance'] }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h5 class="text-sm font-medium text-blue-700 mb-2">Sick Leave</h5>
-                            <div class="text-xs space-y-1">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Opening Balance:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['opening'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Earned Credits:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['earned'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Total Earned:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['total'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Availed:</span>
-                                    <span class="font-semibold">{{ $this->leaveTotals['sick']['availed'] }}</span>
-                                </div>
-                                <div class="flex justify-between border-t pt-1 mt-1">
-                                    <span class="font-medium">Balance:</span>
-                                    <span class="font-bold text-blue-600 text-sm">{{ $this->leaveTotals['sick']['balance'] }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="mb-4 bg-white dark:bg-[#282828] rounded shadow overflow-x-auto">
+                    <h4 class="font-semibold mb-3 p-4 pb-0" style="color: #198f51;">LEAVE CARD SUMMARY</h4>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%; border-color: #ffffff;">TYPE OF LEAVE</th>
+                                <th style="text-align: center !important; width: 12%; border-color: #ffffff;">Opening Balance</th>
+                                <th style="text-align: center !important; width: 12%; border-color: #ffffff;">Credited/Earned</th>
+                                <th style="text-align: center !important; width: 12%; border-color: #ffffff;">Total</th>
+                                <th style="text-align: center !important; width: 12%; border-color: #ffffff;">Availed</th>
+                                <th style="text-align: center !important; width: 12%; border-color: #ffffff;">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-medium">Vacation Leave</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['vacation']['opening'] }}</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['vacation']['earned'] }}</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['vacation']['total'] }}</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['vacation']['availed'] }}</td>
+                                <td class="font-bold" style="text-align: center !important;">{{ $this->leaveTotals['vacation']['balance'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Sick Leave</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['sick']['opening'] }}</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['sick']['earned'] }}</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['sick']['total'] }}</td>
+                                <td style="text-align: center !important;">{{ $this->leaveTotals['sick']['availed'] }}</td>
+                                <td class="font-bold" style="text-align: center !important;">{{ $this->leaveTotals['sick']['balance'] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             @endif
             {{-- x-ref="leaveForm" --}}

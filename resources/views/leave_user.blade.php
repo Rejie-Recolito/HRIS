@@ -171,26 +171,49 @@
         <div class="text-center mb-8 bg-white dark:bg-[#1c1c1d] rounded-lg border border-gray-700 dark:border-gray-600">
             <div class="flex items-center justify-center mb-3">
                 <img src="{{ asset('images/leave-icon.svg') }}" class="w-7 h-7 sm:w-9 sm:h-9 mr-2 sm:mr-3 form-header-icon" alt="Leave Icon">
-                @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
+                @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted', 'Approved', 'Denied']) && !session('acknowledged_leave_' . $lastApplication->id))
                     <h1 class="font-bold custom-label custom-heading mb-0" style="margin-top: 0 !important;">Leave Application Status</h1>
                 @else
                     <h1 class="font-bold custom-label custom-heading mb-0" style="margin-top: 0 !important;">Leave Application Form</h1>
                 @endif
             </div>
-            @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
-                <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-2">You have submitted a leave application.</p>
+            @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted', 'Approved', 'Denied']) && !session('acknowledged_leave_' . $lastApplication->id))
+                <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-2">
+                    @if($lastApplication->status === 'Approved')
+                        Your leave application has been approved.
+                    @elseif($lastApplication->status === 'Denied')
+                        Your leave application has been denied.
+                    @else
+                        You have submitted a leave application.
+                    @endif
+                </p>
             @else
                 <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-2">Fill the required fields below to submit your leave application.</p>
             @endif
             <div class="w-24 h-1 bg-green-600 mx-auto rounded"></div>
         </div>
         
-        @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted']))
+        @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted', 'Approved', 'Denied']) && !session('acknowledged_leave_' . $lastApplication->id))
             <div class="w-full flex items-center justify-center mb-8">
-                <div class="bg-white dark:bg-[#1c1c1d] p-6 rounded-lg shadow-md text-center max-w-md w-full border-2" style="border-color: #2bb16b;">
-                    <div class="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">
-                        Status: {{ $lastApplication->status }}
+                <div class="bg-white dark:bg-[#1c1c1d] p-6 rounded-lg shadow-md text-center max-w-md w-full border-2" style="border-color: {{ $lastApplication->status === 'Denied' ? '#dc2626' : '#2bb16b' }};">
+                    <div class="text-lg font-semibold mb-4" style="color: {{ $lastApplication->status === 'Denied' ? '#dc2626' : '#198f51' }};">
+                        Status: 
+                        @if($lastApplication->status === 'Approved')
+                            Leave Approved
+                        @elseif($lastApplication->status === 'Denied')
+                            Leave Denied
+                        @else
+                            {{ $lastApplication->status }}
+                        @endif
                     </div>
+                    @if(in_array($lastApplication->status, ['Approved', 'Denied']))
+                        <form method="POST" action="{{ route('leave.user.acknowledge', $lastApplication->id) }}">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center justify-center px-6 py-2 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2" style="background-color: {{ $lastApplication->status === 'Denied' ? '#dc2626' : '#198f51' }}; hover:background-color: {{ $lastApplication->status === 'Denied' ? '#b91c1c' : '#166534' }};">
+                                OK
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         @else
