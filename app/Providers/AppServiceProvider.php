@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 use App\Models\ServiceRecord;
 use App\Models\ServiceRecordRequest;
 use App\Models\Notification;
@@ -42,11 +43,19 @@ class AppServiceProvider extends ServiceProvider
         }
     });
 
-    if (Schema::hasTable('notifications')) {
-        View::share('notifications', Notification::latest()->get());
-    } else {
-        View::share('notifications', collect());
-    }
+    // Use View Composer for notifications to ensure user is authenticated when loading
+    View::composer('*', function ($view) {
+        if (Schema::hasTable('notifications')) {
+            if (Auth::check()) {
+                // Both admin and regular users get their own notifications
+                $view->with('notifications', Auth::user()->notifications()->latest()->get());
+            } else {
+                $view->with('notifications', collect());
+            }
+        } else {
+            $view->with('notifications', collect());
+        }
+    });
 
     // Share pending users count for admin approval badge
     if (Schema::hasTable('users')) {

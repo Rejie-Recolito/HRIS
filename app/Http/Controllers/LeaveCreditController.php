@@ -12,7 +12,7 @@ class LeaveCreditController extends Controller
     public function show($employeeId)
     {
         $employee = Employee::findOrFail($employeeId);
-
+        
         $credits = LeaveCredit::where('employee_id', $employeeId)
             ->with('source')
             ->orderBy('created_at', 'asc')
@@ -23,12 +23,6 @@ class LeaveCreditController extends Controller
             'vacation' => 12,
             'sick' => 15,
         ];
-
-        // Get approved leave applications
-        $approvedLeaves = \App\Models\LeaveApplication::where('user_id', $employee->user_id)
-            ->where('status', 'Approved')
-            ->orderBy('created_at', 'asc')
-            ->get();
 
         // Prepare history for vacation leave
         $vacationHistory = [];
@@ -41,13 +35,22 @@ class LeaveCreditController extends Controller
             // Handle negative credits as availed days
             if ($credit->amount < 0) {
                 // Get the type of leave from the source (LeaveApplication)
-                $particulars = 'Leave Deduction';
+                $particulars = 'Vacation Leave'; // Default for vacation type
+                $displayDate = $credit->created_at;
+                
                 if ($credit->source && $credit->source instanceof \App\Models\LeaveApplication) {
                     $particulars = $credit->source->type_of_leave;
+                    // Use the approved_at date if available, otherwise fall back to created_at
+                    $displayDate = $credit->source->approved_at ?? $credit->created_at;
+                } elseif ($credit->notes) {
+                    // Try to extract leave type from notes if source is not available
+                    if (str_contains($credit->notes, 'leave_application:')) {
+                        $particulars = 'Vacation Leave';
+                    }
                 }
                 
                 $vacationHistory[] = [
-                    'date' => $credit->created_at,
+                    'date' => $displayDate,
                     'particulars' => $particulars,
                     'credited' => 0,
                     'availed' => abs($credit->amount),
@@ -80,32 +83,6 @@ class LeaveCreditController extends Controller
                 ];
             }
         }
-        
-        // Add approved vacation leaves to history
-        foreach ($approvedLeaves->where('type_of_leave', 'Vacation Leave') as $leave) {
-            $vacationBalance -= $leave->number_of_days;
-            $vacationHistory[] = [
-                'date' => $leave->created_at,
-                'particulars' => $leave->type_of_leave,
-                'credited' => 0,
-                'availed' => $leave->number_of_days,
-                'balance' => $vacationBalance,
-                'type' => 'leave',
-                'id' => $leave->id,
-            ];
-        }
-        
-        // Sort vacation history by date
-        usort($vacationHistory, function($a, $b) {
-            return $a['date'] <=> $b['date'];
-        });
-        
-        // Recalculate balance for sorted history
-        $vacationBalance = $openingBalance['vacation'];
-        foreach ($vacationHistory as &$item) {
-            $vacationBalance += $item['credited'] - $item['availed'];
-            $item['balance'] = $vacationBalance;
-        }
 
         // Prepare history for sick leave
         $sickHistory = [];
@@ -118,13 +95,22 @@ class LeaveCreditController extends Controller
             // Handle negative credits as availed days
             if ($credit->amount < 0) {
                 // Get the type of leave from the source (LeaveApplication)
-                $particulars = 'Leave Deduction';
+                $particulars = 'Sick Leave'; // Default for sick type
+                $displayDate = $credit->created_at;
+                
                 if ($credit->source && $credit->source instanceof \App\Models\LeaveApplication) {
                     $particulars = $credit->source->type_of_leave;
+                    // Use the approved_at date if available, otherwise fall back to created_at
+                    $displayDate = $credit->source->approved_at ?? $credit->created_at;
+                } elseif ($credit->notes) {
+                    // Try to extract leave type from notes if source is not available
+                    if (str_contains($credit->notes, 'leave_application:')) {
+                        $particulars = 'Sick Leave';
+                    }
                 }
                 
                 $sickHistory[] = [
-                    'date' => $credit->created_at,
+                    'date' => $displayDate,
                     'particulars' => $particulars,
                     'credited' => 0,
                     'availed' => abs($credit->amount),
@@ -157,37 +143,11 @@ class LeaveCreditController extends Controller
                 ];
             }
         }
-        
-        // Add approved sick leaves to history
-        foreach ($approvedLeaves->where('type_of_leave', 'Sick Leave') as $leave) {
-            $sickBalance -= $leave->number_of_days;
-            $sickHistory[] = [
-                'date' => $leave->created_at,
-                'particulars' => $leave->type_of_leave,
-                'credited' => 0,
-                'availed' => $leave->number_of_days,
-                'balance' => $sickBalance,
-                'type' => 'leave',
-                'id' => $leave->id,
-            ];
-        }
-        
-        // Sort sick history by date
-        usort($sickHistory, function($a, $b) {
-            return $a['date'] <=> $b['date'];
-        });
-        
-        // Recalculate balance for sorted history
-        $sickBalance = $openingBalance['sick'];
-        foreach ($sickHistory as &$item) {
-            $sickBalance += $item['credited'] - $item['availed'];
-            $item['balance'] = $sickBalance;
-        }
 
         // Sum of assigned credits
         $earnedCredits = [
-            'vacation' => $credits->where('type', 'vacation')->sum('amount'),
-            'sick' => $credits->where('type', 'sick')->sum('amount'),
+            'vacation' => $credits->where('type', 'vacation')->where('amount', '>', 0)->sum('amount'),
+            'sick' => $credits->where('type', 'sick')->where('amount', '>', 0)->sum('amount'),
         ];
 
         // Total Earned = Opening Balance + Earned Credits
@@ -196,9 +156,10 @@ class LeaveCreditController extends Controller
             'sick' => $openingBalance['sick'] + $earnedCredits['sick'],
         ];
 
+        // Calculate availed from negative leave credits (consumption records)
         $availed = [
-            'vacation' => $approvedLeaves->where('type_of_leave', 'Vacation Leave')->sum('number_of_days'),
-            'sick' => $approvedLeaves->where('type_of_leave', 'Sick Leave')->sum('number_of_days'),
+            'vacation' => abs($credits->where('type', 'vacation')->where('amount', '<', 0)->sum('amount')),
+            'sick' => abs($credits->where('type', 'sick')->where('amount', '<', 0)->sum('amount')),
         ];
 
         // Balance = Total Earned - Availed

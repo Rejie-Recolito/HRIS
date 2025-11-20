@@ -158,7 +158,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </button>
-                        <div x-show="open" @click.outside="open = false" class="absolute right-0 mt-2 w-64 h-[380px] overflow-y-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                        <div x-show="open" @click.outside="open = false" class="absolute right-0 mt-2 w-[480px] max-h-[600px] overflow-y-auto bg-white dark:bg-[#282828] rounded-lg shadow-lg overflow-hidden z-20">
                             <x-notification-component :notifications="$notifications" />
                         </div>
                     </div>
@@ -170,7 +170,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </button>
-                        <div x-show="openUserNotifications" @click.outside="openUserNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                        <div x-show="openUserNotifications" @click.outside="openUserNotifications = false" class="absolute right-0 mt-2 w-[480px] max-h-[600px] overflow-y-auto bg-white dark:bg-[#282828] rounded-lg shadow-lg overflow-hidden z-20">
                             <x-notification-component :notifications="$notifications" />
                             
                         </div>
@@ -190,7 +190,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                     </button>
-                    <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
+                    <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-80 max-h-[500px] overflow-y-auto bg-white dark:bg-[#282828] rounded-lg shadow-lg overflow-hidden z-20">
                         <x-notification-component :notifications="$notifications" />
                     </div>
                 </div>
