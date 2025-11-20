@@ -33,7 +33,23 @@ class LeaveApplicationController extends Controller
             $this->performConsumption($leave);
 
             $leave->status = 'Approved';
+            $leave->approved_at = now();
+            $leave->action_date = now();
             $leave->save();
+            
+            // Notify the user who submitted the leave application
+            $user = User::find($leave->user_id);
+            if ($user) {
+                $user->notifications()->create([
+                    'id' => (string) Str::uuid(),
+                    'type' => 'App\Notifications\LeaveApproved',
+                    'data' => [
+                        'message' => "Your application for leave has been approved.\n \nYou may now download your Leave Application document sent on your email address.",
+                        'leave_application_id' => $leave->id,
+                    ],
+                ]);
+            }
+            
             $this->leaveApplications = LeaveApplication::all();
 
             return redirect()->back()->with('success');
@@ -45,6 +61,21 @@ class LeaveApplicationController extends Controller
         return view('leave_user', compact('lastApplication'));
     }
 
+    public function acknowledge($id)
+    {
+        $leave = LeaveApplication::findOrFail($id);
+        
+        // Verify the leave belongs to the authenticated user
+        if ($leave->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        // Mark the leave as acknowledged by storing it in session
+        session()->put('acknowledged_leave_' . $id, true);
+        
+        return redirect()->route('leave.user');
+    }
+
     public function deny($id)
     {
         $leave = LeaveApplication::findOrFail($id);
@@ -53,7 +84,22 @@ class LeaveApplicationController extends Controller
             $this->restoreConsumedCredits($leave);
 
             $leave->status = 'Denied';
+            $leave->action_date = now();
             $leave->save();
+            
+            // Notify the user who submitted the leave application
+            $user = User::find($leave->user_id);
+            if ($user) {
+                $user->notifications()->create([
+                    'id' => (string) Str::uuid(),
+                    'type' => 'App\Notifications\LeaveDenied',
+                    'data' => [
+                        'message' => "Your application for leave has been disapproved.\n\nYou may now download your Leave Application document sent on your email address to see details of action.",
+                        'leave_application_id' => $leave->id,
+                    ],
+                ]);
+            }
+            
             $this->leaveApplications = LeaveApplication::all();
             return redirect()->back()->with('success');
         }
@@ -86,6 +132,7 @@ class LeaveApplicationController extends Controller
         ]);
 
         $validated['user_id'] = Auth::id();
+        $validated['status'] = 'Submitted';
 
         // Check if the user has a pending leave application
         $existingApplication = LeaveApplication::where('user_id', Auth::id())
@@ -106,7 +153,7 @@ class LeaveApplicationController extends Controller
                 'id' => (string) Str::uuid(),
                 'type' => AdminNotification::class,
                 'data' => [
-                    'message' => Auth::user()->name . ' has requested a leave.',
+                    'message' => Auth::user()->name . ' has submitted application for leave.',
                     'leave_application_id' => $leaveApplication->id,
                 ],
             ]);
@@ -116,10 +163,39 @@ class LeaveApplicationController extends Controller
     }
 
     // Admin: show all leave applications
-    public function index()
+    public function index(Request $request)
     {
-        $leaveApplications = LeaveApplication::all();
-        return view('admin.leave', compact('leaveApplications'));
+        // Only show non-deleted applications in the main table
+        $leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+        
+        // History query with search/filter (includes all applications, even deleted ones)
+        $query = LeaveApplication::with('user');
+
+        // Search by employee name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('firstname', 'like', "%{$search}%")
+                  ->orWhere('lastname', 'like', "%{$search}%")
+                  ->orWhere('middlename', 'like', "%{$search}%")
+                  ->orWhereRaw("CONCAT(firstname, ' ', lastname) like ?", ["%{$search}%"])
+                  ->orWhereRaw("CONCAT(lastname, ' ', firstname) like ?", ["%{$search}%"]);
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by leave type
+        if ($request->filled('type')) {
+            $query->where('type_of_leave', $request->type);
+        }
+
+        $historyApplications = $query->orderBy('created_at', 'desc')->paginate(20);
+        
+        return view('admin.leave', compact('leaveApplications', 'historyApplications'));
     }
 
     // Admin: accept a leave application (for demo, just delete)
@@ -129,6 +205,20 @@ class LeaveApplicationController extends Controller
         if ($leave->status === 'Submitted') {
             $leave->status = 'Under Review';
             $leave->save();
+            
+            // Notify the user who submitted the leave application
+            $user = User::find($leave->user_id);
+            if ($user) {
+                $user->notifications()->create([
+                    'id' => (string) Str::uuid(),
+                    'type' => 'App\Notifications\LeaveUnderReview',
+                    'data' => [
+                        'message' => "Your submitted application for leave is currently under review.\n \nYou shall receive notification of approval or disapproval once your application has completed necessary actions.",
+                        'leave_application_id' => $leave->id,
+                    ],
+                ]);
+            }
+            
             $this->leaveApplications = LeaveApplication::all();
             return redirect()->back()->with('success');
         }
@@ -138,10 +228,15 @@ class LeaveApplicationController extends Controller
     public function delete($id)
     {
         $leave = LeaveApplication::findOrFail($id);
-        // restore any consumed credits before deleting
-        $this->restoreConsumedCredits($leave);
-        $leave->delete();
-        return view('admin.leave')->with('success', 'Leave application deleted successfully.');
+        // Only restore consumed credits if the leave was not approved
+        // Approved leaves are considered completed, so credits should remain consumed
+        if ($leave->status !== 'Approved') {
+            $this->restoreConsumedCredits($leave);
+        }
+        // Mark as deleted instead of actually deleting
+        $leave->is_deleted = true;
+        $leave->save();
+        return redirect()->route('leave')->with('success', 'Leave application deleted successfully.');
     }
 
     /**

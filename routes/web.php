@@ -131,6 +131,7 @@ require __DIR__.'/auth.php';
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/leave_user', [\App\Http\Controllers\LeaveApplicationController::class, 'create'])->name('leave.user');
     Route::post('/leave_user', [\App\Http\Controllers\LeaveApplicationController::class, 'store'])->name('leave.user.submit');
+    Route::post('/leave_user/{id}/acknowledge', [\App\Http\Controllers\LeaveApplicationController::class, 'acknowledge'])->name('leave.user.acknowledge');
 
     Route::get('/service_record_user', [ServiceRecordController::class, 'show'])->name('service_record.user');
 
