@@ -14,6 +14,9 @@ use App\Models\ServiceRecordRequest;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\TemplateProcessor;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Illuminate\Support\Facades\Log;
 
 class ServiceRecordController extends Controller
 {
@@ -54,6 +57,93 @@ class ServiceRecordController extends Controller
         }
 
         return redirect()->back()->with('success', 'Service record created successfully.');
+    }
+
+    /**
+     * Convert a DOCX file to PDF using LibreOffice (soffice) if available.
+     * Returns the PDF file path on success, or null on failure.
+     */
+    protected function convertDocxToPdf(string $docxPath): ?string
+    {
+        if (!file_exists($docxPath)) {
+            return null;
+        }
+
+        // Prepare output directory
+        $outputDir = sys_get_temp_dir();
+
+        // Determine soffice binary path: check env var first, then common locations, then assume 'soffice' on PATH.
+        $candidates = [];
+        if ($env = env('LIBREOFFICE_PATH')) {
+            $candidates[] = $env;
+        }
+        // Common Windows locations
+        $candidates[] = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe';
+        $candidates[] = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe';
+        // Common Linux path
+        $candidates[] = '/usr/bin/soffice';
+        $candidates[] = '/usr/local/bin/soffice';
+        $candidates[] = 'soffice';
+
+        $processBinary = null;
+        foreach ($candidates as $c) {
+            // If candidate is just 'soffice' skip file_exists check
+            if ($c === 'soffice') {
+                // hope it's on PATH
+                $processBinary = $c;
+                break;
+            }
+            if (file_exists($c)) {
+                $processBinary = $c;
+                break;
+            }
+        }
+
+        if (!$processBinary) {
+            Log::warning('LibreOffice not found: cannot convert DOCX to PDF. Candidates tried: ' . implode(', ', $candidates));
+            return null;
+        }
+
+        // Construct and run the process using argv array (safer on Windows with spaces)
+        $process = new Process([
+            $processBinary,
+            '--headless',
+            '--convert-to',
+            'pdf',
+            '--outdir',
+            $outputDir,
+            $docxPath,
+        ]);
+        // Set a reasonable timeout (e.g., 60 seconds)
+        $process->setTimeout(60);
+
+        try {
+            Log::info('Attempting DOCX->PDF conversion', ['binary' => $processBinary, 'docx' => $docxPath, 'outdir' => $outputDir]);
+            $process->run();
+
+            $stdout = $process->getOutput();
+            $stderr = $process->getErrorOutput();
+            $exit = $process->getExitCode();
+            Log::info('LibreOffice conversion finished', ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr]);
+
+            if (!$process->isSuccessful()) {
+                Log::warning('LibreOffice conversion reported non-success', ['exit' => $exit, 'stderr' => $stderr]);
+                return null;
+            }
+
+            // Determine produced PDF filename (same basename but .pdf)
+            $pdfPath = $outputDir . DIRECTORY_SEPARATOR . pathinfo($docxPath, PATHINFO_FILENAME) . '.pdf';
+            if (file_exists($pdfPath)) {
+                return $pdfPath;
+            }
+
+            Log::warning('LibreOffice conversion succeeded but PDF not found', ['expected_pdf' => $pdfPath]);
+        } catch (\Throwable $e) {
+            Log::error('Exception during LibreOffice conversion', ['exception' => $e->getMessage()]);
+            return null;
+        }
+
+        return null;
     }
 
     /**
@@ -119,6 +209,18 @@ class ServiceRecordController extends Controller
 
                 $tempFile = tempnam(sys_get_temp_dir(), 'srvrec') . '.docx';
                 $tpl->saveAs($tempFile);
+
+                // Try converting to PDF using LibreOffice (soffice). If conversion fails, fall back to DOCX.
+                try {
+                    $pdfFile = $this->convertDocxToPdf($tempFile);
+                    if ($pdfFile && file_exists($pdfFile)) {
+                        // Remove the intermediate docx
+                        @unlink($tempFile);
+                        return response()->download($pdfFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf')->deleteFileAfterSend(true);
+                    }
+                } catch (\Throwable $e) {
+                    // ignore and fall back to docx
+                }
 
                 return response()->download($tempFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.docx')->deleteFileAfterSend(true);
             } catch (\Exception $e) {
@@ -250,6 +352,18 @@ class ServiceRecordController extends Controller
         $tempFile = tempnam(sys_get_temp_dir(), 'srvrec') . '.docx';
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save($tempFile);
+
+        // Attempt conversion to PDF via LibreOffice
+        try {
+            $pdfFile = $this->convertDocxToPdf($tempFile);
+            if ($pdfFile && file_exists($pdfFile)) {
+                @unlink($tempFile);
+                $pdfName = str_replace('.docx', '.pdf', $fileName);
+                return response()->download($pdfFile, $pdfName)->deleteFileAfterSend(true);
+            }
+        } catch (\Throwable $e) {
+            // fallback to docx
+        }
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
