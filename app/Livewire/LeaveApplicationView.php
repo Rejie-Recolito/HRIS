@@ -33,11 +33,11 @@ public function mount($id)
             'sick' => 15,
         ];
 
-        // Sum of assigned credits
+        // Sum of assigned credits (only positive amounts)
         $credits = LeaveCredit::where('employee_id', $employee->id)->get();
         $earnedCredits = [
-            'vacation' => (int) $credits->where('type', 'vacation')->sum('amount'),
-            'sick' => (int) $credits->where('type', 'sick')->sum('amount'),
+            'vacation' => $credits->where('type', 'vacation')->where('amount', '>', 0)->sum('amount'),
+            'sick' => $credits->where('type', 'sick')->where('amount', '>', 0)->sum('amount'),
         ];
 
         // Total Earned = Opening Balance + Earned Credits
@@ -46,14 +46,10 @@ public function mount($id)
             'sick' => $openingBalance['sick'] + $earnedCredits['sick'],
         ];
 
-        // Calculate availed credits from approved leave applications
-        $approvedLeaves = LeaveApplication::where('user_id', $this->leaveApplication->user_id)
-            ->where('status', 'Approved')
-            ->get();
-
+        // Calculate availed from negative leave credits (consumption records)
         $availed = [
-            'vacation' => $approvedLeaves->where('type_of_leave', 'Vacation Leave')->sum('number_of_days'),
-            'sick' => $approvedLeaves->where('type_of_leave', 'Sick Leave')->sum('number_of_days'),
+            'vacation' => abs($credits->where('type', 'vacation')->where('amount', '<', 0)->sum('amount')),
+            'sick' => abs($credits->where('type', 'sick')->where('amount', '<', 0)->sum('amount')),
         ];
 
         // Balance = Total Earned - Availed
