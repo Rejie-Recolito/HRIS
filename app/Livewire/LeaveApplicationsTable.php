@@ -15,12 +15,12 @@ class LeaveApplicationsTable extends Component
 
     public function mount()
     {
-        $this->leaveApplications = LeaveApplication::all();
+        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
     }
 
     public function updated()
     {
-        $this->leaveApplications = LeaveApplication::all();
+        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
     }
 
     public function accept($id)
@@ -29,7 +29,7 @@ class LeaveApplicationsTable extends Component
         if ($leave->status === 'Submitted') {
             $leave->status = 'Under Review';
             $leave->save();
-            $this->leaveApplications = LeaveApplication::all();
+            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
             session()->flash('success', 'Leave application set to Under Review.');
         }
     }
@@ -39,8 +39,9 @@ class LeaveApplicationsTable extends Component
         $leave = LeaveApplication::findOrFail($id);
         if ($leave->status === 'Under Review') {
             $leave->status = 'Approved';
+            $leave->action_date = now();
             $leave->save();
-            $this->leaveApplications = LeaveApplication::all();
+            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
             session()->flash('success', 'Leave application approved.');
         }
     }
@@ -50,8 +51,9 @@ class LeaveApplicationsTable extends Component
         $leave = LeaveApplication::findOrFail($id);
         if ($leave->status === 'Under Review') {
             $leave->status = 'Denied';
+            $leave->action_date = now();
             $leave->save();
-            $this->leaveApplications = LeaveApplication::all();
+            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
             session()->flash('success', 'Leave application denied.');
         }
     }
@@ -59,8 +61,9 @@ class LeaveApplicationsTable extends Component
     public function delete($id)
     {
         $leave = LeaveApplication::findOrFail($id);
-        $leave->delete();
-        $this->leaveApplications = LeaveApplication::all();
+        $leave->is_deleted = true;
+        $leave->save();
+        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
         session()->flash('success', 'Leave application deleted.');
     }
 

@@ -50,6 +50,7 @@ class LeaveApplication extends Model
         'sick_total_earned',
         'sick_less_this_application',
         'sick_balance',
+        'is_deleted',
     ];
 
     public function user()
@@ -76,5 +77,6 @@ class LeaveApplication extends Model
         'action_date' => 'date',
         'inclusive_from' => 'date',
         'inclusive_to' => 'date',
+        'approved_at' => 'datetime',
     ];
 }
