@@ -223,12 +223,12 @@
 
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 px-4 pb-4">
                             <div class="border p-3 border-[#198f51]" x-data="{
-                                vacationTotal: {{ $vacationTotal ?? 0 }},
-                                sickTotal: {{ $sickTotal ?? 0 }},
-                                vacationLess: Number('{{ old('vacation_less_this_application', $leaveApplication->vacation_less_this_application ?? 0) }}'),
-                                sickLess: Number('{{ old('sick_less_this_application', $leaveApplication->sick_less_this_application ?? 0) }}'),
-                                get vacationBalance() { return this.vacationTotal - (Number(this.vacationLess) || 0) },
-                                get sickBalance() { return this.sickTotal - (Number(this.sickLess) || 0) }
+                                vacationBalance: {{ $leaveCardDetails['vacation']['balance'] ?? 0 }},
+                                sickBalance: {{ $leaveCardDetails['sick']['balance'] ?? 0 }},
+                                vacationLess: Number('{{ $leaveApplication->status === 'Approved' ? 0 : old('vacation_less_this_application', $leaveApplication->vacation_less_this_application ?? 0) }}'),
+                                sickLess: Number('{{ $leaveApplication->status === 'Approved' ? 0 : old('sick_less_this_application', $leaveApplication->sick_less_this_application ?? 0) }}'),
+                                get vacationNewBalance() { return this.vacationBalance - (Number(this.vacationLess) || 0) },
+                                get sickNewBalance() { return this.sickBalance - (Number(this.sickLess) || 0) }
                             }">
                                 <h4 class="font-medium mb-2 dark:text-gray-100">LEAVE CREDITS</h4>
 
@@ -237,7 +237,7 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Total Earned (Vacation)</td>
-                                            <td><input type="number" name="vacation_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationTotal" /></td>
+                                            <td><input type="number" name="vacation_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['vacation']['total'] ?? 0 }}" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Less this application (Vacation)</td>
@@ -245,7 +245,7 @@
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Balance (Vacation)</td>
-                                            <td><input type="number" name="vacation_balance" readonly class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationBalance" /></td>
+                                            <td><input type="number" name="vacation_balance" readonly class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationNewBalance" /></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -255,7 +255,7 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Total Earned (Sick)</td>
-                                            <td><input type="number" name="sick_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickTotal" /></td>
+                                            <td><input type="number" name="sick_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['sick']['total'] ?? 0 }}" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Less this application (Sick)</td>
@@ -263,7 +263,7 @@
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Balance (Sick)</td>
-                                            <td><input type="number" name="sick_balance" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickBalance" /></td>
+                                            <td><input type="number" name="sick_balance" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickNewBalance" /></td>
                                         </tr>
                                     </table>
                                 </div>

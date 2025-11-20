@@ -72,11 +72,13 @@ class LeaveApplicationForm extends Component
             'sick' => 15,
         ];
 
-        // Sum of assigned credits
+        // Get all credits for this employee
         $credits = LeaveCredit::where('employee_id', $employee->id)->get();
+        
+        // Sum of assigned credits (positive amounts only)
         $earnedCredits = [
-            'vacation' => (int) $credits->where('type', 'vacation')->sum('amount'),
-            'sick' => (int) $credits->where('type', 'sick')->sum('amount'),
+            'vacation' => $credits->where('type', 'vacation')->where('amount', '>', 0)->sum('amount'),
+            'sick' => $credits->where('type', 'sick')->where('amount', '>', 0)->sum('amount'),
         ];
 
         // Total Earned = Opening Balance + Earned Credits
@@ -85,14 +87,10 @@ class LeaveApplicationForm extends Component
             'sick' => $openingBalance['sick'] + $earnedCredits['sick'],
         ];
 
-        // Calculate availed credits from approved leave applications
-        $approvedLeaves = \App\Models\LeaveApplication::where('user_id', Auth::id())
-            ->where('status', 'Approved')
-            ->get();
-
+        // Calculate availed from negative leave credits (consumption records)
         $availed = [
-            'vacation' => $approvedLeaves->where('type_of_leave', 'Vacation Leave')->sum('number_of_days'),
-            'sick' => $approvedLeaves->where('type_of_leave', 'Sick Leave')->sum('number_of_days'),
+            'vacation' => abs($credits->where('type', 'vacation')->where('amount', '<', 0)->sum('amount')),
+            'sick' => abs($credits->where('type', 'sick')->where('amount', '<', 0)->sum('amount')),
         ];
 
         // Balance = Total Earned - Availed
