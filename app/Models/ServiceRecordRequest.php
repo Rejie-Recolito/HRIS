@@ -14,8 +14,20 @@ class ServiceRecordRequest extends Model
     protected $fillable = [
         'user_id',
         'name',
-        'request_status', // pending, in_progress, accepted, deleted
+        'request_status', // pending, in_progress, verified, certified, completed, deleted
         'service_record_id',
+        'verified_at',
+        'certified_at',
+        'completed_at',
+        'generated_pdf_path',
+        'certified_by',
+        'verification_notes',
+    ];
+
+    protected $casts = [
+        'verified_at' => 'datetime',
+        'certified_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function user()
@@ -26,5 +38,10 @@ class ServiceRecordRequest extends Model
     public function serviceRecord()
     {
         return $this->belongsTo(ServiceRecord::class);
+    }
+
+    public function certifiedBy()
+    {
+        return $this->belongsTo(User::class, 'certified_by');
     }
 }

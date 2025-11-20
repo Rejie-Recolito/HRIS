@@ -15,33 +15,36 @@ class ServiceRecord extends Model
      * @var array
      */
     protected $fillable = [
-        'name',
-        'age',
-        'salary',
-        'date_of_birth',
-        'job_title',
-        'place_of_birth',
-        'office',
-        'status',
-        'date_of_service',
-        'place_of_assignment',
+        'employee_id',
         'user_id',
-        // New fields for admin-filled service record details
+        // Service inclusive dates
         'service_from',
         'service_to',
-        'appointment_rank',
+        // Record of appointment
         'appointment_designation',
         'appointment_status',
-        'appointment_monthly_base_pay',
-        'station',
-        'place',
-    'leave_of_absence',
+        'appointment_salary',
+        // Office entity/division
+        'station_place',
+        'leave_of_absence',
+        // Separation
         'separation_date',
         'separation_cause',
+    ];
+
+    protected $casts = [
+        'service_from' => 'date',
+        'service_to' => 'date',
+        'separation_date' => 'date',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
     }
 }

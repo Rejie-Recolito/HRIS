@@ -46,13 +46,8 @@
                                         <span class="{{ $badgeClasses[$status] ?? $badgeClasses['pending'] }}">{{ ucwords(str_replace('_', ' ', $status)) }}</span>
                                     </td>
                                     <td class="flex items-center space-x-2">
-                                        @if($r->request_status === 'pending')
-                                            <form method="POST" action="{{ route('service-record-requests.accept', ['id' => $r->id]) }}" style="display:inline-block;">
-                                                @csrf
-                                                <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Accept</button>
-                                            </form>
-                                        @elseif($r->request_status === 'in_progress' && $r->service_record_id)
-                                            <a href="{{ route('service-records.edit', ['id' => $r->service_record_id]) }}" class="bg-yellow-500 text-white px-3 py-1 rounded">Resume</a>
+                                        @if($r->request_status === 'pending' || $r->request_status === 'in_progress')
+                                            <a href="{{ route('service-record-requests.process', ['id' => $r->id]) }}" class="bg-blue-600 text-white px-3 py-1 rounded">Process</a>
                                         @endif
 
                                         <form method="POST" action="{{ route('service-record-requests.destroy', ['id' => $r->id]) }}" style="display:inline-block;" onsubmit="return confirm('Delete this request?');">

@@ -31,4 +31,14 @@ class Employee extends Model
     ];
 
     protected $table = 'employee';
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function serviceRecords()
+    {
+        return $this->hasMany(ServiceRecord::class);
+    }
 }

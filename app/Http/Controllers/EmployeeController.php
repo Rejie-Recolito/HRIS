@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Notification;
+use App\Models\ServiceRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -140,5 +141,88 @@ class EmployeeController extends Controller
     {
         $employee = Employee::where('user_id', Auth::id())->first();
         return view('add-user-information', compact('employee'));
+    }
+
+    /**
+     * Show service record management page for an employee
+     */
+    public function showServiceRecord($id)
+    {
+        $employee = Employee::findOrFail($id);
+        $serviceRecords = ServiceRecord::where('employee_id', $id)
+            ->orderBy('service_from', 'asc')
+            ->get();
+        
+        return view('admin.employee_service_record_new', compact('employee', 'serviceRecords'));
+    }
+
+    /**
+     * Store a new service record entry
+     */
+    public function storeServiceRecord(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+        
+        $validated = $request->validate([
+            'service_from' => 'required|date',
+            'service_to' => 'nullable|date|after_or_equal:service_from',
+            'appointment_designation' => 'required|string|max:255',
+            'appointment_status' => 'required|string|max:255',
+            'appointment_salary' => 'required|numeric|min:0',
+            'station_place' => 'required|string|max:255',
+            'leave_of_absence' => 'nullable|string|max:255',
+            'separation_date' => 'nullable|date',
+            'separation_cause' => 'nullable|string|max:500',
+        ]);
+
+        $validated['employee_id'] = $employee->id;
+        $validated['user_id'] = $employee->user_id;
+
+        ServiceRecord::create($validated);
+
+        return redirect()->route('employees.service_record', $id)
+            ->with('success', 'Service record entry added successfully.');
+    }
+
+    /**
+     * Update a service record entry
+     */
+    public function updateServiceRecord(Request $request, $employeeId, $recordId)
+    {
+        $record = ServiceRecord::where('employee_id', $employeeId)
+            ->where('id', $recordId)
+            ->firstOrFail();
+        
+        $validated = $request->validate([
+            'service_from' => 'required|date',
+            'service_to' => 'nullable|date|after_or_equal:service_from',
+            'appointment_designation' => 'required|string|max:255',
+            'appointment_status' => 'required|string|max:255',
+            'appointment_salary' => 'required|numeric|min:0',
+            'station_place' => 'required|string|max:255',
+            'leave_of_absence' => 'nullable|string|max:255',
+            'separation_date' => 'nullable|date',
+            'separation_cause' => 'nullable|string|max:500',
+        ]);
+
+        $record->update($validated);
+
+        return redirect()->route('employees.service_record', $employeeId)
+            ->with('success', 'Service record entry updated successfully.');
+    }
+
+    /**
+     * Delete a service record entry
+     */
+    public function deleteServiceRecord($employeeId, $recordId)
+    {
+        $record = ServiceRecord::where('employee_id', $employeeId)
+            ->where('id', $recordId)
+            ->firstOrFail();
+        
+        $record->delete();
+
+        return redirect()->route('employees.service_record', $employeeId)
+            ->with('success', 'Service record entry deleted successfully.');
     }
 }

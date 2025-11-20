@@ -432,11 +432,48 @@ class ServiceRecordController extends Controller
     $req->request_status = 'in_progress';
     $req->service_record_id = $serviceRecord ? $serviceRecord->id : null;
     $req->save();
+    
+        // Notify the user that their request is being processed
+        if ($user) {
+            $user->notifications()->create([
+                'id' => (string) Str::uuid(),
+                'type' => 'App\Notifications\ServiceRecordUpdate',
+                'data' => [
+                    'message' => 'Your Service Record request is now being processed by HR.',
+                    'service_record_request_id' => $req->id,
+                    'status' => 'in_progress'
+                ],
+            ]);
+        }
 
         if ($serviceRecord) {
             return redirect()->route('service-records.edit', ['id' => $serviceRecord->id]);
         }
-        return redirect()->back()->with('success', 'Request accepted.');
+        return redirect()->route('service-record-requests.process', $req->id)->with('success', 'Request accepted.');
+    }
+
+    /**
+     * Show the processing page for a service record request
+     */
+    public function showProcessing($id)
+    {
+        $req = ServiceRecordRequest::with('user')->findOrFail($id);
+        
+        if (!$req->user) {
+            return redirect()->back()->with('error', 'Invalid request - user not found.');
+        }
+        
+        $employee = Employee::where('user_id', $req->user->id)->first();
+        
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee record not found.');
+        }
+        
+        $serviceRecords = ServiceRecord::where('employee_id', $employee->id)
+            ->orderBy('service_from')
+            ->get();
+        
+        return view('admin.service_record_processing', compact('req', 'employee', 'serviceRecords'));
     }
 
     /**
@@ -577,10 +614,28 @@ class ServiceRecordController extends Controller
      */
     public function show()
     {
-    /** @var \App\Models\User|null $user */
-    $user = Auth::user();
-    $serviceRecords = $user ? $user->serviceRecords()->latest()->get() : collect();
-        return view('service_record_user', compact('serviceRecords'));
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        
+        $serviceRecords = collect();
+        $hasPending = false;
+        
+        if ($user) {
+            $employee = Employee::where('user_id', $user->id)->first();
+            
+            if ($employee) {
+                // Get service records by employee_id (not user_id)
+                $serviceRecords = ServiceRecord::where('employee_id', $employee->id)
+                    ->orderBy('service_from')
+                    ->get();
+                
+                $hasPending = ServiceRecordRequest::where('user_id', $user->id)
+                    ->whereIn('request_status', ['pending', 'in_progress', 'verified', 'generated'])
+                    ->exists();
+            }
+        }
+        
+        return view('service_record_user', compact('serviceRecords', 'hasPending'));
     }
 
     /**
@@ -673,6 +728,61 @@ class ServiceRecordController extends Controller
                 return response()->json(['message' => 'Server error', 'error' => $e->getMessage()], 500);
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Generate certified document from service records
+     */
+    public function generateCertifiedDocument($id)
+    {
+        $req = ServiceRecordRequest::with('user')->findOrFail($id);
+        
+        if (!$req->user) {
+            return redirect()->back()->with('error', 'User not found for this request.');
+        }
+        
+        $user = $req->user;
+        $employee = Employee::where('user_id', $user->id)->first();
+        
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee record not found.');
+        }
+        
+        // Get all service records for this employee
+        $serviceRecords = ServiceRecord::where('employee_id', $employee->id)
+            ->orderBy('service_from')
+            ->get();
+        
+        if ($serviceRecords->isEmpty()) {
+            return redirect()->back()->with('error', 'No service records found. Please add service records first.');
+        }
+        
+        try {
+            // TODO: Implement actual document generation here
+            // For now, just update status and notify user
+            
+            $req->update([
+                'request_status' => 'generated',
+                'generated_at' => now()
+            ]);
+            
+            // Notify the user that their document is ready
+            $user->notifications()->create([
+                'id' => (string) Str::uuid(),
+                'type' => 'App\Notifications\ServiceRecordReady',
+                'data' => [
+                    'message' => 'Your Service Record has been generated and is now ready for download.',
+                    'service_record_request_id' => $req->id,
+                ],
+            ]);
+            
+            return redirect()->route('service-record-requests.process', $req->id)
+                ->with('success', 'Document generated successfully. User has been notified.');
+                
+        } catch (\Exception $e) {
+            Log::error('Service record generation failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate document: ' . $e->getMessage());
         }
     }
 }

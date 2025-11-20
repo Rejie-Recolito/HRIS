@@ -78,7 +78,15 @@ Route::post('/service-records/request', [ServiceRecordController::class, 'reques
 Route::get('/service-record-requests', [ServiceRecordController::class, 'requestsIndex'])->name('service-record-requests.index');
 Route::get('/service-record-requests/history', [ServiceRecordController::class, 'historyIndex'])->name('service-record-requests.history');
 Route::post('/service-record-requests/{id}/accept', [ServiceRecordController::class, 'acceptRequest'])->name('service-record-requests.accept');
+Route::get('/service-record-requests/{id}/process', [ServiceRecordController::class, 'showProcessing'])->name('service-record-requests.process');
 Route::delete('/service-record-requests/{id}', [ServiceRecordController::class, 'destroyRequest'])->name('service-record-requests.destroy');
+
+// NEW: Service record certification workflow routes
+Route::get('/service-record-requests/{id}/verify', [ServiceRecordController::class, 'showVerification'])->middleware(['auth', 'verified'])->name('service-records.verify');
+Route::post('/service-record-requests/{id}/mark-verified', [ServiceRecordController::class, 'markAsVerified'])->middleware(['auth', 'verified'])->name('service-records.mark-verified');
+Route::post('/service-record-requests/{id}/generate-document', [ServiceRecordController::class, 'generateCertifiedDocument'])->middleware(['auth', 'verified'])->name('service-records.generate-document');
+Route::post('/service-record-requests/{id}/certify', [ServiceRecordController::class, 'certifyDocument'])->middleware(['auth', 'verified'])->name('service-records.certify');
+Route::get('/service-record-requests/{id}/download', [ServiceRecordController::class, 'downloadCertified'])->middleware(['auth', 'verified'])->name('service-records.download-certified');
 
 // Admin edit/update routes for service records
 Route::get('/service-records/{id}/edit', [ServiceRecordController::class, 'edit'])->name('service-records.edit');
@@ -119,6 +127,12 @@ Route::middleware('auth')->group(function () {
     // Leave card (assign/view leave credits for employees)
     Route::get('/employees/{id}/leave-card', [\App\Http\Controllers\LeaveCreditController::class, 'show'])->name('employees.leave_card');
     Route::post('/employees/{id}/leave-card', [\App\Http\Controllers\LeaveCreditController::class, 'store'])->name('employees.leave_card.store');
+    
+    // Service Record routes for employees
+    Route::get('/employees/{id}/service-record', [EmployeeController::class, 'showServiceRecord'])->name('employees.service_record');
+    Route::post('/employees/{id}/service-record', [EmployeeController::class, 'storeServiceRecord'])->name('employees.service_record.store');
+    Route::put('/employees/{employee}/service-record/{record}', [EmployeeController::class, 'updateServiceRecord'])->name('employees.service_record.update');
+    Route::delete('/employees/{employee}/service-record/{record}', [EmployeeController::class, 'deleteServiceRecord'])->name('employees.service_record.delete');
      
      // User information/employee profile route (shows the form with existing data if present)
      Route::get('/add-user-information', [\App\Http\Controllers\EmployeeController::class, 'showUserForm'])
