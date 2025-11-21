@@ -21,55 +21,14 @@
 <div class="py-12">
     <div class="w-[95%] mx-auto px-4">
         
-        <!-- Certified Documents Section -->
-        @if($certifiedRequests->isNotEmpty())
-            <div class="bg-white dark:bg-[#1c1c1d] rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <h2 class="text-xl font-bold text-[#198f51] mb-4">📄 Your Certified Service Records</h2>
-                
-                <div class="space-y-3">
-                    @foreach($certifiedRequests as $request)
-                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                            <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">
-                                        Certified Service Record
-                                    </p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                                        Certified on: {{ $request->certified_at ? $request->certified_at->format('F d, Y') : 'N/A' }}
-                                    </p>
-                                    @if($request->completed_at)
-                                        <p class="text-xs text-green-600 dark:text-green-400">
-                                            ✓ Downloaded on {{ $request->completed_at->format('F d, Y') }}
-                                        </p>
-                                    @else
-                                        <p class="text-xs text-blue-600 dark:text-blue-400">
-                                            🆕 New - Ready for download
-                                        </p>
-                                    @endif
-                                </div>
-                                <div>
-                                    <a href="{{ route('service-records.download-certified', $request->id) }}" 
-                                       class="inline-flex items-center px-4 py-2 bg-[#198f51] text-white font-semibold rounded-md hover:bg-[#156b3f] transition">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        Download PDF
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
         
         <div class="bg-white dark:bg-[#1c1c1d] rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-green-600">Service Record</h1>
+                <h1 class="text-2xl font-bold text-[#198f51]">Service Record</h1>
             </div>
 
             <!-- Service Records Table -->
-            <div class="mb-4 overflow-x-auto" style="max-width: 100%;">
+            <div class="mb-7 overflow-x-auto" style="max-width: 100%;">
                 <table class="admin-table" style="min-width: 1700px;">
                     <thead>
                         <tr>
@@ -115,36 +74,49 @@
                 </table>
             </div>
 
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">For an official service record document, that contains comprehensive personal data, detailed career progression, and other government-specific elements, with certification and verification; submit a request by clicking on the button below.</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">The request will be processed accordingly and can be claimed physically at the office.</p>
-
+            <p class="text-lg mb-4">For an official service record document, that contains personal data and with certification and verification for whatever purposes; submit a request by clicking on the button below.</p>
+            <p class="text-lg mb-4">The request will be processed accordingly and can be claimed physically at the office.</p>
+    
             <div x-data="serviceRecordRequest({ hasPending: {{ $hasPending ? 'true' : 'false' }}, requestUrl: {{ json_encode(route('service-records.request')) }}, csrfToken: {{ json_encode(csrf_token()) }} })" class="mt-6">
                 <div id="sr-message" class="mb-3"></div>
 
-                @if($hasPending)
-                    <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 rounded-r">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                                </svg>
+
+                {{-- Ready for Claim Notification --}}
+                @php
+                    $readyForClaim = $certifiedRequests->firstWhere('request_status', 'ready_for_claim');
+                @endphp
+                @if($readyForClaim)
+                    <div class="mb-6 p-4 bg-blue-100 border border-blue-400 text-blue-800 rounded">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <strong>Your requested Certified True Copy of Service Record is ready to be claimed physically at the MHRMO.</strong>
                             </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                                    Request Pending
-                                </p>
-                                <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                                    Your service record request is being processed by HR.
-                                </p>
-                            </div>
+                            <form method="POST" action="{{ route('service-records.mark-claimed', $readyForClaim->id) }}" class="mt-3 md:mt-0 md:ml-6">
+                                @csrf
+                                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">Mark as Claimed</button>
+                            </form>
                         </div>
                     </div>
-                @endif
-
-                @if(!$hasPending)
-                    <button x-show="!hasPending" x-ref="openBtn" x-on:click="open()" type="button" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow">Request Complete Service Record</button>
                 @else
-                    <button disabled class="bg-gray-400 text-white font-semibold px-6 py-2 rounded shadow cursor-not-allowed">Request Pending</button>
+                    @if($hasPending)
+                        <div class="mb-4 p-4 bg-[#e3f9ec] dark:bg-[#486da90f] border-l-4 border-[#198f51] rounded-r">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-[#198f51]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-md mt-1">
+                                        Your service record request is currently being processed by HR.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <button disabled class="bg-gray-400 text-white font-semibold px-6 py-2 rounded shadow cursor-not-allowed">Request Pending</button>
+                    @else
+                        <button x-show="!hasPending" x-ref="openBtn" x-on:click="open()" type="button" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow">Request Complete Service Record</button>
+                    @endif
                 @endif
 
                 <!-- Modal -->
@@ -158,6 +130,7 @@
                         </div>
                     </div>
                 </div>
+
 
             </div>
         </div>

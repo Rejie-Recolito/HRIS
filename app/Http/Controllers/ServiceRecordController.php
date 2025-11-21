@@ -23,6 +23,23 @@ use Illuminate\Http\File;
 class ServiceRecordController extends Controller
 {
     /**
+     * User marks their service record request as claimed.
+     */
+    public function markAsClaimed($id)
+    {
+        $req = ServiceRecordRequest::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $req->update([
+            'request_status' => 'claimed',
+            'completed_at' => now(),
+        ]);
+
+        return redirect()->route('service_record.user')
+            ->with('success', 'Thank you! Your request has been marked as claimed.');
+    }
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -461,9 +478,9 @@ class ServiceRecordController extends Controller
      */
     public function requestsIndex()
     {
-        // Show pending and in-progress requests so admins can resume incomplete ones
+        // Show all active requests, including claimed, so admins can track all requests
         $requests = ServiceRecordRequest::with('user')
-            ->whereIn('request_status', ['pending', 'in_progress'])
+            ->whereIn('request_status', ['pending', 'in_progress', 'ready_for_claim', 'claimed'])
             ->orderBy('created_at', 'desc')
             ->get();
         return view('admin.service_record_requests', compact('requests'));
@@ -653,8 +670,9 @@ class ServiceRecordController extends Controller
                 ->where('request_status', 'in_progress')
                 ->first();
             if ($req) {
-                // Admin finished the form — remove the original request from the queue
-                $req->delete();
+                // Admin finished the form — mark as accepted, do not delete
+                $req->request_status = 'accepted';
+                $req->save();
             }
         } catch (\Throwable $e) {
             // non-fatal: continue
@@ -704,28 +722,34 @@ class ServiceRecordController extends Controller
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        
+
         $serviceRecords = collect();
         $hasPending = false;
-        
+        $certifiedRequests = collect();
+
         if ($user) {
             $employee = Employee::where('user_id', $user->id)->first();
-            
+
             if ($employee) {
                 // Get service records by employee_id (not user_id)
                 $serviceRecords = ServiceRecord::where('employee_id', $employee->id)
                     ->orderBy('service_from')
                     ->get();
-                
+
                 // Consider only pending or in_progress as "pending" for the user UI.
-                // 'generated' means the document was produced and should not block new requests.
                 $hasPending = ServiceRecordRequest::where('user_id', $user->id)
                     ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
                     ->exists();
+
+                // Get all certified/ready/claimed requests for this user for display
+                $certifiedRequests = ServiceRecordRequest::where('user_id', $user->id)
+                    ->whereIn('request_status', ['certified', 'ready_for_claim', 'claimed'])
+                    ->orderByDesc('updated_at')
+                    ->get();
             }
         }
-        
-        return view('service_record_user', compact('serviceRecords', 'hasPending'));
+
+        return view('service_record_user', compact('serviceRecords', 'hasPending', 'certifiedRequests'));
     }
 
     /**
@@ -853,20 +877,20 @@ class ServiceRecordController extends Controller
             // For now, just update status and notify user
             
             $req->update([
-                'request_status' => 'generated',
+                'request_status' => 'ready_for_claim',
                 'generated_at' => now()
             ]);
-            
-            // Notify the user that their document is ready
+
+            // Notify the user that their document is ready for claim
             $user->notifications()->create([
                 'id' => (string) Str::uuid(),
-                'type' => 'App\Notifications\ServiceRecordReady',
+                'type' => 'App\\Notifications\\ServiceRecordReady',
                 'data' => [
-                    'message' => 'Your Service Record has been generated and is now ready for download.',
+                    'message' => 'Your requested Certified True Copy of Service Record is ready to be claimed physically at the MHRMO.',
                     'service_record_request_id' => $req->id,
                 ],
             ]);
-            
+
             return redirect()->route('service-record-requests.process', $req->id)
                 ->with('success', 'Document generated successfully. User has been notified.');
                 

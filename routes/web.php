@@ -183,3 +183,6 @@ Route::get('/leave-application/{id}/view', \App\Livewire\LeaveApplicationView::c
 
 
 Route::get('/leave-applications', [LeaveApplicationController::class, 'index'])->name('leave_applications.index');
+
+// NEW: Route for users to mark service record request as claimed
+Route::post('/service-records/{id}/mark-claimed', [ServiceRecordController::class, 'markAsClaimed'])->middleware(['auth', 'verified'])->name('service-records.mark-claimed');

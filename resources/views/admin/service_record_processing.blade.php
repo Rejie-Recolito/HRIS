@@ -111,15 +111,13 @@
                        class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
                         ← Back to Requests
                     </a>
-                    
                     <div class="flex space-x-2">
                         <a href="{{ route('employees.service_record', $employee->id) }}" 
                            class="bg-[#198f51] text-white px-6 py-2 rounded-md hover:bg-[#156b3f] transition-colors">
                             Add/Edit Records
                         </a>
-                        
-                        {{-- Export for the request's user (use GET route) --}}
-                        <form method="GET" action="{{ route('service-records.export', $req->user->id) }}?request={{ $req->id }}">
+                        <form method="POST" action="{{ route('service-records.generate-document', $req->id) }}">
+                            @csrf
                             <button type="submit" 
                                     class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
                                 Generate
