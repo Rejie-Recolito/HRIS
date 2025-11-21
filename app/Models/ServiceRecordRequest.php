@@ -20,6 +20,7 @@ class ServiceRecordRequest extends Model
         'certified_at',
         'completed_at',
         'generated_pdf_path',
+            'generated_at',
         'certified_by',
         'verification_notes',
     ];
@@ -28,6 +29,7 @@ class ServiceRecordRequest extends Model
         'verified_at' => 'datetime',
         'certified_at' => 'datetime',
         'completed_at' => 'datetime',
+        'generated_at' => 'datetime',
     ];
 
     public function user()

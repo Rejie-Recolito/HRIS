@@ -17,6 +17,8 @@ use PhpOffice\PhpWord\TemplateProcessor;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\File;
 
 class ServiceRecordController extends Controller
 {
@@ -189,12 +191,18 @@ class ServiceRecordController extends Controller
                     $rec = $serviceRecords->get($i - 1);
                     $tpl->setValue("from#{$i}", $rec ? $fmt($rec->service_from) : '');
                     $tpl->setValue("to#{$i}", $rec ? $fmt($rec->service_to) : '');
-                    $tpl->setValue("rank#{$i}", $rec->appointment_rank ?? '');
+
                     $tpl->setValue("designation#{$i}", $rec->appointment_designation ?? '');
                     $tpl->setValue("status#{$i}", $rec->appointment_status ?? '');
-                    $tpl->setValue("monthly_pay#{$i}", $rec && $rec->appointment_monthly_base_pay ? number_format($rec->appointment_monthly_base_pay, 2) : '');
-                    $tpl->setValue("station#{$i}", $rec->station ?? '');
-                    $tpl->setValue("branch#{$i}", $rec->place_of_assignment ?? '');
+
+                    // Monthly pay: support both appointment_salary and appointment_monthly_base_pay
+                    $monthly = $rec ? ($rec->appointment_salary ?? $rec->appointment_monthly_base_pay ?? '') : '';
+                    $tpl->setValue("monthly_pay#{$i}", $monthly !== '' ? number_format($monthly, 2) : '');
+
+                    // Station/place: prefer station_place then station
+                    $station = $rec ? ($rec->station_place ?? $rec->station ?? '') : '';
+                    $tpl->setValue("station#{$i}", $station);
+
                     // Use single 'leave_of_absence' field
                     $tpl->setValue("leave_of_absence#{$i}", $rec->leave_of_absence ?? '');
                     $tpl->setValue("sep_date#{$i}", $rec ? $fmt($rec->separation_date) : '');
@@ -202,10 +210,20 @@ class ServiceRecordController extends Controller
                 }
 
                 // Header placeholders (if template contains them)
-                // Format name as: surname, firstname middlename
+                // Provide separate lastname / firstname / middlename placeholders for templates that use them.
+                $lastname = $employee->lastname ?? ($user->lastname ?? '');
+                $firstname = $employee->firstname ?? ($user->firstname ?? '');
+                $middlename = $employee->middlename ?? ($user->middlename ?? '');
+
+                // Keep old 'name' placeholder for backwards compatibility
                 $tpl->setValue('name', $employee ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? '')) : ($user->name ?? ''));
+                $tpl->setValue('lastname', $lastname);
+                $tpl->setValue('firstname', $firstname);
+                $tpl->setValue('middlename', $middlename);
                 $tpl->setValue('birth', $employee->date_of_birth ?? ($user->date_of_birth ?? ''));
                 $tpl->setValue('place_of_birth', $employee->place_of_birth ?? ($user->place_of_birth ?? ''));
+                // Date accomplished: default to today; templates may override this if needed
+                $tpl->setValue('date_accomplished', date('Y-m-d'));
 
                 $tempFile = tempnam(sys_get_temp_dir(), 'srvrec') . '.docx';
                 $tpl->saveAs($tempFile);
@@ -214,9 +232,65 @@ class ServiceRecordController extends Controller
                 try {
                     $pdfFile = $this->convertDocxToPdf($tempFile);
                     if ($pdfFile && file_exists($pdfFile)) {
-                        // Remove the intermediate docx
-                        @unlink($tempFile);
-                        return response()->download($pdfFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf')->deleteFileAfterSend(true);
+                        // Persist PDF to storage/public so it can be referenced later
+                        $fileName = 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf';
+                        $storageDir = 'service_records';
+                        // Ensure directory exists (Storage will create it when putting file)
+                        $storagePath = $storageDir . '/' . $fileName;
+                        try {
+                            // Copy generated pdf into storage/app/public/service_records
+                            Storage::disk('public')->putFileAs($storageDir, new File($pdfFile), $fileName);
+
+                            // If a specific request id was supplied, update only that request; otherwise update all relevant requests
+                            $specificRequestId = request()->query('request');
+                            if ($specificRequestId) {
+                                $r = ServiceRecordRequest::where('id', $specificRequestId)->where('user_id', $user->id)->first();
+                                if ($r) {
+                                    $r->request_status = 'generated';
+                                    $r->generated_pdf_path = $storagePath;
+                                    $r->generated_at = now();
+                                    $r->save();
+                                }
+                            } else {
+                                $reqs = ServiceRecordRequest::where('user_id', $user->id)
+                                    ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
+                                    ->get();
+                                foreach ($reqs as $r) {
+                                    $r->request_status = 'generated';
+                                    $r->generated_pdf_path = $storagePath;
+                                    $r->generated_at = now();
+                                    $r->save();
+                                }
+                            }
+
+                            // Notify the user if they exist
+                            if ($user) {
+                                $user->notifications()->create([
+                                    'id' => (string) Str::uuid(),
+                                    'type' => 'App\\Notifications\\ServiceRecordReady',
+                                    'data' => [
+                                        'message' => 'Your Service Record has been generated and is now ready for download.',
+                                        'service_record_request_id' => $reqs->first() ? $reqs->first()->id : null,
+                                        'path' => $storagePath,
+                                    ],
+                                ]);
+                            }
+
+                            // Clean up intermediate docx and local pdf
+                            @unlink($tempFile);
+                            @unlink($pdfFile);
+
+                            // Return the stored file for download
+                            $fullPath = storage_path('app/public/' . $storagePath);
+                            if (file_exists($fullPath)) {
+                                return response()->download($fullPath, $fileName)->deleteFileAfterSend(false);
+                            }
+                        } catch (\Throwable $e) {
+                            Log::error('Failed to persist generated PDF: ' . $e->getMessage());
+                            // fallback: return the raw pdf if possible
+                            @unlink($tempFile);
+                            return response()->download($pdfFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf')->deleteFileAfterSend(true);
+                        }
                     }
                 } catch (\Throwable $e) {
                     // ignore and fall back to docx
@@ -248,7 +322,9 @@ class ServiceRecordController extends Controller
 
         // Add user header lines similar to the template
     // Use employee profile when available for more accurate header data
-    $headerName = $employee ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? '')) : ($user->name ?? '');
+    $headerLastname = $employee->lastname ?? ($user->lastname ?? '');
+    $headerFirstname = $employee->firstname ?? ($user->firstname ?? '');
+    $headerMiddlename = $employee->middlename ?? ($user->middlename ?? '');
     $headerBirth = $employee->date_of_birth ?? ($user->date_of_birth ?? '');
     $headerPlace = $employee->place_of_birth ?? ($user->place_of_birth ?? '');
 
@@ -257,10 +333,12 @@ class ServiceRecordController extends Controller
     $phpWord->addTableStyle('HdrTable', $hdrTableStyle);
     $hdr = $section->addTable('HdrTable');
 
-    // Name row: label + long underline cell
+    // Name row: label + three underlined cells for lastname, firstname and middlename
     $hdr->addRow();
     $hdr->addCell(1000)->addText('NAME:', ['bold' => true, 'name' => 'Times New Roman']);
-    $hdr->addCell(14000, ['borderBottomSize' => 6])->addText($headerName, ['name' => 'Times New Roman']);
+    $hdr->addCell(7000, ['borderBottomSize' => 6])->addText(strtoupper($headerLastname), ['name' => 'Times New Roman']);
+    $hdr->addCell(5000, ['borderBottomSize' => 6])->addText(strtoupper($headerFirstname), ['name' => 'Times New Roman']);
+    $hdr->addCell(2000, ['borderBottomSize' => 6])->addText(strtoupper($headerMiddlename), ['name' => 'Times New Roman']);
     $hdr->addCell(2000)->addText('', []);
 
     // Birth row
@@ -331,13 +409,23 @@ class ServiceRecordController extends Controller
             $table->addCell(1500)->addText($rec ? $fmt($rec->service_from) : '');
             $table->addCell(1500)->addText($rec ? $fmt($rec->service_to) : '');
 
-            $table->addCell(1200)->addText($rec->appointment_rank ?? '');
+            // Rank: prefer appointment_rank then appointment_designation
+            $rank = $rec ? ($rec->appointment_rank ?? $rec->appointment_designation ?? '') : '';
+            $table->addCell(1200)->addText($rank);
             $table->addCell(3000)->addText($rec->appointment_designation ?? '');
             $table->addCell(1200)->addText($rec->appointment_status ?? '');
-            $table->addCell(1200)->addText($rec && $rec->appointment_monthly_base_pay ? number_format($rec->appointment_monthly_base_pay, 2) : '');
 
-            $table->addCell(2000)->addText($rec->station ?? '');
-            $table->addCell(1500)->addText($rec->place_of_assignment ?? '');
+            // Monthly pay: prefer appointment_salary then appointment_monthly_base_pay
+            $monthly = $rec ? ($rec->appointment_salary ?? $rec->appointment_monthly_base_pay ?? '') : '';
+            $table->addCell(1200)->addText($monthly !== '' ? number_format($monthly, 2) : '');
+
+            // Station/place: prefer station_place then station
+            $station = $rec ? ($rec->station_place ?? $rec->station ?? '') : '';
+            $table->addCell(2000)->addText($station);
+
+            // Branch: prefer place_of_assignment then place
+            $branch = $rec ? ($rec->place_of_assignment ?? $rec->place ?? '') : '';
+            $table->addCell(1500)->addText($branch);
 
             // Leave of Absence value
             $table->addCell(2500)->addText($rec->leave_of_absence ?? '');
@@ -629,8 +717,10 @@ class ServiceRecordController extends Controller
                     ->orderBy('service_from')
                     ->get();
                 
+                // Consider only pending or in_progress as "pending" for the user UI.
+                // 'generated' means the document was produced and should not block new requests.
                 $hasPending = ServiceRecordRequest::where('user_id', $user->id)
-                    ->whereIn('request_status', ['pending', 'in_progress', 'verified', 'generated'])
+                    ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
                     ->exists();
             }
         }

@@ -118,8 +118,8 @@
                             Add/Edit Records
                         </a>
                         
-                        <form method="POST" action="{{ route('service-records.generate-document', $req->id) }}">
-                            @csrf
+                        {{-- Export for the request's user (use GET route) --}}
+                        <form method="GET" action="{{ route('service-records.export', $req->user->id) }}?request={{ $req->id }}">
                             <button type="submit" 
                                     class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
                                 Generate
