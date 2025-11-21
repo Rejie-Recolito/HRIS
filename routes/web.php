@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\DtrController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ServiceRecordController;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\LeaveApplicationController;
 use App\Livewire\LeaveApplicationView;
+use Carbon\Carbon;
 
 Route::get('/', function () {
     return view('welcome');
@@ -106,9 +109,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/leave/generateDocx/{id}', [\App\Http\Controllers\LeaveApplicationController::class, 'generateDocx'])->name('leave.generate-docx');
 });
 
-Route::get('/dtr', function () {
-    return view('admin.dtr');
-})->middleware(['auth', 'verified'])->name('dtr');
+Route::get('/dtr', [DtrController::class, 'show'])->middleware(['auth', 'verified'])->name('dtr');
+
+// Controller handles parsing, mapping, and streaming-friendly parsing
+Route::post('/dtr/upload', [DtrController::class, 'upload'])->middleware(['auth', 'verified'])->name('dtr.upload');
 
 
 
