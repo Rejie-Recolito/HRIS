@@ -86,11 +86,11 @@
                                             </tr>
                                             <tr>
                                                 <td class="text-md py-1" style="width: 70%;">Earned Credits</td>
-                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ $leaveCardDetails['vacation']['earned'] ?? 0 }}</td>
+                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ number_format($leaveCardDetails['vacation']['earned'] ?? 0, 2) }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-md py-1" style="width: 70%;">Total Earned</td>
-                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ $leaveCardDetails['vacation']['total'] ?? 0 }}</td>
+                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ number_format($leaveCardDetails['vacation']['total'] ?? 0, 2) }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-md py-1" style="width: 70%;">Availed</td>
@@ -98,7 +98,7 @@
                                             </tr>
                                             <tr>
                                                 <td class="font-bold text-md py-1 text-[#198f51]" style="width: 70%;">BALANCE</td>
-                                                <td class="text-right font-bold text-md py-1" style="color: #198f51; width: 30%;">{{ $leaveCardDetails['vacation']['balance'] ?? 0 }}</td>
+                                                <td class="text-right font-bold text-md py-1" style="color: #198f51; width: 30%;">{{ number_format($leaveCardDetails['vacation']['balance'] ?? 0, 2) }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -116,11 +116,11 @@
                                             </tr>
                                             <tr>
                                                 <td class="text-md py-1" style="width: 70%;">Earned Credits</td>
-                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ $leaveCardDetails['sick']['earned'] ?? 0 }}</td>
+                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ number_format($leaveCardDetails['sick']['earned'] ?? 0, 2) }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-md py-1" style="width: 70%;">Total Earned</td>
-                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ $leaveCardDetails['sick']['total'] ?? 0 }}</td>
+                                                <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ number_format($leaveCardDetails['sick']['total'] ?? 0, 2) }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-md py-1" style="width: 70%;">Availed</td>
@@ -128,7 +128,7 @@
                                             </tr>
                                             <tr>
                                                 <td class="font-bold text-md py-1 text-[#198f51]" style="width: 70%;">Balance</td>
-                                                <td class="text-right font-bold text-md py-1" style="color: #198f51; width: 30%;">{{ $leaveCardDetails['sick']['balance'] ?? 0 }}</td>
+                                                <td class="text-right font-bold text-md py-1" style="color: #198f51; width: 30%;">{{ number_format($leaveCardDetails['sick']['balance'] ?? 0, 2) }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -237,15 +237,15 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Total Earned (Vacation)</td>
-                                            <td><input type="number" name="vacation_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['vacation']['total'] ?? 0 }}" /></td>
+                                            <td><input type="number" name="vacation_total_earned" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['vacation']['total'] ?? 0 }}" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Less this application (Vacation)</td>
-                                            <td><input type="number" name="vacation_less_this_application" x-model.number="vacationLess" class="border-gray-300 input-field-border custom-input rounded-xl w-full dark:bg-gray-700 dark:text-gray-100" /></td>
+                                            <td><input type="number" name="vacation_less_this_application" x-model.number="vacationLess" step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full dark:bg-gray-700 dark:text-gray-100" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Balance (Vacation)</td>
-                                            <td><input type="number" name="vacation_balance" readonly class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationNewBalance" /></td>
+                                            <td><input type="number" name="vacation_balance" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationNewBalance" /></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -255,15 +255,15 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Total Earned (Sick)</td>
-                                            <td><input type="number" name="sick_total_earned" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['sick']['total'] ?? 0 }}" /></td>
+                                            <td><input type="number" name="sick_total_earned" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['sick']['total'] ?? 0 }}" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Less this application (Sick)</td>
-                                            <td><input type="number" name="sick_less_this_application" x-model.number="sickLess" class="border-gray-300 input-field-border custom-input rounded-md w-full dark:bg-gray-700 dark:text-gray-100" /></td>
+                                            <td><input type="number" name="sick_less_this_application" x-model.number="sickLess" step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full dark:bg-gray-700 dark:text-gray-100" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Balance (Sick)</td>
-                                            <td><input type="number" name="sick_balance" readonly class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickNewBalance" /></td>
+                                            <td><input type="number" name="sick_balance" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickNewBalance" /></td>
                                         </tr>
                                     </table>
                                 </div>

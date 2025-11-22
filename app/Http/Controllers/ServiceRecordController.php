@@ -65,12 +65,18 @@ class ServiceRecordController extends Controller
         // Notify admin with a custom message
         $admin = User::where('is_admin', true)->first();
         if ($admin) {
+            // Get employee name if available, else fallback to user name
+            $employee = Employee::where('user_id', $user->id)->first();
+            $employeeName = $employee
+                ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? ''))
+                : $user->name;
+
             $admin->notifications()->create([
                 'id' => (string) Str::uuid(),
                 'type' => AdminNotification::class,
                 'data' => [
-                    'message' => Auth::user()->name . ' has requested a service record.',
-                    'service_record_id' => $serviceRecord->id,
+                    'message' => $employeeName . ' has requested for a Certified True Copy of Service Record.',
+                    'service_record_request_id' => $req->id,
                 ],
             ]);
         }
@@ -821,11 +827,17 @@ class ServiceRecordController extends Controller
             // Notify admin
             $admin = User::where('is_admin', true)->first();
             if ($admin) {
+                // Get employee name if available, else fallback to user name
+                $employee = Employee::where('user_id', $user->id)->first();
+                $employeeName = $employee
+                    ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? ''))
+                    : $user->name;
+
                 $admin->notifications()->create([
                     'id' => (string) Str::uuid(),
                     'type' => AdminNotification::class,
                     'data' => [
-                        'message' => $user->name . ' has requested a service record.',
+                        'message' => $employeeName . ' has requested for a Certified True Copy of Service Record.',
                         'service_record_request_id' => $req->id,
                     ],
                 ]);

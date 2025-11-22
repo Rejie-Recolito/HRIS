@@ -560,9 +560,9 @@ class LeaveApplicationController extends Controller
         ];
 
         $sickRules = [
-            'sick_total_earned' => 'nullable|integer',
-            'sick_less_this_application' => 'nullable|integer',
-            'sick_balance' => 'nullable|integer',
+            'sick_total_earned' => 'nullable|numeric',
+            'sick_less_this_application' => 'nullable|numeric',
+            'sick_balance' => 'nullable|numeric',
         ];
 
         // Merge rules depending on what was submitted

@@ -186,3 +186,7 @@ Route::get('/leave-applications', [LeaveApplicationController::class, 'index'])-
 
 // NEW: Route for users to mark service record request as claimed
 Route::post('/service-records/{id}/mark-claimed', [ServiceRecordController::class, 'markAsClaimed'])->middleware(['auth', 'verified'])->name('service-records.mark-claimed');
+
+// Route for AJAX trend data
+Route::get('/admin/dashboard/trends', [App\Http\Controllers\AdminDashboardController::class, 'trends'])->name('admin.dashboard.trends');
+
