@@ -255,65 +255,44 @@ class ServiceRecordController extends Controller
                 try {
                     $pdfFile = $this->convertDocxToPdf($tempFile);
                     if ($pdfFile && file_exists($pdfFile)) {
-                        // Persist PDF to storage/public so it can be referenced later
-                        $fileName = 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf';
-                        $storageDir = 'service_records';
-                        // Ensure directory exists (Storage will create it when putting file)
-                        $storagePath = $storageDir . '/' . $fileName;
-                        try {
-                            // Copy generated pdf into storage/app/public/service_records
-                            Storage::disk('public')->putFileAs($storageDir, new File($pdfFile), $fileName);
-
-                            // If a specific request id was supplied, update only that request; otherwise update all relevant requests
-                            $specificRequestId = request()->query('request');
-                            if ($specificRequestId) {
-                                $r = ServiceRecordRequest::where('id', $specificRequestId)->where('user_id', $user->id)->first();
-                                if ($r) {
-                                    $r->request_status = 'generated';
-                                    $r->generated_pdf_path = $storagePath;
-                                    $r->generated_at = now();
-                                    $r->save();
-                                }
-                            } else {
-                                $reqs = ServiceRecordRequest::where('user_id', $user->id)
-                                    ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
-                                    ->get();
-                                foreach ($reqs as $r) {
-                                    $r->request_status = 'generated';
-                                    $r->generated_pdf_path = $storagePath;
-                                    $r->generated_at = now();
-                                    $r->save();
-                                }
+                        // Do NOT persist PDF to storage. Update request(s) to 'generated' and set generated_at only.
+                        $specificRequestId = request()->query('request');
+                        $updatedRequestId = null;
+                        if ($specificRequestId) {
+                            $r = ServiceRecordRequest::where('id', $specificRequestId)->where('user_id', $user->id)->first();
+                            if ($r) {
+                                $r->request_status = 'generated';
+                                $r->generated_at = now();
+                                $r->save();
+                                $updatedRequestId = $r->id;
                             }
-
-                            // Notify the user if they exist
-                            if ($user) {
-                                $user->notifications()->create([
-                                    'id' => (string) Str::uuid(),
-                                    'type' => 'App\\Notifications\\ServiceRecordReady',
-                                    'data' => [
-                                        'message' => 'Your Service Record has been generated and is now ready for download.',
-                                        'service_record_request_id' => $reqs->first() ? $reqs->first()->id : null,
-                                        'path' => $storagePath,
-                                    ],
-                                ]);
+                        } else {
+                            $reqs = ServiceRecordRequest::where('user_id', $user->id)
+                                ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
+                                ->get();
+                            foreach ($reqs as $r) {
+                                $r->request_status = 'generated';
+                                $r->generated_at = now();
+                                $r->save();
+                                $updatedRequestId = $updatedRequestId ?? $r->id;
                             }
-
-                            // Clean up intermediate docx and local pdf
-                            @unlink($tempFile);
-                            @unlink($pdfFile);
-
-                            // Return the stored file for download
-                            $fullPath = storage_path('app/public/' . $storagePath);
-                            if (file_exists($fullPath)) {
-                                return response()->download($fullPath, $fileName)->deleteFileAfterSend(false);
-                            }
-                        } catch (\Throwable $e) {
-                            Log::error('Failed to persist generated PDF: ' . $e->getMessage());
-                            // fallback: return the raw pdf if possible
-                            @unlink($tempFile);
-                            return response()->download($pdfFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf')->deleteFileAfterSend(true);
                         }
+
+                        // Notify the user if they exist (include request id when available)
+                        if ($user) {
+                            $user->notifications()->create([
+                                'id' => (string) Str::uuid(),
+                                'type' => 'App\\Notifications\\ServiceRecordReady',
+                                'data' => [
+                                    'message' => 'Your Service Record has been generated and is now ready for download.',
+                                    'service_record_request_id' => $updatedRequestId,
+                                ],
+                            ]);
+                        }
+
+                        // Clean up intermediate docx but keep pdf to return directly to admin; delete after send
+                        @unlink($tempFile);
+                        return response()->download($pdfFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf')->deleteFileAfterSend(true);
                     }
                 } catch (\Throwable $e) {
                     // ignore and fall back to docx
@@ -863,52 +842,42 @@ class ServiceRecordController extends Controller
     public function generateCertifiedDocument($id)
     {
         $req = ServiceRecordRequest::with('user')->findOrFail($id);
-        
+
         if (!$req->user) {
             return redirect()->back()->with('error', 'User not found for this request.');
         }
-        
+
         $user = $req->user;
         $employee = Employee::where('user_id', $user->id)->first();
-        
+
         if (!$employee) {
             return redirect()->back()->with('error', 'Employee record not found.');
         }
-        
-        // Get all service records for this employee
+
+        // Ensure there are service records for this employee
         $serviceRecords = ServiceRecord::where('employee_id', $employee->id)
             ->orderBy('service_from')
             ->get();
-        
+
         if ($serviceRecords->isEmpty()) {
             return redirect()->back()->with('error', 'No service records found. Please add service records first.');
         }
-        
+
+        // Set the request query parameter so exportDocx will update this specific request
         try {
-            // TODO: Implement actual document generation here
-            // For now, just update status and notify user
-            
-            $req->update([
-                'request_status' => 'ready_for_claim',
-                'generated_at' => now()
-            ]);
-
-            // Notify the user that their document is ready for claim
-            $user->notifications()->create([
-                'id' => (string) Str::uuid(),
-                'type' => 'App\\Notifications\\ServiceRecordReady',
-                'data' => [
-                    'message' => 'Your requested Certified True Copy of Service Record is ready to be claimed physically at the MHRMO.',
-                    'service_record_request_id' => $req->id,
-                ],
-            ]);
-
-            return redirect()->route('service-record-requests.process', $req->id)
-                ->with('success', 'Document generated successfully. User has been notified.');
-                
-        } catch (\Exception $e) {
-            Log::error('Service record generation failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to generate document: ' . $e->getMessage());
+            if (method_exists(request(), 'query')) {
+                // Laravel's Request object exposes a ParameterBag
+                request()->query->set('request', $id);
+            } else {
+                // Fallback: set the global GET param
+                $_GET['request'] = $id;
+            }
+        } catch (\Throwable $e) {
+            // Non-fatal: ensure at least the global is set
+            $_GET['request'] = $id;
         }
+
+        // Delegate to exportDocx which handles DOCX/PDF generation, storage, request updates and notification.
+        return $this->exportDocx($user->id);
     }
 }

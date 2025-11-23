@@ -207,25 +207,19 @@
                     </p>
                 @endif
 
-                @if($req->generated_pdf_path && file_exists(storage_path('app/public/' . $req->generated_pdf_path)))
+                @if($req->request_status === 'generated')
                     <div class="mb-4 p-4 bg-green-100 border border-green-400 rounded dark:bg-green-900 dark:border-green-700">
                         <p class="text-green-700 dark:text-green-200 font-semibold">✓ Document Generated Successfully</p>
-                        <a href="{{ asset('storage/' . $req->generated_pdf_path) }}" target="_blank" class="text-blue-600 dark:text-blue-400 underline text-sm mt-1 inline-block">
-                            Preview PDF Document
-                        </a>
+                        <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">The PDF was generated and returned to the admin for download. It is not stored on the server.</p>
                     </div>
 
-                    @if($req->request_status === 'verified' && !$req->certified_at)
+                    @if(!$req->certified_at)
                         <form method="POST" action="{{ route('service-records.certify', $req->id) }}" class="mt-4">
                             @csrf
                             <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors font-semibold">
                                 ✓ Certify Document & Notify Employee
                             </button>
                         </form>
-                        
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            Review the generated PDF. If correct, certify it to release to the employee.
-                        </p>
                     @endif
                 @endif
 
