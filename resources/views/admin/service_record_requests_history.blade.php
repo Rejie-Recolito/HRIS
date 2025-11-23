@@ -12,7 +12,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold">Request History</h2>
                         <div class="space-x-2">
-                            <a href="{{ route('service-record-requests.index') }}" class="px-3 py-1 rounded bg-white text-green-600 border">Pending</a>
+                            <a href="{{ route('service-record-requests.index') }}" class="px-3 py-1 rounded bg-white text-green-600 border">Recent</a>
                             <a href="{{ route('service-record-requests.history') }}" class="px-3 py-1 rounded bg-green-600 text-white">History</a>
                         </div>
                     </div>
@@ -22,8 +22,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Status</th>
-                                <th>Updated At</th>
-                                <th>Actions</th>
+                                <th>Issued On</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -43,16 +42,11 @@
                                         @endphp
                                         <span class="{{ $badgeClasses[$status] ?? $badgeClasses['accepted'] }}">{{ ucwords(str_replace('_', ' ', $status)) }}</span>
                                     </td>
-                                    <td>{{ $r->updated_at->format('Y-m-d H:i') }}</td>
-                                    <td>
-                                        @if($r->service_record_id)
-                                            <a href="{{ route('service-records.edit', ['id' => $r->service_record_id]) }}" class="bg-blue-600 text-white px-3 py-1 rounded">Open</a>
-                                        @endif
-                                    </td>
+                                    <td>{{ $r->issued_on ? $r->issued_on->format('Y-m-d H:i') : ($r->updated_at->format('Y-m-d H:i')) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center">No history found.</td>
+                                    <td colspan="3" class="text-center">No history found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

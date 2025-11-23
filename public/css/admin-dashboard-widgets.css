@@ -1,0 +1,51 @@
+/* Custom widget styles for admin dashboard */
+.widget-row {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+.widget-square {
+  background: #198f51;
+  color: #fff;
+  width: 220px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+  transition: box-shadow 0.2s;
+}
+.widget-square:hover {
+  box-shadow: 0 4px 16px rgba(25,143,81,0.18);
+}
+.widget-square .widget-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-left: 0.75rem;
+}
+.widget-square .widget-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  align-self: flex-end;
+}
+.widget-square .widget-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+@media (max-width: 900px) {
+  .widget-row {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+  .widget-square {
+    width: 100%;
+    min-width: 0;
+    align-items: flex-start;
+  }
+}

@@ -67,6 +67,63 @@ class AdminDashboardController extends Controller
         $totalEmployees = Employee::count();
         $leaveApplications = LeaveApplication::where('status', 'Submitted')->count();
         $serviceRecordRequests = \App\Models\ServiceRecordRequest::where('request_status', 'Pending')->count();
+        $accountsNeedingApproval = User::where('is_approved', false)->count();
+        // ...existing code...
+
+        // Recent Activity Feed: fetch latest 5 leave applications, 5 service record requests, and 5 new users
+        $recentLeave = LeaveApplication::with('user')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'type' => 'Leave Application',
+                    'id' => $item->id,
+                    'user' => $item->user ? $item->user->name : 'Unknown',
+                    'status' => $item->status,
+                    'timestamp' => $item->created_at,
+                    'link' => route('leave_application.view', ['id' => $item->id]),
+                ];
+            });
+
+        $recentService = \App\Models\ServiceRecordRequest::with('user')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'type' => 'SR Request',
+                    'id' => $item->id,
+                    'user' => $item->user ? $item->user->name : 'Unknown',
+                    'status' => $item->request_status,
+                    'timestamp' => $item->created_at,
+                    'link' => route('service-records.show', ['id' => $item->id]),
+                ];
+            });
+
+        $recentUsers = User::orderByDesc('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'type' => 'Employee',
+                    'id' => $item->id,
+                    'user' => $item->name,
+                    'status' => 'Added',
+                    'timestamp' => $item->created_at,
+                    'link' => '#', // No user details route defined
+                ];
+            });
+
+        // Merge and sort by timestamp descending
+        $recentActivities = $recentLeave
+            ->concat($recentService)
+            ->concat($recentUsers)
+            ->sortByDesc('timestamp')
+            ->take(8)
+            ->values();
+        $leaveApplications = LeaveApplication::where('status', 'Submitted')->count();
+        $serviceRecordRequests = \App\Models\ServiceRecordRequest::where('request_status', 'Pending')->count();
 
         // For filter dropdowns
         $users = User::orderBy('name')->get();
@@ -134,6 +191,7 @@ class AdminDashboardController extends Controller
             'totalEmployees' => $totalEmployees,
             'leaveApplications' => $leaveApplications,
             'serviceRecordRequests' => $serviceRecordRequests,
+            'accountsNeedingApproval' => $accountsNeedingApproval,
             'users' => $users,
             'departments' => $departments,
             'reportTypes' => $reportTypes,
@@ -148,6 +206,7 @@ class AdminDashboardController extends Controller
             'leaveMonthlyCount' => $leaveMonthlyCount,
             'leaveQuarterly' => $leaveQuarterly,
             'leaveAnnually' => $leaveAnnually,
+            'recentActivities' => $recentActivities,
         ]);
     }
 }
