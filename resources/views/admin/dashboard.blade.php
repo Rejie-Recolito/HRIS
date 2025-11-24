@@ -94,7 +94,7 @@
                                 </div>
                                 <a href="{{ $activity['link'] }}" class="flex items-center group text-gray-900 dark:text-white">
                                     <span class="inline-block w-2 h-2 rounded-full mr-3"
-                                        style="background: {{ $activity['type'] === 'Leave Application' ? '#10b981' : '#2563eb' }};"></span>
+                                        style="background: {{ $activity['type'] === 'Leave Application' ? '#10b981' : ($activity['type'] === 'Employee' ? '#eab308' : '#2563eb') }};"></span>
                                     <span class="font-medium mr-2 text-xs">{{ $activity['type'] }}</span>
                                     <span class="mr-2 text-xs">{{ $activity['user'] }}</span>
                                     <span class="text-xs mr-2">({{ $activity['status'] }})</span>
