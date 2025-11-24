@@ -530,8 +530,18 @@ class LeaveApplicationController extends Controller
     // Email the generated PDF to the employee, then delete temporary files
     try {
         $user = User::find($leaveApplication->user_id);
-        if ($user && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
-            $email = $user->email;
+        // Prefer employee.email_address when available
+        $employee = Employee::where('user_id', $leaveApplication->user_id)->first();
+
+        $candidateEmail = null;
+        if ($employee && !empty($employee->email_address) && filter_var($employee->email_address, FILTER_VALIDATE_EMAIL)) {
+            $candidateEmail = $employee->email_address;
+        } elseif ($user && !empty($user->email) && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+            $candidateEmail = $user->email;
+        }
+
+        if ($candidateEmail) {
+            $email = $candidateEmail;
             $subject = 'Leave Application Document';
             $body = "Your leave application (ID: {$leaveApplication->id}) has been processed. Please find the attached document.";
             $fileName = 'Leave_Application_' . $leaveApplication->id . '.pdf';
