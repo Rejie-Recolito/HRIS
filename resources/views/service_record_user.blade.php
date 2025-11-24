@@ -74,8 +74,8 @@
                 </table>
             </div>
 
-            <p class="text-lg mb-4">For an official service record document, that contains personal data and with certification and verification for whatever purposes; submit a request by clicking on the button below.</p>
-            <p class="text-lg mb-4">The request will be processed accordingly and can be claimed physically at the office.</p>
+            <p class="dark:text-white text-lg mb-4">For an official service record document, that contains personal data and with certification and verification for whatever purposes; submit a request by clicking on the button below.</p>
+            <p class="dark:text-white text-lg mb-4">The request will be processed accordingly and can be claimed physically at the office.</p>
     
             <div x-data="serviceRecordRequest({ hasPending: {{ $hasPending ? 'true' : 'false' }}, requestUrl: {{ json_encode(route('service-records.request')) }}, csrfToken: {{ json_encode(csrf_token()) }} })" class="mt-6">
                 <div id="sr-message" class="mb-3"></div>
@@ -108,14 +108,14 @@
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-md mt-1">
-                                        Your service record request is currently being processed by HR.
+                                        Your request for a Certified True Copy of Service Record is currently being processed by HR.
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <button disabled class="bg-gray-400 text-white font-semibold px-6 py-2 rounded shadow cursor-not-allowed">Request Pending</button>
                     @else
-                        <button x-show="!hasPending" x-ref="openBtn" x-on:click="open()" type="button" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow">Request Certified True Copy</button>
+                        <button x-show="!hasPending" x-ref="openBtn" x-on:click="open()" type="button" class="bg-[#198f51] text-white font-semibold px-6 py-2 rounded-lg shadow">Request Certified True Copy</button>
                     @endif
                 @endif
 

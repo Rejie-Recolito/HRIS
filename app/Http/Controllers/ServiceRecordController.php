@@ -22,6 +22,7 @@ use Illuminate\Http\File;
 
 class ServiceRecordController extends Controller
 {
+    // Removed old history() method; unified with historyIndex()
     /**
      * User marks their service record request as claimed.
      */
@@ -57,29 +58,10 @@ class ServiceRecordController extends Controller
             'place_of_assignment' => 'required|string',
         ]);
 
+
         $serviceRecord = ServiceRecord::create(array_merge($validated, [
             'user_id' => Auth::id(),
         ]));
-
-
-        // Notify admin with a custom message
-        $admin = User::where('is_admin', true)->first();
-        if ($admin) {
-            // Get employee name if available, else fallback to user name
-            $employee = Employee::where('user_id', $user->id)->first();
-            $employeeName = $employee
-                ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? ''))
-                : $user->name;
-
-            $admin->notifications()->create([
-                'id' => (string) Str::uuid(),
-                'type' => AdminNotification::class,
-                'data' => [
-                    'message' => $employeeName . ' has requested for a Certified True Copy of Service Record.',
-                    'service_record_request_id' => $req->id,
-                ],
-            ]);
-        }
 
         return redirect()->back()->with('success', 'Service record created successfully.');
     }
@@ -254,42 +236,34 @@ class ServiceRecordController extends Controller
                 // Try converting to PDF using LibreOffice (soffice). If conversion fails, fall back to DOCX.
                 try {
                     $pdfFile = $this->convertDocxToPdf($tempFile);
+                    $specificRequestId = request()->query('request');
+                    $updatedRequestId = null;
+                    if ($specificRequestId) {
+                        $r = ServiceRecordRequest::where('id', $specificRequestId)->where('user_id', $user->id)->first();
+                        if ($r) {
+                            $r->request_status = 'ready_for_claim';
+                            $r->generated_at = now();
+                            $r->save();
+                            $updatedRequestId = $r->id;
+                        }
+                    } else {
+                        $reqs = ServiceRecordRequest::where('user_id', $user->id)
+                            ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
+                            ->get();
+                        foreach ($reqs as $r) {
+                            $r->request_status = 'ready_for_claim';
+                            $r->generated_at = now();
+                            $r->save();
+                            $updatedRequestId = $updatedRequestId ?? $r->id;
+                        }
+                    }
+
+                    // Notify the user if they exist (include request id when available)
+                    if ($user) {
+                        $user->notify(new \App\Notifications\ServiceRecordReady($updatedRequestId));
+                    }
+
                     if ($pdfFile && file_exists($pdfFile)) {
-                        // Do NOT persist PDF to storage. Update request(s) to 'generated' and set generated_at only.
-                        $specificRequestId = request()->query('request');
-                        $updatedRequestId = null;
-                        if ($specificRequestId) {
-                            $r = ServiceRecordRequest::where('id', $specificRequestId)->where('user_id', $user->id)->first();
-                            if ($r) {
-                                $r->request_status = 'generated';
-                                $r->generated_at = now();
-                                $r->save();
-                                $updatedRequestId = $r->id;
-                            }
-                        } else {
-                            $reqs = ServiceRecordRequest::where('user_id', $user->id)
-                                ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
-                                ->get();
-                            foreach ($reqs as $r) {
-                                $r->request_status = 'generated';
-                                $r->generated_at = now();
-                                $r->save();
-                                $updatedRequestId = $updatedRequestId ?? $r->id;
-                            }
-                        }
-
-                        // Notify the user if they exist (include request id when available)
-                        if ($user) {
-                            $user->notifications()->create([
-                                'id' => (string) Str::uuid(),
-                                'type' => 'App\\Notifications\\ServiceRecordReady',
-                                'data' => [
-                                    'message' => 'Your Service Record has been generated and is now ready for download.',
-                                    'service_record_request_id' => $updatedRequestId,
-                                ],
-                            ]);
-                        }
-
                         // Clean up intermediate docx but keep pdf to return directly to admin; delete after send
                         @unlink($tempFile);
                         return response()->download($pdfFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.pdf')->deleteFileAfterSend(true);
@@ -298,6 +272,7 @@ class ServiceRecordController extends Controller
                     // ignore and fall back to docx
                 }
 
+                // Always update status and notify user, even if only DOCX is generated
                 return response()->download($tempFile, 'service_record_' . $user->id . '_' . date('Ymd_His') . '.docx')->deleteFileAfterSend(true);
             } catch (\Exception $e) {
                 // fallback to programmatic generation on error
@@ -476,8 +451,8 @@ class ServiceRecordController extends Controller
      */
     public function historyIndex()
     {
-        $requests = ServiceRecordRequest::with('user')
-            ->whereIn('request_status', ['accepted', 'deleted', 'declined'])
+        $requests = ServiceRecordRequest::withTrashed()->with('user')
+            ->whereIn('request_status', ['accepted', 'deleted', 'declined', 'claimed'])
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -712,6 +687,7 @@ class ServiceRecordController extends Controller
         $hasPending = false;
         $certifiedRequests = collect();
 
+        $historyRequests = collect();
         if ($user) {
             $employee = Employee::where('user_id', $user->id)->first();
 
@@ -721,20 +697,29 @@ class ServiceRecordController extends Controller
                     ->orderBy('service_from')
                     ->get();
 
-                // Consider only pending or in_progress as "pending" for the user UI.
+                // Consider only pending or in_progress as "pending" for the user UI, but NOT if there is a ready_for_claim or claimed request
                 $hasPending = ServiceRecordRequest::where('user_id', $user->id)
                     ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
-                    ->exists();
+                    ->doesntExist() ? false :
+                    !ServiceRecordRequest::where('user_id', $user->id)
+                        ->whereIn('request_status', ['ready_for_claim', 'claimed'])
+                        ->exists();
 
-                // Get all certified/ready/claimed requests for this user for display
+                // Get all certified/ready/claimed/ready_for_claim requests for this user for display
                 $certifiedRequests = ServiceRecordRequest::where('user_id', $user->id)
                     ->whereIn('request_status', ['certified', 'ready_for_claim', 'claimed'])
+                    ->orderByDesc('updated_at')
+                    ->get();
+
+                // Get all completed/claimed requests for history
+                $historyRequests = ServiceRecordRequest::where('user_id', $user->id)
+                    ->whereIn('request_status', ['claimed'])
                     ->orderByDesc('updated_at')
                     ->get();
             }
         }
 
-        return view('service_record_user', compact('serviceRecords', 'hasPending', 'certifiedRequests'));
+        return view('service_record_user', compact('serviceRecords', 'hasPending', 'certifiedRequests', 'historyRequests'));
     }
 
     /**

@@ -23,8 +23,6 @@
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-[#282828]">
             @include('layouts.navigation')
-
-
             <!-- Page Heading -->
             <div class="pt-16">
                 @hasSection('header')

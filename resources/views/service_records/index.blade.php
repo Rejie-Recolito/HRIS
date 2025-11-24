@@ -20,33 +20,42 @@
         </div>
     @endif
 
-    <table class="table-auto w-full border-collapse border border-gray-400">
+    <table class="admin-table mb-6">
         <thead>
             <tr>
-                <th class="border border-gray-300 px-4 py-2">Name</th>
-                <th class="border border-gray-300 px-4 py-2">Age</th>
-                <th class="border border-gray-300 px-4 py-2">Salary</th>
-                <th class="border border-gray-300 px-4 py-2">Date of Birth</th>
-                <th class="border border-gray-300 px-4 py-2">Job Title</th>
-                <th class="border border-gray-300 px-4 py-2">Actions</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Salary</th>
+                <th>Date of Birth</th>
+                <th>Job Title</th>
+                <th>Request Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @forelse($serviceRecords as $record)
                 <tr>
-                    <td class="border border-gray-300 px-4 py-2">{{ $record->name }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ $record->age }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ $record->salary }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ $record->date_of_birth }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ $record->job_title }}</td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <a href="#" class="text-blue-500">Edit</a> |
-                        <a href="#" class="text-red-500">Delete</a>
+                    <td>{{ $record->name }}</td>
+                    <td>{{ $record->age }}</td>
+                    <td>{{ $record->salary }}</td>
+                    <td>{{ $record->date_of_birth }}</td>
+                    <td>{{ $record->job_title }}</td>
+                    <td>
+                        @php
+                            $req = \App\Models\ServiceRecordRequest::where('service_record_id', $record->id)->orderByDesc('updated_at')->first();
+                        @endphp
+                        {{ $req ? $req->request_status : 'N/A' }}
+                    </td>
+                    <td style="padding: 0 !important; text-align: center !important; vertical-align: middle !important;">
+                        <div class="inline-flex flex-row items-center justify-center gap-2">
+                            <a href="#" class="btn-edit px-4 py-2 text-base flex items-center justify-center">Process</a>
+                            <a href="#" class="btn-delete px-4 py-2 text-base flex items-center justify-center">Delete</a>
+                        </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center py-4">No service records found.</td>
+                    <td colspan="7" class="text-center py-4">No service records found.</td>
                 </tr>
             @endforelse
         </tbody>

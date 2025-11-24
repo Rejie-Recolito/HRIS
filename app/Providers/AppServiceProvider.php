@@ -32,22 +32,18 @@ class AppServiceProvider extends ServiceProvider
     }
 
     View::composer('admin.service_record', function ($view) {
-        // Keep serviceRecords for compatibility and also provide requests for the new request-board view
         $view->with('serviceRecords', ServiceRecord::all());
-        // Provide ServiceRecordRequest collection; if table doesn't exist, provide empty collection
         if (Schema::hasTable('service_record_requests')) {
-            // Provide pending and in-progress requests so admins see requests that were accepted but still being edited
             $view->with('requests', ServiceRecordRequest::whereIn('request_status', ['pending', 'in_progress'])->latest()->get());
         } else {
             $view->with('requests', collect());
         }
     });
 
-    // Use View Composer for notifications to ensure user is authenticated when loading
+    // Restore notifications view composer for all views
     View::composer('*', function ($view) {
         if (Schema::hasTable('notifications')) {
             if (Auth::check()) {
-                // Both admin and regular users get their own notifications
                 $view->with('notifications', Auth::user()->notifications()->latest()->get());
             } else {
                 $view->with('notifications', collect());

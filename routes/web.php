@@ -1,4 +1,6 @@
 <?php
+// Admin: Service Record Requests History (unified)
+Route::get('/service-records/history', [ServiceRecordController::class, 'historyIndex'])->middleware(['auth', 'verified'])->name('service-records.history');
 
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DtrController;

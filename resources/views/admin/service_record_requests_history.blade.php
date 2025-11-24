@@ -5,12 +5,12 @@
 @endsection
 
 @section('content')
-    <div class="py-12">
+    <div class="py-0">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="card-bg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-bold">Request History</h2>
+                        <h2 class="text-[#198f51] text-xl font-bold">REQUESTS HISTORY</h2>
                         <div class="space-x-2">
                             <a href="{{ route('service-record-requests.index') }}" class="px-3 py-1 rounded bg-white text-green-600 border">Recent</a>
                             <a href="{{ route('service-record-requests.history') }}" class="px-3 py-1 rounded bg-green-600 text-white">History</a>
@@ -20,9 +20,9 @@
                     <table class="admin-table mb-6">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Status</th>
-                                <th>Issued On</th>
+                                <th>EMPLOYEE</th>
+                                <th>STATUS</th>
+                                <th>ISSUED ON</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -42,7 +42,15 @@
                                         @endphp
                                         <span class="{{ $badgeClasses[$status] ?? $badgeClasses['accepted'] }}">{{ ucwords(str_replace('_', ' ', $status)) }}</span>
                                     </td>
-                                    <td>{{ $r->issued_on ? $r->issued_on->format('Y-m-d H:i') : ($r->updated_at->format('Y-m-d H:i')) }}</td>
+                                    <td>
+                                        @if($r->completed_at)
+                                            {{ $r->completed_at->format('Y-m-d H:i') }}
+                                        @elseif($r->issued_on)
+                                            {{ $r->issued_on->format('Y-m-d H:i') }}
+                                        @else
+                                            {{ $r->updated_at->format('Y-m-d H:i') }}
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>

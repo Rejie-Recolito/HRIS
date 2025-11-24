@@ -17,7 +17,7 @@
             <div class="card-bg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-bold">Service Record Requests</h2>
+                        <h2 class="text-[#198f51] text-xl font-bold">REQUESTS</h2>
                         <div class="space-x-2">
                             <a href="{{ route('service-record-requests.index') }}" class="px-3 py-1 rounded {{ request()->routeIs('service-record-requests.index') ? 'bg-green-600 text-white' : 'bg-white text-green-600 border' }}">Recent</a>
                             <a href="{{ route('service-record-requests.history') }}" class="px-3 py-1 rounded {{ request()->routeIs('service-record-requests.history') ? 'bg-green-600 text-white' : 'bg-white text-green-600 border' }}">History</a>
@@ -27,10 +27,10 @@
                     <table class="admin-table mb-6">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Requested At</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>EMPLOYEE</th>
+                                <th>DATE OF REQUEST</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
