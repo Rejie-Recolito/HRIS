@@ -18,6 +18,8 @@ use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Settings;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class LeaveApplicationController extends Controller
 {
@@ -51,8 +53,14 @@ class LeaveApplicationController extends Controller
             }
             
             $this->leaveApplications = LeaveApplication::all();
-
-            return redirect()->back()->with('success');
+            // After approving, generate the document and return it for download.
+            try {
+                return $this->generateDocx($leave->id);
+            } catch (\Throwable $e) {
+                // If generation fails, fall back to the previous behavior and surface an error message
+                Log::error('Failed to generate leave application document after approval: ' . $e->getMessage());
+                return redirect()->back()->with('success');
+            }
         }
     }
     public function create()
@@ -478,14 +486,13 @@ class LeaveApplicationController extends Controller
         $templateProcessor->setValue('checkNotRequested', $leaveApplication->commutation === 'Not Requested' ? '☑' : '☐');
         $templateProcessor->setValue('checkRequested', $leaveApplication->commutation === 'Requested' ? '☑' : '☐');
 
-    // Save DOCX
-    $fileName = 'Leave_Application_' . $leaveApplication->id . '.docx';
-    $filePath = storage_path('app/public/' . $fileName);
-    $templateProcessor->saveAs($filePath);
-    
+    // Save DOCX to a temporary file (do not persist to storage)
+    $tempDocx = tempnam(sys_get_temp_dir(), 'leaveapp_') . '.docx';
+    $templateProcessor->saveAs($tempDocx);
 
-    // Convert DOCX → PDF using LibreOffice (auto path detection)
-    $pdfFilePath = storage_path('app/public/Leave_Application_' . $leaveApplication->id . '.pdf');
+    // Convert DOCX → PDF using LibreOffice into the system temp dir
+    $pdfTempDir = sys_get_temp_dir();
+    $pdfTemp = $pdfTempDir . DIRECTORY_SEPARATOR . pathinfo($tempDocx, PATHINFO_FILENAME) . '.pdf';
 
     // 🔍 Detect OS and set LibreOffice path accordingly
     if (stripos(PHP_OS, 'WIN') === 0) {
@@ -502,23 +509,78 @@ class LeaveApplicationController extends Controller
         $libreOfficePath = 'libreoffice';
     }
 
-    $command = "{$libreOfficePath} --headless --convert-to pdf --outdir " . escapeshellarg(dirname($pdfFilePath)) . " " . escapeshellarg($filePath);
+    $command = $libreOfficePath . ' --headless --convert-to pdf --outdir ' . escapeshellarg($pdfTempDir) . ' ' . escapeshellarg($tempDocx);
     exec($command, $output, $resultCode);
 
     if ($resultCode !== 0) {
-        return response()->json(['error' => 'Failed to convert DOCX to PDF', 'details' => $output], 500);
+        // cleanup temp docx
+        if (file_exists($tempDocx)) @unlink($tempDocx);
+        return redirect()->back()->with('error', 'Failed to convert DOCX to PDF');
     }
 
-    // Wait until the PDF is generated
-    if (file_exists($pdfFilePath)) {
-    // Safe to delete the DOCX now
-    unlink($filePath);
+    // Wait briefly for output and verify PDF exists
+    if (!file_exists($pdfTemp)) {
+        // cleanup temp docx
+        if (file_exists($tempDocx)) @unlink($tempDocx);
+        return redirect()->back()->with('error', 'PDF conversion completed but PDF not found.');
     }
 
 
 
-    // Return the PDF for download, then delete after sending
-    return response()->download($pdfFilePath)->deleteFileAfterSend(true);
+    // Email the generated PDF to the employee, then delete temporary files
+    try {
+        $user = User::find($leaveApplication->user_id);
+        if ($user && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+            $email = $user->email;
+            $subject = 'Leave Application Document';
+            $body = "Your leave application (ID: {$leaveApplication->id}) has been processed. Please find the attached document.";
+            $fileName = 'Leave_Application_' . $leaveApplication->id . '.pdf';
+
+            Mail::raw($body, function ($message) use ($email, $subject, $pdfTemp, $fileName) {
+                $message->to($email)
+                    ->subject($subject);
+
+                if (file_exists($pdfTemp)) {
+                    $message->attach($pdfTemp, [
+                        'as' => $fileName,
+                        'mime' => 'application/pdf',
+                    ]);
+                }
+            });
+
+            // Clean up temp files
+            if (file_exists($pdfTemp)) {
+                @unlink($pdfTemp);
+            }
+            if (file_exists($tempDocx)) {
+                @unlink($tempDocx);
+            }
+
+            return redirect()->back()->with('success', 'Leave approved and document emailed to the employee.');
+        }
+
+        // If user/email not found, return an error to admin
+        // Clean up files anyway
+        if (file_exists($pdfTemp)) {
+            @unlink($pdfTemp);
+        }
+        if (file_exists($tempDocx)) {
+            @unlink($tempDocx);
+        }
+
+        return redirect()->back()->with('error', 'Leave approved but failed to send email: user email not found.');
+    } catch (\Throwable $e) {
+        Log::error('Failed to email leave application PDF: ' . $e->getMessage());
+        // Clean up files
+        if (file_exists($pdfTemp)) {
+            @unlink($pdfTemp);
+        }
+        if (file_exists($tempDocx)) {
+            @unlink($tempDocx);
+        }
+
+        return redirect()->back()->with('error', 'Leave approved but failed to send email: ' . $e->getMessage());
+    }
 }
 
 

@@ -21,7 +21,7 @@
             <div class="card-bg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h2 class="text-xl font-bold mb-4">LGU-Bulusan Employees</h2>
-
+Change generateDocx to use temp files only (no writes to storage) and attach those to the email.
                     <!-- Filter Input -->
                     <div class="mb-4">
                         <input type="text" id="employeeFilter" placeholder="Search employee..." class="border-gray-300 rounded-xl shadow-sm text-gray-900" style="width:30%">

@@ -178,14 +178,14 @@
                 </div>
 
                 <div
-                x-show="typeOfLeave === 'Study Leave'" >
+                x-show="typeOfLeave === 'Study leave'" >
                     <div 
                     class="mb-4 flex flex-col sm:flex-row sm:items-center">
                     <label 
                     for="inCaseStudyLeave"
                      class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Details of Leave</label>
                     <select
-                    :disabled="typeOfLeave !== 'Study Leave'"
+                    :disabled="typeOfLeave !== 'Study leave'"
                     name="inCaseStudyLeave"
                     id="inCaseStudyLeave"
                     class="flex-1 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm">
