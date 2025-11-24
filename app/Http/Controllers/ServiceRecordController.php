@@ -697,13 +697,10 @@ class ServiceRecordController extends Controller
                     ->orderBy('service_from')
                     ->get();
 
-                // Consider only pending or in_progress as "pending" for the user UI, but NOT if there is a ready_for_claim or claimed request
+                // Show pending if any request is pending/in_progress/verified (regardless of ready_for_claim/claimed)
                 $hasPending = ServiceRecordRequest::where('user_id', $user->id)
                     ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
-                    ->doesntExist() ? false :
-                    !ServiceRecordRequest::where('user_id', $user->id)
-                        ->whereIn('request_status', ['ready_for_claim', 'claimed'])
-                        ->exists();
+                    ->exists();
 
                 // Get all certified/ready/claimed/ready_for_claim requests for this user for display
                 $certifiedRequests = ServiceRecordRequest::where('user_id', $user->id)
@@ -769,7 +766,6 @@ class ServiceRecordController extends Controller
     {
         try {
             $user = Auth::user();
-
             if (!$user) {
                 if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                     return response()->json(['message' => 'Unauthenticated'], 401);
@@ -777,10 +773,19 @@ class ServiceRecordController extends Controller
                 return redirect()->route('login');
             }
 
+            // Check if there is already a pending/in_progress/verified request (do not allow duplicate pending)
+            $existing = ServiceRecordRequest::where('user_id', $user->id)
+                ->whereIn('request_status', ['pending', 'in_progress', 'verified'])
+                ->first();
+            if ($existing) {
+                if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json(['message' => 'A pending request already exists.', 'id' => $existing->id], 200);
+                }
+                return redirect()->back()->with('info', 'A pending request already exists.');
+            }
+
             // Try to fill from Employee profile if available
             $employee = Employee::where('user_id', $user->id)->first();
-
-            // Create a lightweight request record instead of a full service record
             $name = $employee ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? '')) : $user->name;
             $req = ServiceRecordRequest::create([
                 'user_id' => $user->id,
@@ -791,12 +796,7 @@ class ServiceRecordController extends Controller
             // Notify admin
             $admin = User::where('is_admin', true)->first();
             if ($admin) {
-                // Get employee name if available, else fallback to user name
-                $employee = Employee::where('user_id', $user->id)->first();
-                $employeeName = $employee
-                    ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? ''))
-                    : $user->name;
-
+                $employeeName = $employee ? $name : $user->name;
                 $admin->notifications()->create([
                     'id' => (string) Str::uuid(),
                     'type' => AdminNotification::class,
@@ -810,10 +810,8 @@ class ServiceRecordController extends Controller
             if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['message' => 'Service record request submitted.', 'id' => $req->id], 201);
             }
-
             return redirect()->back()->with('success', 'Service record request submitted.');
         } catch (\Exception $e) {
-            // On exception return JSON if AJAX or rethrow
             if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['message' => 'Server error', 'error' => $e->getMessage()], 500);
             }
