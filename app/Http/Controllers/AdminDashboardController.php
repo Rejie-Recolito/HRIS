@@ -66,7 +66,7 @@ class AdminDashboardController extends Controller
     {
         $totalEmployees = Employee::count();
         $leaveApplications = LeaveApplication::where('status', 'Submitted')->count();
-        $serviceRecordRequests = \App\Models\ServiceRecordRequest::where('request_status', 'Pending')->count();
+        $serviceRecordRequests = \App\Models\ServiceRecordRequest::where('request_status', 'pending')->count();
         $accountsNeedingApproval = User::where('is_approved', false)->count();
         // ...existing code...
 
@@ -122,8 +122,7 @@ class AdminDashboardController extends Controller
             ->sortByDesc('timestamp')
             ->take(8)
             ->values();
-        $leaveApplications = LeaveApplication::where('status', 'Submitted')->count();
-        $serviceRecordRequests = \App\Models\ServiceRecordRequest::where('request_status', 'Pending')->count();
+        // $leaveApplications and $serviceRecordRequests already set above, do not reassign here
 
         // For filter dropdowns
         $users = User::orderBy('name')->get();
