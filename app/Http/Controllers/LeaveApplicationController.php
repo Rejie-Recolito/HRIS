@@ -555,7 +555,7 @@ class LeaveApplicationController extends Controller
         if ($candidateEmail) {
             $email = $candidateEmail;
             $subject = 'Leave Application Document';
-            $body = "Your leave application (ID: {$leaveApplication->id}) has been processed. Please find the attached document.";
+            $body = "Greetings {$leaveApplication->firstname} {$leaveApplication->lastname}, \n\nYour leave application has been processed. Please find the attached Leave Application document in PDF format for your reference.\n\nBest regards,\nHR Department";
             $fileName = 'Leave_Application_' . $leaveApplication->id . '.pdf';
 
             Mail::raw($body, function ($message) use ($email, $subject, $pdfTemp, $fileName) {
