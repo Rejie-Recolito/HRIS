@@ -32,11 +32,30 @@ class ServiceRecord extends Model
         'separation_cause',
     ];
 
+
     protected $casts = [
         'service_from' => 'date',
-        'service_to' => 'date',
+        // 'service_to' is handled by accessor below
         'separation_date' => 'date',
+        // No cast for appointment_salary (string)
     ];
+
+    public function getServiceToAttribute($value)
+    {
+        if ($value === 'Present') {
+            return 'Present';
+        }
+        return $value ? \Carbon\Carbon::parse($value) : null;
+    }
+
+    public function setServiceToAttribute($value)
+    {
+        if ($value === 'Present') {
+            $this->attributes['service_to'] = 'Present';
+        } else {
+            $this->attributes['service_to'] = $value;
+        }
+    }
 
     public function user()
     {

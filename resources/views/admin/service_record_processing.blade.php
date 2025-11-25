@@ -62,7 +62,6 @@
                                 <th colspan="2" style="border-color: #ffffff; text-align: center;">SERVICE<br>(Inclusive Dates)</th>
                                 <th colspan="3" style="border-color: #ffffff; text-align: center;">RECORD OF APPOINTMENT</th>
                                 <th style="border-color: #ffffff; text-align: center;">OFFICE ENTITY/DIV</th>
-                                <th style="border-color: #ffffff; text-align: center;">LEAVE OF ABSENCE<br>W/O PAY</th>
                                 <th colspan="2" style="border-color: #ffffff; text-align: center;">SEPARATION</th>
                             </tr>
                             <tr>
@@ -72,7 +71,6 @@
                                 <th style="border-color: #ffffff; min-width: 120px;">Status</th>
                                 <th style="border-color: #ffffff; min-width: 120px;">Salary</th>
                                 <th style="border-color: #ffffff; min-width: 200px;">Station/Place of Assignment</th>
-                                <th style="border-color: #ffffff; min-width: 150px;">w/o Pay</th>
                                 <th style="border-color: #ffffff; min-width: 120px;">Date</th>
                                 <th style="border-color: #ffffff; min-width: 150px;">Cause</th>
                             </tr>
@@ -80,14 +78,31 @@
                         <tbody>
                             @forelse($serviceRecords as $record)
                                 <tr>
-                                    <td>{{ $record->service_from ? $record->service_from->format('Y-m-d') : '' }}</td>
-                                    <td>{{ $record->service_to ? $record->service_to->format('Y-m-d') : '' }}</td>
+                                    <td>
+                                        @if($record->service_from instanceof \Carbon\Carbon)
+                                            {{ $record->service_from->format('Y-m-d') }}
+                                        @else
+                                            {{ $record->service_from }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($record->service_to instanceof \Carbon\Carbon)
+                                            {{ $record->service_to->format('Y-m-d') }}
+                                        @else
+                                            {{ $record->service_to }}
+                                        @endif
+                                    </td>
                                     <td>{{ $record->appointment_designation }}</td>
                                     <td>{{ $record->appointment_status }}</td>
                                     <td class="text-right">{{ number_format($record->appointment_salary, 2) }}</td>
                                     <td>{{ $record->station_place }}</td>
-                                    <td>{{ $record->leave_of_absence }}</td>
-                                    <td class="text-xs">{{ $record->separation_date ? $record->separation_date->format('Y-m-d') : '' }}</td>
+                                    <td class="text-xs">
+                                        @if($record->separation_date instanceof \Carbon\Carbon)
+                                            {{ $record->separation_date->format('Y-m-d') }}
+                                        @else
+                                            {{ $record->separation_date }}
+                                        @endif
+                                    </td>
                                     <td>{{ $record->separation_cause }}</td>
                                 </tr>
                             @empty

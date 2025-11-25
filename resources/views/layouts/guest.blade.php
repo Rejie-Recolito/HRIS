@@ -17,16 +17,16 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
-    <div class="min-h-screen flex flex-col sm:justify-center bg-no-repeat bg-cover items-center pt-6 sm:pt-0 bg-[#198F51]-500 " style="background-image: url('/Images/lguhall.png');">
-
+    <div class="min-h-screen w-full flex flex-col sm:justify-center bg-no-repeat bg-cover items-center pt-6 sm:pt-0 relative" style="background-image: url('/Images/lguhall.png');">
+        <!-- Overlay backgrounds -->
+        <div class="absolute inset-0 bg-[#198F51]/40"></div>
+        <div class="absolute inset-0 bg-[#267E3F]/60"></div>
         <div class="z-50">
             <a href="/">
                 <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
             </a>
         </div>
-        <div class="bg-[#198F51]/40 absolute inset-0"></div>
-        <div class="bg-[#267E3F]/60 absolute inset-0"></div>
-        <div class="w-full z-50 sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-white-800 shadow-md overflow-hidden sm:rounded-lg">
+        <div class="w-full z-50 sm:max-w-md mt-6 mb-8 px-4 sm:px-6 py-4 bg-white dark:bg-white-800 shadow-md overflow-hidden sm:rounded-lg">
             {{ $slot }}
         </div>
     </div>

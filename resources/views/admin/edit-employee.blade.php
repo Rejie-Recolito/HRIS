@@ -86,7 +86,42 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-8">
                             <div>
                                 <label for="department" class="block text-[11px] md:text-sm font-bold">DEPARTMENT</label>
-                                <input type="text" name="department" id="department" value="{{ $employee->department }}" class="mt-1 block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required readonly>
+                                @php
+                                    $departmentOptions = [
+                                        "Office of the Mayor",
+                                        "Office of the Vice Mayor",
+                                        "Sangguniang Bayan Legislative Services",
+                                        "Sangguniang Bayan Secretatiat Services",
+                                        "Sangguniang Bayan Library Services",
+                                        "Municipal Treasurer's Office",
+                                        "Municipal Assessor's Office",
+                                        "Municipal Budget Office",
+                                        "Municipal Planning and Development Office",
+                                        "General Service Office",
+                                        "Municipal Health Office",
+                                        "Municipal Civil Registrar Office",
+                                        "Municipal Human Resource Management Office",
+                                        "Municipal Disaster Risk Reduction Management Office",
+                                        "Municipal Agriculture Office",
+                                        "Municipal Environment and Natural Resources Office",
+                                        "Municipal Social Welfare and Development Office",
+                                        "Municipal Tourism Office",
+                                        "Operation of Waterworks System",
+                                        "Municipal Agricultural and Biosystems Engineering",
+                                        "Public Employment Services Office",
+                                        "Municipal Accounting Office",
+                                        "Other"
+                                    ];
+                                    $selectedDepartment = $employee->department;
+                                    $isOther = $selectedDepartment && !in_array($selectedDepartment, $departmentOptions);
+                                @endphp
+                                <select name="department" id="department" class="mt-1 block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required onchange="document.getElementById('department_other').style.display = (this.value === 'Other') ? 'block' : 'none';" disabled>
+                                    <option value="">Select Department</option>
+                                    @foreach($departmentOptions as $option)
+                                        <option value="{{ $option }}" {{ ($selectedDepartment === $option) ? 'selected' : '' }}>{{ $option }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="text" name="department_other" id="department_other" placeholder="Please specify department" class="mt-2 block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" style="display: {{ ($selectedDepartment === 'Other' || $isOther) ? 'block' : 'none' }};" value="{{ $isOther ? $selectedDepartment : '' }}" readonly>
                             </div>
                             <div>
                                 <label for="designation" class="block text-[11px] md:text-sm font-bold">DESIGNATION</label>
@@ -103,16 +138,22 @@
                         </div>
                         <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 md:gap-8 mt-2 md:mt-8">
                             <div class="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
-                                <label for="start_date" class="text-[11px] md:text-sm font-bold whitespace-nowrap">START DATE</label>
+                                <label for="start_date" class="text-[11px] md:text-sm font-bold whitespace-nowrap">START OF SERVICE</label>
                                 <input type="date" name="start_date" id="start_date" value="{{ $employee->start_date }}" class="block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required readonly>
                             </div>
                             <div class="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
                                 <label for="status" class="text-[11px] md:text-sm font-bold whitespace-nowrap">STATUS</label>
-                                <input type="text" name="status" id="status" value="{{ $employee->status }}" class="block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required readonly>
+                                <select name="status" id="status" class="block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required disabled>
+                                    <option value="">Select Status</option>
+                                    @php $statusOptions = ['Permanent', 'Temporary', 'Casual', 'Contractual', 'Job Order', 'Probationary', 'Co-Terminus', 'Other']; @endphp
+                                    @foreach($statusOptions as $option)
+                                        <option value="{{ $option }}" {{ $employee->status === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 md:flex-1 md:pr-4">
                                 <label for="salary" class="text-[11px] md:text-sm font-bold whitespace-nowrap md:w-24">SALARY</label>
-                                <input type="number" step="0.01" name="salary" id="salary" value="{{ $employee->salary }}" class="block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required readonly>
+                                <input type="text" name="salary" id="salary" value="{{ $employee->salary }}" class="block w-full text-xs md:text-base border-1.5 border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm employee-field py-1.5 md:py-2" required readonly>
                             </div>
                         </div>
                     </div>

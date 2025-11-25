@@ -114,7 +114,7 @@
                                 </div>
                                 <div>
                                     <label class="block font-medium">Salary</label>
-                                    <input type="number" step="0.01" name="salary" value="{{ $serviceRecord->salary }}" class="w-full rounded border-gray-300" />
+                                    <input type="text" name="salary" value="{{ $serviceRecord->salary }}" class="w-full rounded border-gray-300" />
                                 </div>
                                 <div>
                                     <label class="block font-medium">Place of Assignment</label>

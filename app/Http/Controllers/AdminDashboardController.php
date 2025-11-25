@@ -66,7 +66,7 @@ class AdminDashboardController extends Controller
     {
         $totalEmployees = Employee::count();
         $leaveApplications = LeaveApplication::where('status', 'Submitted')->count();
-        $serviceRecordRequests = \App\Models\ServiceRecordRequest::where('request_status', 'pending')->count();
+        $serviceRecordRequests = \App\Models\ServiceRecordRequest::whereRaw('LOWER(request_status) = ?', ['pending'])->count();
         $accountsNeedingApproval = User::where('is_approved', false)->count();
         // ...existing code...
 

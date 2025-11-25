@@ -59,7 +59,7 @@
                 <x-primary-text-input name="middlename" label="Middle Name" value="{{ old('middlename', $employee->middlename ?? '') }}" />
                 <x-primary-text-input name="date_of_filing" type="date" label="Date" />
                 <x-primary-text-input name="position" label="Position" value="{{ old('job_title', $employee->job_title ?? '') }}" />
-                <x-primary-text-input name="salary" type="number" label="Salary" value="{{ old('salary', $employee->salary ?? '') }}" />
+                <x-primary-text-input name="salary" type="text" label="Salary" value="{{ old('salary', $employee->salary ?? '') }}" />
                 <x-primary-text-input name="department" type="text" label="Office/Department" value="{{ old('department', $employee->department ?? '') }}" />
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
                     <label for="type_of_leave" class="w-full sm:w-1/3 font-medium custom-label sm:pr-4 mb-1 sm:mb-0">Leave Type :</label>

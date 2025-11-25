@@ -56,8 +56,13 @@ class ServiceRecordController extends Controller
             'status' => 'required|string',
             'date_of_service' => 'required|date',
             'place_of_assignment' => 'required|string',
+            'service_to' => 'nullable',
         ]);
 
+        // Handle 'Present' for service_to
+        if ($request->has('service_to_present')) {
+            $validated['service_to'] = 'Present';
+        }
 
         $serviceRecord = ServiceRecord::create(array_merge($validated, [
             'user_id' => Auth::id(),
@@ -595,6 +600,7 @@ class ServiceRecordController extends Controller
     {
         $serviceRecord = ServiceRecord::findOrFail($id);
 
+
         $validated = $request->validate([
             'name' => 'required|string',
             'age' => 'nullable|integer',
@@ -606,7 +612,7 @@ class ServiceRecordController extends Controller
             'status' => 'nullable|string',
             // Admin-filled fields
             'service_from' => 'nullable|date',
-            'service_to' => 'nullable|date',
+            'service_to' => 'nullable',
             'appointment_rank' => 'nullable|string',
             'appointment_designation' => 'nullable|string',
             'appointment_status' => 'nullable|string',
@@ -621,6 +627,11 @@ class ServiceRecordController extends Controller
             'place_of_assignment' => 'nullable|string',
             'request_status' => 'nullable|string|in:pending,ready',
         ]);
+
+        // Handle 'Present' for service_to
+        if ($request->has('service_to_present')) {
+            $validated['service_to'] = 'Present';
+        }
 
         $serviceRecord->update($validated);
 

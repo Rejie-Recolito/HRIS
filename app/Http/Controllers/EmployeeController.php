@@ -42,15 +42,16 @@ class EmployeeController extends Controller
             'firstname' => 'required|string|max:255',
             'middlename' => 'required|string|max:255',
             'department' => 'required|string|max:255',
+            'department_other' => 'nullable|string|max:255',
             'job_title' => 'required|string|max:255',
             'start_date' => 'required|date',
-            'status' => 'required|string|max:255',
+            'status' => 'required|in:Permanent,Temporary,Casual,Contractual,Job Order,Probationary,Co-Terminus,Other',
             'sex' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'age' => 'required|integer|min:0',
             'date_of_birth' => 'required|date',
             'place_of_birth' => 'required|string|max:255',
-            'salary' => 'required|numeric|min:0',
+            'salary' => 'required|string|max:255',
             'designation' => 'required|string|max:255',
             'place_of_assignment' => 'required|string|max:255',
             'phone_number' => ['required','regex:/^09[0-9]{9}$/'],
@@ -59,13 +60,16 @@ class EmployeeController extends Controller
 
         $data = $request->all();
         $data['user_id'] = Auth::id();
+        // If department is 'Other', use department_other value
+        if (isset($data['department']) && $data['department'] === 'Other' && !empty($data['department_other'])) {
+            $data['department'] = $data['department_other'];
+        }
+        unset($data['department_other']);
 
         // Prevent duplicate employee records for the same user.
         $existing = Employee::where('user_id', Auth::id())->first();
         if ($existing) {
-            // Update existing record instead of creating a new one
             $existing->update($data);
-
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -73,12 +77,11 @@ class EmployeeController extends Controller
                     'message' => 'Employee updated instead of creating duplicate.'
                 ]);
             }
-
             return redirect()->back()->with('success', 'Employee updated successfully.');
         }
 
-    $employee = Employee::create($data);
-    \Log::info('Employee created via store', ['employee_id' => $employee->id, 'user_id' => $employee->user_id]);
+        $employee = Employee::create($data);
+        \Log::info('Employee created via store', ['employee_id' => $employee->id, 'user_id' => $employee->user_id]);
 
         if ($request->ajax()) {
             return response()->json([
@@ -103,23 +106,30 @@ class EmployeeController extends Controller
             'firstname' => 'required|string|max:255',
             'middlename' => 'required|string|max:255',
             'department' => 'required|string|max:255',
+            'department_other' => 'nullable|string|max:255',
             'job_title' => 'required|string|max:255',
             'start_date' => 'required|date',
-            'status' => 'required|string|max:255',
+            'status' => 'required|in:Permanent,Temporary,Casual,Contractual,Job Order,Probationary,Co-Terminus,Other',
             'sex' => 'required|string|max:255',
             'age' => 'required|integer|min:0',
             'date_of_birth' => 'required|date',
             'place_of_birth' => 'required|string|max:255',
             'address' => 'required|string|max:500',
-            'salary' => 'required|numeric|min:0',
+            'salary' => 'required|string|max:255',
             'designation' => 'required|string|max:255',
             'place_of_assignment' => 'required|string|max:255',
             'phone_number' => ['required','regex:/^09[0-9]{9}$/'],
             'email_address' => ['required','email','max:255','regex:/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/'],
         ]);
 
+        $data = $request->all();
+        if (isset($data['department']) && $data['department'] === 'Other' && !empty($data['department_other'])) {
+            $data['department'] = $data['department_other'];
+        }
+        unset($data['department_other']);
+
         $employee = Employee::findOrFail($id);
-        $employee->update($request->all());
+        $employee->update($data);
 
         // Redirect based on user role
         if (Auth::user()->is_admin) {
@@ -165,15 +175,19 @@ class EmployeeController extends Controller
         
         $validated = $request->validate([
             'service_from' => 'required|date',
-            'service_to' => 'nullable|date|after_or_equal:service_from',
+            'service_to' => 'nullable',
             'appointment_designation' => 'required|string|max:255',
-            'appointment_status' => 'required|string|max:255',
+            'appointment_status' => 'required|in:Permanent,Temporary,Casual,Contractual,Job Order,Probationary,Co-Terminus,Other',
             'appointment_salary' => 'required|numeric|min:0',
             'station_place' => 'required|string|max:255',
             'leave_of_absence' => 'nullable|string|max:255',
             'separation_date' => 'nullable|date',
             'separation_cause' => 'nullable|string|max:500',
         ]);
+
+        if ($request->has('service_to_present')) {
+            $validated['service_to'] = 'Present';
+        }
 
         $validated['employee_id'] = $employee->id;
         $validated['user_id'] = $employee->user_id;
@@ -195,15 +209,19 @@ class EmployeeController extends Controller
         
         $validated = $request->validate([
             'service_from' => 'required|date',
-            'service_to' => 'nullable|date|after_or_equal:service_from',
+            'service_to' => 'nullable',
             'appointment_designation' => 'required|string|max:255',
-            'appointment_status' => 'required|string|max:255',
+            'appointment_status' => 'required|in:Permanent,Temporary,Casual,Contractual,Job Order,Probationary,Co-Terminus,Other',
             'appointment_salary' => 'required|numeric|min:0',
             'station_place' => 'required|string|max:255',
             'leave_of_absence' => 'nullable|string|max:255',
             'separation_date' => 'nullable|date',
             'separation_cause' => 'nullable|string|max:500',
         ]);
+
+        if ($request->has('service_to_present')) {
+            $validated['service_to'] = 'Present';
+        }
 
         $record->update($validated);
 

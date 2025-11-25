@@ -68,7 +68,6 @@
                                 <th colspan="2" style="border-color: #ffffff; text-align: center;">SERVICE<br>(Inclusive Dates)</th>
                                 <th colspan="3" style="border-color: #ffffff; text-align: center;">RECORD OF APPOINTMENT</th>
                                 <th style="border-color: #ffffff; text-align: center;">OFFICE ENTITY/DIV</th>
-                                <th style="border-color: #ffffff; text-align: center;">LEAVE OF ABSENCE</th>
                                 <th colspan="2" style="border-color: #ffffff; text-align: center;">SEPARATION</th>
                                 <th style="border-color: #ffffff; text-align: center;">ACTIONS</th>
                             </tr>
@@ -79,7 +78,6 @@
                                 <th style="border-color: #ffffff; min-width: 120px;">Status</th>
                                 <th style="border-color: #ffffff; min-width: 120px;">Salary</th>
                                 <th style="border-color: #ffffff; min-width: 200px;">Station/Place of Assignment</th>
-                                <th style="border-color: #ffffff; min-width: 150px;">w/o Pay</th>
                                 <th style="border-color: #ffffff; min-width: 120px;">Date</th>
                                 <th style="border-color: #ffffff; min-width: 150px;">Cause</th>
                                 <th style="border-color: #ffffff; min-width: 100px;"></th>
@@ -88,14 +86,35 @@
                         <tbody>
                             @forelse($serviceRecords as $record)
                                 <tr>
-                                    <td>{{ $record->service_from ? $record->service_from->format('Y-m-d') : '' }}</td>
-                                    <td>{{ $record->service_to ? $record->service_to->format('Y-m-d') : '' }}</td>
+                                    <td>
+                                        @if($record->service_from instanceof \Carbon\Carbon)
+                                            {{ $record->service_from->format('Y-m-d') }}
+                                        @else
+                                            {{ $record->service_from }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($record->service_to === 'Present')
+                                            Present
+                                        @elseif($record->service_to)
+                                            @if($record->service_to instanceof \Carbon\Carbon)
+                                                {{ $record->service_to->format('Y-m-d') }}
+                                            @else
+                                                {{ $record->service_to }}
+                                            @endif
+                                        @endif
+                                    </td>
                                     <td>{{ $record->appointment_designation }}</td>
                                     <td>{{ $record->appointment_status }}</td>
                                     <td class="text-right">{{ number_format($record->appointment_salary, 2) }}</td>
                                     <td>{{ $record->station_place }}</td>
-                                    <td>{{ $record->leave_of_absence }}</td>
-                                    <td class="text-xs">{{ $record->separation_date ? $record->separation_date->format('Y-m-d') : '' }}</td>
+                                    <td class="text-xs">
+                                        @if($record->separation_date instanceof \Carbon\Carbon)
+                                            {{ $record->separation_date->format('Y-m-d') }}
+                                        @else
+                                            {{ $record->separation_date }}
+                                        @endif
+                                    </td>
                                     <td>{{ $record->separation_cause }}</td>
                                     <td>
                                         <div class="flex items-center space-x-1">
@@ -131,8 +150,13 @@
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service To</label>
-                                                    <input type="date" name="service_to" value="{{ $record->service_to ? $record->service_to->format('Y-m-d') : '' }}" 
-                                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                                                    <div class="flex items-center space-x-2">
+                                                        <input type="date" name="service_to" id="edit_service_to_{{ $record->id }}" value="{{ ($record->service_to && $record->service_to !== 'Present') ? (is_object($record->service_to) ? $record->service_to->format('Y-m-d') : $record->service_to) : '' }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" {{ ($record->service_to === 'Present') ? 'disabled' : '' }}>
+                                                        <label class="ml-2 flex items-center">
+                                                            <input type="checkbox" name="service_to_present" id="edit_service_to_present_{{ $record->id }}" value="1" {{ ($record->service_to === 'Present') ? 'checked' : '' }} onchange="toggleEditServiceTo({{ $record->id }})">
+                                                            <span class="ml-1">Present</span>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Designation *</label>
@@ -141,23 +165,23 @@
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status *</label>
-                                                    <input type="text" name="appointment_status" value="{{ $record->appointment_status }}" 
-                                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
+                                                    <select name="appointment_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
+                                                        <option value="">Select Status</option>
+                                                        @php $statusOptions = ['Permanent', 'Temporary', 'Casual', 'Contractual', 'Job Order', 'Probationary', 'Co-Terminus', 'Other']; @endphp
+                                                        @foreach($statusOptions as $option)
+                                                            <option value="{{ $option }}" {{ $record->appointment_status === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Salary *</label>
-                                                    <input type="number" step="0.01" name="appointment_salary" value="{{ $record->appointment_salary }}" 
+                                                       <input type="text" name="appointment_salary" value="{{ $record->appointment_salary }}" 
                                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Station/Place *</label>
                                                     <input type="text" name="station_place" value="{{ $record->station_place }}" 
                                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
-                                                </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leave of Absence w/o Pay</label>
-                                                    <input type="text" name="leave_of_absence" value="{{ $record->leave_of_absence }}" 
-                                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Separation Date</label>
@@ -218,8 +242,13 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service To</label>
-                            <input type="date" name="service_to" value="{{ old('service_to') }}" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                            <div class="flex items-center space-x-2">
+                                <input type="date" name="service_to" id="add_service_to" value="{{ old('service_to') }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" {{ old('service_to_present') ? 'disabled' : '' }}>
+                                <label class="ml-2 flex items-center">
+                                    <input type="checkbox" name="service_to_present" id="add_service_to_present" value="1" {{ old('service_to_present') ? 'checked' : '' }} onchange="toggleAddServiceTo()">
+                                    <span class="ml-1">Present</span>
+                                </label>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Designation *</label>
@@ -228,24 +257,23 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status *</label>
-                            <input type="text" name="appointment_status" value="{{ old('appointment_status') }}" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" 
-                                   placeholder="e.g., Permanent, Temporary, Casual" required>
+                            <select name="appointment_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
+                                <option value="">Select Status</option>
+                                @php $statusOptions = ['Permanent', 'Temporary', 'Casual', 'Contractual', 'Job Order', 'Probationary', 'Co-Terminus', 'Other']; @endphp
+                                @foreach($statusOptions as $option)
+                                    <option value="{{ $option }}" {{ old('appointment_status') === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Salary *</label>
-                            <input type="number" step="0.01" name="appointment_salary" value="{{ old('appointment_salary') }}" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
+                            <input type="text" name="appointment_salary" value="{{ old('appointment_salary') }}" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Station/Place of Assignment *</label>
                             <input type="text" name="station_place" value="{{ old('station_place') }}" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leave of Absence w/o Pay</label>
-                            <input type="text" name="leave_of_absence" value="{{ old('leave_of_absence') }}" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Separation Date</label>
@@ -283,6 +311,27 @@
 </div>
 
 <script>
+        function toggleAddServiceTo() {
+            const cb = document.getElementById('add_service_to_present');
+            const dateInput = document.getElementById('add_service_to');
+            if (cb.checked) {
+                dateInput.disabled = true;
+                dateInput.value = '';
+            } else {
+                dateInput.disabled = false;
+            }
+        }
+
+        function toggleEditServiceTo(id) {
+            const cb = document.getElementById('edit_service_to_present_' + id);
+            const dateInput = document.getElementById('edit_service_to_' + id);
+            if (cb.checked) {
+                dateInput.disabled = true;
+                dateInput.value = '';
+            } else {
+                dateInput.disabled = false;
+            }
+        }
     function showEditForm(recordId) {
         document.getElementById('editRow' + recordId).classList.remove('hidden');
     }

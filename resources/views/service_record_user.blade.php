@@ -35,7 +35,6 @@
                             <th colspan="2" style="border-color: #ffffff; text-align: center;">SERVICE<br>(Inclusive Dates)</th>
                             <th colspan="3" style="border-color: #ffffff; text-align: center;">RECORD OF APPOINTMENT</th>
                             <th style="border-color: #ffffff; text-align: center;">OFFICE ENTITY/DIV</th>
-                            <th style="border-color: #ffffff; text-align: center;">LEAVE OF ABSENCE</th>
                             <th colspan="2" style="border-color: #ffffff; text-align: center;">SEPARATION</th>
                         </tr>
                         <tr>
@@ -45,7 +44,6 @@
                             <th style="border-color: #ffffff; min-width: 120px;">Status</th>
                             <th style="border-color: #ffffff; min-width: 120px;">Salary</th>
                                 <th style="border-color: #ffffff; min-width: 200px;">Station/Place</th>
-                                <th style="border-color: #ffffff; min-width: 150px;">w/o Pay</th>
                                 <th style="border-color: #ffffff; min-width: 120px;">Date</th>
                             <th style="border-color: #ffffff; min-width: 150px;">Cause</th>
                         </tr>
@@ -53,14 +51,25 @@
                     <tbody>
                         @forelse($serviceRecords as $record)
                             <tr>
-                                <td>{{ $record->service_from ? $record->service_from->format('Y-m-d') : '' }}</td>
-                                <td>{{ $record->service_to ? $record->service_to->format('Y-m-d') : '' }}</td>
+                                <td>
+                                    @if($record->service_from instanceof \Carbon\Carbon)
+                                        {{ $record->service_from->format('Y-m-d') }}
+                                    @else
+                                        {{ $record->service_from }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($record->service_to instanceof \Carbon\Carbon)
+                                        {{ $record->service_to->format('Y-m-d') }}
+                                    @else
+                                        {{ $record->service_to }}
+                                    @endif
+                                </td>
                                 <td>{{ $record->appointment_designation }}</td>
                                 <td>{{ $record->appointment_status }}</td>
                                 <td class="text-right">{{ number_format($record->appointment_salary, 2) }}</td>
                                 <td>{{ $record->station_place }}</td>
-                                <td>{{ $record->leave_of_absence }}</td>
-                                <td class="text-xs">{{ $record->separation_date ? $record->separation_date->format('Y-m-d') : '' }}</td>
+                                <td class="text-xs">{{ $record->separation_date ? ($record->separation_date instanceof \Carbon\Carbon ? $record->separation_date->format('Y-m-d') : $record->separation_date) : '' }}</td>
                                 <td>{{ $record->separation_cause }}</td>
                             </tr>
                         @empty
@@ -74,8 +83,8 @@
                 </table>
             </div>
 
-            <p class="dark:text-white text-lg mb-4">For an official service record document, that contains personal data and with certification and verification for whatever purposes; submit a request by clicking on the button below.</p>
-            <p class="dark:text-white text-lg mb-4">The request will be processed accordingly and can be claimed physically at the office.</p>
+            <p class="text-lg mb-4">For an official service record document, that contains personal data and with certification and verification for whatever purposes; submit a request by clicking on the button below.</p>
+            <p class="text-lg mb-4">The request will be processed accordingly and can be claimed physically at the office.</p>
     
             <div x-data="serviceRecordRequest({ hasPending: {{ $hasPending ? 'true' : 'false' }}, requestUrl: {{ json_encode(route('service-records.request')) }}, csrfToken: {{ json_encode(csrf_token()) }} })" class="mt-6">
                 <div id="sr-message" class="mb-3"></div>
@@ -108,14 +117,14 @@
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-md mt-1">
-                                        Your request for a Certified True Copy of Service Record is currently being processed by HR.
+                                        Your service record request is currently being processed by HR.
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <button disabled class="bg-gray-400 text-white font-semibold px-6 py-2 rounded shadow cursor-not-allowed">Request Pending</button>
                     @else
-                        <button x-show="!hasPending" x-ref="openBtn" x-on:click="open()" type="button" class="bg-[#198f51] text-white font-semibold px-6 py-2 rounded-lg shadow">Request Certified True Copy</button>
+                        <button x-show="!hasPending" x-ref="openBtn" x-on:click="open()" type="button" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow">Request Certified True Copy</button>
                     @endif
                 @endif
 
@@ -123,10 +132,10 @@
                 <div x-show="showModal" x-cloak class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-11/12 max-w-md">
                         <h3 class="text-lg font-semibold mb-3">Confirm Request</h3>
-                        <p class="mb-4">Are you sure you want to request a Service Record? The administrator will complete the details for you.</p>
+                        <p class="mb-4">Are you sure you want to request a Service Record?</p>
                         <div class="flex justify-end space-x-2">
-                            <button type="button" x-on:click="close()" class="px-3 py-1 rounded border">Cancel</button>
-                            <button type="button" x-on:click="submit()" x-bind:disabled="submitting" class="px-3 py-1 rounded bg-green-600 text-white" x-text="submitting ? 'Submitting...' : 'Confirm'"></button>
+                            <button type="button" x-on:click="close()" class="px-3 py-1 rounded-lg border border-[#198f51]">Cancel</button>
+                            <button type="button" x-on:click="submit()" x-bind:disabled="submitting" class="px-3 py-1 rounded-lg bg-[#198f51] text-white" x-text="submitting ? 'Submitting...' : 'Confirm'"></button>
                         </div>
                     </div>
                 </div>
