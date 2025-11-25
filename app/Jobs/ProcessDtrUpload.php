@@ -53,15 +53,29 @@ class ProcessDtrUpload implements ShouldQueue
 
             $rows = $result['rows'] ?? [];
 
+
             $chunk = [];
             $now = now();
             foreach ($rows as $r) {
+                // Map your CSV columns to a single DTR entry per day
+                $employee = is_array($r) ? ($r['Emp Name'] ?? null) : null;
+                $date = isset($r['_parsed_date']) && $r['_parsed_date'] ? $r['_parsed_date']->toDateString() : null;
+                // Combine AM-Arrival and PM-Arrival for time_in, AM-Departure and PM-Departure for time_out
+                $am_in = is_array($r) ? ($r['AM-Arrival'] ?? null) : null;
+                $pm_in = is_array($r) ? ($r['PM-Arrival'] ?? null) : null;
+                $am_out = is_array($r) ? ($r['AM-Departure'] ?? null) : null;
+                $pm_out = is_array($r) ? ($r['PM-Departure'] ?? null) : null;
+
+                // For a full day, use AM-Arrival as time_in and PM-Departure as time_out
+                $time_in = $am_in;
+                $time_out = $pm_out;
+
                 $chunk[] = [
                     'upload_id' => $upload->id,
-                    'occurred_at' => isset($r['_parsed_date']) && $r['_parsed_date'] ? $r['_parsed_date']->toDateTimeString() : null,
-                    'employee' => is_array($r) ? ($r['Employee'] ?? ($r['employee'] ?? null)) : null,
-                    'time_in' => is_array($r) ? ($r['TimeIn'] ?? ($r['time_in'] ?? null)) : null,
-                    'time_out' => is_array($r) ? ($r['TimeOut'] ?? ($r['time_out'] ?? null)) : null,
+                    'occurred_at' => $date ? ($date . ' 00:00:00') : null,
+                    'employee' => $employee,
+                    'time_in' => $time_in,
+                    'time_out' => $time_out,
                     'raw' => json_encode($r),
                     'created_at' => $now,
                     'updated_at' => $now,

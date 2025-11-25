@@ -16,21 +16,51 @@ class DtrCsvParser
      * @param string|null $dateFormat
      * @return array
      */
-    public function parseUploadedFile(string $filePath, ?string $dateColumn = null, ?string $dateFormat = null): array
+
+    public function parseUploadedFile(string $filePath, ?string $dateColumn = null, ?string $dateFormat = null, ?string $delimiter = null): array
     {
-        $stream = fopen($filePath, 'r');
-        if (!$stream) {
-            throw new \RuntimeException('Unable to open file');
-        }
 
-        $headers = [];
+        // Read file as lines
+        $lines = @file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!$lines || !is_array($lines)) {
+            throw new \RuntimeException('Unable to read file or file is empty');
+        }
+        // Remove BOM and trim each line
+        $lines = array_map(function($line) {
+            $line = preg_replace('/^\xEF\xBB\xBF/', '', $line);
+            return trim($line);
+        }, $lines);
+        // Remove any empty lines
+        $lines = array_filter($lines, function($line) { return $line !== ''; });
+        if (count($lines) === 0) {
+            throw new \RuntimeException('CSV file is empty after cleaning');
+        }
+        // Use first non-empty line as header
+        $headerLine = array_shift($lines);
+        // Force comma as delimiter for all parsing
+        $delimiter = ',';
+        // Remove surrounding quotes from header and lines if present
+        $headerLine = preg_replace('/^"|"$/', '', $headerLine);
+        $headers = str_getcsv($headerLine, $delimiter);
+        if (count($headers) === 1) {
+            $headers = explode($delimiter, $headerLine);
+        }
+        $headers = array_map('trim', $headers);
         $rows = [];
-
-        // Read header
-        if (($data = fgetcsv($stream)) !== false) {
-            $headers = $data;
+        foreach ($lines as $line) {
+            $line = preg_replace('/^"|"$/', '', $line);
+            $data = str_getcsv($line, $delimiter);
+            if (count($data) === 1) {
+                $data = explode($delimiter, $line);
+            }
+            if (count($headers) && count($data) < count($headers)) {
+                $data = array_pad($data, count($headers), '');
+            }
+            $data = array_map('trim', $data);
+            $row = count($headers) ? array_combine($headers, $data) : $data;
+            $rows[] = $row;
         }
-
+        // No need to close $stream or use fgetcsv anymore
         // If user provided a date column but headers exist, validate it exists
         if ($dateColumn && !empty($headers) && !in_array($dateColumn, $headers, true)) {
             // allow numeric index as column
@@ -40,21 +70,6 @@ class DtrCsvParser
             }
         }
 
-        while (($data = fgetcsv($stream)) !== false) {
-            if (count($data) === 1 && trim($data[0]) === '') {
-                continue;
-            }
-
-            if (count($headers) && count($data) < count($headers)) {
-                $data = array_pad($data, count($headers), '');
-            }
-
-            $row = count($headers) ? array_combine($headers, $data) : $data;
-
-            $rows[] = $row;
-        }
-
-        fclose($stream);
 
         // Auto-detect date column if not provided
         $detectedDateColumn = $dateColumn;

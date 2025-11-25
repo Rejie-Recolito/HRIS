@@ -1,7 +1,4 @@
 <?php
-// Admin: Service Record Requests History (unified)
-Route::get('/service-records/history', [ServiceRecordController::class, 'historyIndex'])->middleware(['auth', 'verified'])->name('service-records.history');
-
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DtrController;
 use App\Http\Controllers\ProfileController;
@@ -13,6 +10,16 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\LeaveApplicationController;
 use App\Livewire\LeaveApplicationView;
 use Carbon\Carbon;
+
+// DTR uploads list, view, and delete
+Route::get('/admin/dtr/uploads', [\App\Http\Controllers\DtrController::class, 'uploadsList'])->middleware(['auth', 'verified'])->name('admin.dtr.uploads');
+Route::get('/admin/dtr/uploads/{upload}', [\App\Http\Controllers\DtrController::class, 'viewUpload'])->middleware(['auth', 'verified'])->name('admin.dtr.uploads.view');
+Route::delete('/admin/dtr/uploads/{upload}', [\App\Http\Controllers\DtrController::class, 'deleteUpload'])->middleware(['auth', 'verified'])->name('admin.dtr.uploads.delete');
+
+// Store DTR data after preview (admin action)
+Route::post('/admin/dtr/store/{upload}', [DtrController::class, 'store'])->middleware(['auth', 'verified'])->name('admin.dtr.store');
+// Admin: Service Record Requests History (unified)
+Route::get('/service-records/history', [ServiceRecordController::class, 'historyIndex'])->middleware(['auth', 'verified'])->name('service-records.history');
 
 Route::get('/', function () {
     return view('welcome');
