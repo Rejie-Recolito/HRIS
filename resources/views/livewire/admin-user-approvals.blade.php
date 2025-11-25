@@ -28,6 +28,22 @@
         </div>
     @endif
 
+    <!-- Approval Error Modal -->
+    @if(session('approval_error'))
+        <div id="errorModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white dark:bg-[#1c1c1d] p-8 rounded-lg shadow-lg border-2" style="border-color: #d9534f; min-width: 400px;">
+                <div class="text-center">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <h2 class="text-xl font-medium text-gray-900 dark:text-gray-100 mb-3">Approval blocked</h2>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6 text-base">{{ session('approval_error') }}</p>
+                    <button onclick="document.getElementById('errorModal').style.display='none'" class="custom-submit-btn px-6 py-2 rounded-md">Continue</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if($pendingUsers->isEmpty())
         <p>No users awaiting approval.</p>
     @else
@@ -39,6 +55,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -47,6 +64,7 @@
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $user->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ $user->employee_id ?? '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <button wire:click="confirmApprove({{ $user->id }})" class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded mr-2">Approve</button>
                                 <button wire:click="denyUser({{ $user->id }})" class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded">Deny</button>
@@ -69,6 +87,9 @@
             <div class="relative bg-white dark:bg-gray-800 rounded-lg p-6 z-50 max-w-md w-full">
                 <h3 class="text-lg font-medium mb-2">Confirm approval</h3>
                 <p class="mb-4">Are you sure you want to approve <strong>{{ $confirmingUserName }}</strong>?</p>
+                @if($confirmingUserEmployeeId)
+                    <p class="mb-4 text-sm">Employee ID: <strong>{{ $confirmingUserEmployeeId }}</strong></p>
+                @endif
                 <div class="flex justify-end space-x-2">
                     <button type="button" wire:click="approveUser" wire:loading.attr="disabled" wire:target="approveUser" class="px-4 py-2 bg-green-600 text-white rounded">Yes, approve</button>
                     <button type="button" wire:click="$set('confirmingUserId', null)" wire:loading.attr="disabled" class="px-4 py-2 border rounded">Cancel</button>

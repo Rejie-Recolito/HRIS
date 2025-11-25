@@ -215,7 +215,7 @@
                                 <div class="mt-4">
                                     <div class="flex items-center gap-2">
                                         <label class="text-sm dark:text-gray-300 whitespace-nowrap">Authorized Officer Name</label>
-                                        <input type="text" name="authorized_officer_recommendation" class="border-gray-300 input-field-border custom-input rounded-xl flex-1 dark:bg-gray-700 dark:text-gray-100" value="{{ old('authorized_officer_recommendation', $leaveApplication->authorized_officer_recommendation) }}" />
+                                        <input type="text" name="authorized_officer_recommendation" class="border-gray-300 input-field-border custom-input rounded-xl flex-1 dark:bg-gray-700 dark:text-gray-100" value="JEANET BROQUIEZA" />
                                     </div>
                                 </div>
                             </div>
@@ -271,7 +271,7 @@
                                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm dark:text-gray-300">Authorized Officer Name</label>
-                                        <input type="text" name="authorized_officer_leave_cred" class="border-gray-300 input-field-border custom-input rounded-xl w-full dark:bg-gray-700 dark:text-gray-100" value="{{ old('authorized_officer_leave_cred', $leaveApplication->authorized_officer_leave_cred) }}" />
+                                        <input type="text" name="authorized_officer_leave_cred" class="border-gray-300 input-field-border custom-input rounded-xl w-full dark:bg-gray-700 dark:text-gray-100" value="JEANET BROQUIEZA" />
                                     </div>
                                 </div>
                             </div>
@@ -291,7 +291,7 @@
                                 <div class="mt-4">
                                     <div class="flex items-center gap-2">
                                         <label class="text-sm dark:text-gray-300 whitespace-nowrap">Authorized Officer Name</label>
-                                        <input type="text" name="authorized_officer" class="border-gray-300 input-field-border custom-input rounded-xl flex-1 dark:bg-gray-700 dark:text-gray-100" value="{{ old('authorized_officer', $leaveApplication->authorized_officer) }}" />
+                                        <input type="text" name="authorized_officer" class="border-gray-300 input-field-border custom-input rounded-xl flex-1 dark:bg-gray-700 dark:text-gray-100" value="JEANET BROQUIEZA" />
                                     </div>
                                 </div>
                             </div>
@@ -316,10 +316,6 @@
                             <form method="POST" action="{{ route('leave.deny', $leaveApplication->id) }}" style="display:inline-block; margin-left: 5px;">
                                 @csrf
                                 <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded">Disapproved</button>
-                            </form>
-                            <form method="GET" action="{{ route('leave.generate-docx', $leaveApplication->id) }}" style="display:inline-block; margin-left: 5px;">
-                                @csrf
-                                <button type="submit" class="bg-yellow-600 text-white px-2 py-1 rounded">Download PDF</button>
                             </form>
                         @endif
                         <form method="POST" action="{{ route('leave.delete', $leaveApplication->id) }}" style="display:inline-block; margin-left: 5px;">

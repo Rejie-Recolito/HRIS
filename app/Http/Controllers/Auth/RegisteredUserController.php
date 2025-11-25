@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class RegisteredUserController extends Controller
 {
@@ -34,12 +35,24 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'employee_id' => ['required', 'string', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        // Prevent registration if an approved user already has this employee_id
+        if ($request->filled('employee_id')) {
+            $existing = User::where('employee_id', $request->employee_id)->where('is_approved', true)->first();
+            if ($existing) {
+                throw ValidationException::withMessages([
+                    'employee_id' => ['The provided employee id is already associated with an approved account.'],
+                ]);
+            }
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'employee_id' => $request->employee_id,
             'password' => Hash::make($request->password),
             'is_approved' => false,
         ]);
