@@ -73,7 +73,7 @@
         <div class="bg-white dark:bg-[#282828] overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <!-- Search and Filter Form -->
-                <form method="GET" action="{{ route('leave.history') }}" class="mb-6">
+                <form method="GET" action="{{ url()->current() }}" class="mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <!-- Search by Name -->
                         <div>
@@ -138,7 +138,7 @@
                                 Filter
                             </button>
                             <a 
-                                href="{{ route('leave.history') }}" 
+                                href="{{ url()->current() }}" 
                                 class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors text-center"
                             >
                                 Clear

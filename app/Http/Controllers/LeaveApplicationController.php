@@ -20,6 +20,7 @@ use PhpOffice\PhpWord\Settings;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class LeaveApplicationController extends Controller
 {
@@ -182,12 +183,23 @@ class LeaveApplicationController extends Controller
         // Search by employee name
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $connectionDriver = DB::getDriverName();
+
+            // SQLite doesn't support CONCAT(), use || for concatenation
+            if ($connectionDriver === 'sqlite') {
+                $concat1 = "firstname || ' ' || lastname";
+                $concat2 = "lastname || ' ' || firstname";
+            } else {
+                $concat1 = "CONCAT(firstname, ' ', lastname)";
+                $concat2 = "CONCAT(lastname, ' ', firstname)";
+            }
+
+            $query->where(function($q) use ($search, $concat1, $concat2) {
                 $q->where('firstname', 'like', "%{$search}%")
                   ->orWhere('lastname', 'like', "%{$search}%")
                   ->orWhere('middlename', 'like', "%{$search}%")
-                  ->orWhereRaw("CONCAT(firstname, ' ', lastname) like ?", ["%{$search}%"])
-                  ->orWhereRaw("CONCAT(lastname, ' ', firstname) like ?", ["%{$search}%"]);
+                  ->orWhereRaw("{$concat1} like ?", ["%{$search}%"]) 
+                  ->orWhereRaw("{$concat2} like ?", ["%{$search}%"]);
             });
         }
 
