@@ -51,6 +51,7 @@
                         <label for="filter_user_name" class="block text-sm font-medium text-gray-700 dark:text-white">Employee Name</label>
                         <div class="relative">
                             <input type="text" id="filter_user_name" name="user_name" autocomplete="off" class="mt-1 block w-48 rounded-lg border-gray-300" placeholder="Type employee name...">
+                            <input type="hidden" id="filter_user_id" name="user_id" value="">
                             <ul id="user_name_suggestions" class="absolute z-10 bg-white border border-gray-300 rounded w-48 mt-1 hidden max-h-40 overflow-y-auto"></ul>
                         </div>
                     </div>
@@ -171,11 +172,15 @@
                         }
                     }
                 });
+
                 const months = {!! json_encode($months) !!};
                 const leaveMonthly = {!! json_encode($leaveMonthly) !!};
                 const serviceRecordMonthly = {!! json_encode($serviceRecordMonthly) !!};
                 console.log('Chart Data:', { months, leaveMonthly, serviceRecordMonthly });
-                let currentType = document.getElementById('filter_report_type').value;
+
+                // Users list is provided by the server; we'll use it for client-side suggestions
+                const users = {!! json_encode($users->map(function($u){ return ['id' => $u->id, 'name' => $u->name]; })) !!};
+
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 let trendChart = new Chart(ctx, {
                     type: 'line',
@@ -210,14 +215,22 @@
                         }
                     }
                 });
+
                 function updateChart(data, type) {
                     trendChart.data.datasets[0].data = data.leaveMonthly;
                     trendChart.data.datasets[1].data = data.serviceRecordMonthly;
-                    trendChart.data.datasets[0].hidden = type !== 'leave';
-                    trendChart.data.datasets[1].hidden = type !== 'service_record';
+                    // If type is empty ("All"), show both datasets
+                    if (!type) {
+                        trendChart.data.datasets[0].hidden = false;
+                        trendChart.data.datasets[1].hidden = false;
+                    } else {
+                        trendChart.data.datasets[0].hidden = type !== 'leave';
+                        trendChart.data.datasets[1].hidden = type !== 'service_record';
+                    }
                     trendChart.update();
                 }
-                // Debounce function to limit AJAX calls while typing
+
+                // Debounce function to limit calls while typing
                 function debounce(func, wait) {
                     let timeout;
                     return function(...args) {
@@ -225,45 +238,59 @@
                         timeout = setTimeout(() => func.apply(this, args), wait);
                     };
                 }
+
                 function fetchTrends() {
-                    const userName = document.getElementById('filter_user_name').value;
+                    const userId = document.getElementById('filter_user_id').value;
                     const department = document.getElementById('filter_department').value;
                     const reportType = document.getElementById('filter_report_type').value;
-                    const params = new URLSearchParams({ user_name: userName, department, report_type: reportType });
+                    const params = new URLSearchParams();
+                    if (userId) params.append('user_id', userId);
+                    if (department) params.append('department', department);
+                    if (reportType) params.append('report_type', reportType);
+
                     fetch(`/admin/dashboard/trends?${params.toString()}`)
                         .then(res => res.json())
                         .then(data => {
                             updateChart(data, reportType);
                         });
                 }
+
                 const userNameInput = document.getElementById('filter_user_name');
+                const userIdInput = document.getElementById('filter_user_id');
                 const suggestionsBox = document.getElementById('user_name_suggestions');
 
+                // Suggestion handling using the server-provided `users` array
                 userNameInput.addEventListener('input', debounce(function() {
                     const query = userNameInput.value.trim();
+                    // clear selected user id when typing changes
+                    userIdInput.value = '';
                     if (query.length < 2) {
                         suggestionsBox.innerHTML = '';
                         suggestionsBox.classList.add('hidden');
                         fetchTrends();
                         return;
                     }
-                    fetch(`/admin/employees/suggest?name=${encodeURIComponent(query)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (Array.isArray(data) && data.length > 0) {
-                                suggestionsBox.innerHTML = data.map(name => `<li class='px-3 py-1 hover:bg-gray-100 cursor-pointer'>${name}</li>`).join('');
-                                suggestionsBox.classList.remove('hidden');
-                            } else {
-                                suggestionsBox.innerHTML = '<li class="px-3 py-1 text-gray-400">No matches found</li>';
-                                suggestionsBox.classList.remove('hidden');
-                            }
-                        });
+
+                    const q = query.toLowerCase();
+                    const matches = users.filter(u => u.name && u.name.toLowerCase().includes(q)).slice(0, 10);
+                    if (matches.length > 0) {
+                        suggestionsBox.innerHTML = matches.map(u => `<li data-id="${u.id}" class='px-3 py-1 hover:bg-gray-100 cursor-pointer'>${u.name}</li>`).join('');
+                        suggestionsBox.classList.remove('hidden');
+                    } else {
+                        suggestionsBox.innerHTML = '<li class="px-3 py-1 text-gray-400">No matches found</li>';
+                        suggestionsBox.classList.remove('hidden');
+                    }
+
+                    // also fetch trends for broader queries (without user_id)
                     fetchTrends();
                 }, 300));
 
                 suggestionsBox.addEventListener('mousedown', function(e) {
                     if (e.target.tagName === 'LI' && !e.target.classList.contains('text-gray-400')) {
-                        userNameInput.value = e.target.textContent;
+                        const selectedId = e.target.dataset.id;
+                        const selectedName = e.target.textContent;
+                        userNameInput.value = selectedName;
+                        userIdInput.value = selectedId;
                         suggestionsBox.classList.add('hidden');
                         fetchTrends();
                     }
@@ -275,8 +302,6 @@
                     }
                 });
 
-                // Existing event for trends
-                userNameInput.addEventListener('input', debounce(fetchTrends, 400));
                 document.getElementById('filter_department').addEventListener('change', fetchTrends);
                 document.getElementById('filter_report_type').addEventListener('change', fetchTrends);
             });
