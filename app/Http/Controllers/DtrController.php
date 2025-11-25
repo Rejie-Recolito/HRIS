@@ -94,7 +94,7 @@ class DtrController
             'filename' => $file->getClientOriginalName(),
             'path' => $path,
             'size' => $file->getSize(),
-            'status' => 'pending',
+            'status' => 'not stored',
         ]);
 
 

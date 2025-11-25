@@ -1,9 +1,31 @@
 @extends('layouts.app')
 
+@section('header')
+    @php
+        $dtrDate = null;
+        if(count($entries) > 0) {
+            // Prefer occurred_at if available
+            $dtrDate = $entries[0]->occurred_at;
+            // If not, try to get from first column of raw
+            if(!$dtrDate && isset($entries[0]->raw) && is_array($entries[0]->raw)) {
+                $firstRaw = $entries[0]->raw;
+                $firstKey = array_key_first($firstRaw);
+                $dtrDate = $firstRaw[$firstKey] ?? null;
+            }
+        }
+    @endphp
+    <h2 class="font-semibold text-xl text-white dark:text-gray-200 leading-tight flex items-center">
+        <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2" />
+        </svg>
+        DTR for {{ $dtrDate ? (\Carbon\Carbon::parse($dtrDate)->format('Y F d')) : 'Unknown Date' }}
+    </h2>
+@endsection
+
 @section('content')
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">DTR Entries for Upload #{{ $upload->id }}</h1>
-    <a href="{{ route('admin.dtr.uploads') }}" class="text-blue-600 underline mb-4 inline-block">&larr; Back to Uploads</a>
+    {{-- Back to Uploads link removed as requested --}}
     @php
         $hasEntries = count($entries) > 0;
         $headers = $hasEntries && is_array($entries[0]->raw) ? array_keys($entries[0]->raw) : [];

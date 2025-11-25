@@ -1,7 +1,11 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-white dark:text-gray-200 leading-tight">
+    <h2 class="font-semibold text-xl text-white dark:text-gray-200 leading-tight flex items-center">
+        <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2" />
+        </svg>
         {{ __('DAILY TIME RECORD') }}
     </h2>
 @endsection
@@ -14,7 +18,7 @@
                 @if(session('error'))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
                         {{ session('error') }}
-                        @if(isset($upload) && $upload->status === 'Not Stored')
+                        @if(isset($upload) && $upload->status === 'not stored')
                             <div class="flex gap-4 mt-4">
                                 <form method="POST" action="{{ route('admin.dtr.store', ['upload' => $upload->id]) }}">
                                     @csrf
@@ -32,10 +36,58 @@
                 @endif
 
 
-                <div class="mb-6">
-                    
-                    <a href="{{ route('admin.dtr.uploads') }}" class="text-[#198f51] text-lg underline">VIEW ALL RECORDS</a>
+
+                @if(isset($uploads) && count($uploads))
+                <div class="mt-8">
+                    <h3 class="text-lg text-[#198f51] font-bold mb-2">DTR UPLOADS</h3>
+                    <table class="admin-table min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-2 py-1">Date</th>
+                                <th class="px-2 py-1">Filename</th>
+                                <th class="px-2 py-1">Status</th>
+                                <th class="px-2 py-1">Uploaded At</th>
+                                <th class="px-2 py-1">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($uploads as $upload)
+                            <tr>
+                                <td class="px-2 py-1">
+                                    @php
+                                        $firstEntry = $upload->entries()->orderBy('occurred_at')->first();
+                                    @endphp
+                                    @if($firstEntry && $firstEntry->occurred_at)
+                                        {{ \Carbon\Carbon::parse($firstEntry->occurred_at)->format('Y F d') }}
+                                    @else
+                                        <span class="text-gray-400 italic">No Date</span>
+                                    @endif
+                                </td>
+                                <td class="px-2 py-1">{{ $upload->filename }}</td>
+                                <td class="px-2 py-1">
+                                    @if($upload->status === 'not stored')
+                                        Not Stored
+                                    @elseif($upload->status === 'stored')
+                                        Stored
+                                    @else
+                                        {{ ucfirst($upload->status) }}
+                                    @endif
+                                </td>
+                                <td class="px-2 py-1">{{ $upload->created_at }}</td>
+                                <td class="px-2 py-1 flex gap-2 items-center">
+                                    <a href="{{ route('admin.dtr.uploads.view', $upload->id) }}" class="text-blue-600 underline">View</a>
+                                    <form method="POST" action="{{ route('admin.dtr.uploads.delete', $upload->id) }}" onsubmit="return confirm('Are you sure you want to delete this DTR upload?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 underline ml-2">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+                @endif
 
                 @if ($errors->any())
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
@@ -49,44 +101,19 @@
 
                 <form action="{{ route('dtr.upload') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <label class="block mb-2 text-[#198f51]">Upload new DTR csv</label>
-                    <input type="file" name="csv" accept=".csv" class="mb-2" />
-
-                    @if(!empty($headers))
-                        <div class="mb-2">
-                            <label class="block text-sm">Date column</label>
-                            <select name="date_column" class="mt-1 block w-full">
-                                <option value="">(auto-detect)</option>
-                                @foreach($headers as $h)
-                                    <option value="{{ $h }}" {{ (old('date_column') == $h || (isset($detected_date_column) && $detected_date_column == $h)) ? 'selected' : '' }}>{{ $h }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    <div class="mb-2">
-                        <label class="block text-sm">Optional date format (PHP date format for parse)</label>
-                        <input type="text" name="date_format" value="{{ old('date_format') ?? ($date_format ?? '') }}" class="mt-1 block w-48" placeholder="e.g. YYYY-MM-DD" />
-                    </div>
+                    <label class="block text-lg font-bold mt-10 mb-2 text-[#198f51]">UPLOAD NEW RECORD</label>
+                    <input type="file" name="csv" accept=".csv" class="mb-2 rounded border border-[#198f51]" />
 
                     <div>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-[#198f51] border border-transparent rounded-lg font-semibold text-white">
+                        <button type="submit" class="inline-flex items-center mt-2 px-4 py-2 bg-[#198f51] border border-transparent rounded-lg font-semibold text-white">
                             Upload and Parse
                         </button>
                     </div>
                 </form>
 
-                @if(isset($upload))
-                    <div class="mt-6 p-4 border rounded bg-gray-50 dark:bg-gray-900">
-                        <p class="font-medium">Upload: {{ $upload->filename }}</p>
-                        <p>Status: <span class="font-semibold">{{ $upload->status }}</span></p>
-                    </div>
-                @endif
 
                 @if(isset($groupedRecords))
                     <div class="mt-6">
-                        <h3 class="font-semibold">Parsed Records</h3>
-
                         @if(!empty($groupedRecords['ungrouped'] ?? null))
                             <div class="mt-4" x-data="{ show: true }" x-show="show">
                                 <h4 class="font-medium">Ungrouped / Unparsed Dates</h4>
@@ -132,7 +159,7 @@
                                 <div class="flex gap-4 mt-4">
                                     <form method="POST" action="{{ route('admin.dtr.store', ['upload' => $upload->id]) }}">
                                         @csrf
-                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Save</button>
+                                        <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-9 rounded-lg">STORE</button>
                                     </form>
                                     <button type="button" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded" @click="show = false">Close</button>
                                 </div>
@@ -144,15 +171,16 @@
                                 @continue
                             @endif
                             <div class="mt-6 border-t pt-4">
-                                <h4 class="text-lg font-semibold">{{ $year }}</h4>
                                 @foreach($months as $month => $days)
-                                    <div class="mt-3">
-                                        <h5 class="font-medium">{{ $month }}</h5>
-                                        @foreach($days as $day => $records)
-                                            <div class="mt-2 pl-4">
-                                                <h6 class="font-medium">Day {{ $day }}</h6>
-                                                <div class="overflow-x-auto">
-                                                    <table class="admin-table min-w-full divide-y divide-gray-200 mt-1">
+                                    @foreach($days as $day => $records)
+                                        <div class="mt-4">
+                                            <div class="flex items-center gap-4 mb-1">
+                                                <span class="text-lg font-semibold">{{ $year }}</span>
+                                                <span class="font-medium">{{ $month }}</span>
+                                                <span class="font-medium">Day {{ $day }}</span>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="admin-table min-w-full divide-y divide-gray-200 mt-1">
                                                     <thead>
                                                         <tr>
                                                             @if(!empty($headers))
@@ -197,11 +225,11 @@
                                 @endforeach
                             </div>
                         @endforeach
-                        @if(isset($upload) && $upload->status === 'pending')
+                        @if(isset($upload) && $upload->status === 'not stored')
                             <div class="flex gap-4 mt-4">
                                 <form method="POST" action="{{ route('admin.dtr.store', ['upload' => $upload->id]) }}">
                                     @csrf
-                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Save</button>
+                                    <button type="submit" class="bg-[#198F51] text-white font-bold py-2 px-8 rounded-lg">Store</button>
                                 </form>
                             </div>
                         @endif
