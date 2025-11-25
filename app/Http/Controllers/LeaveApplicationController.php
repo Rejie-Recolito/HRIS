@@ -123,7 +123,7 @@ class LeaveApplicationController extends Controller
             'middlename' => 'required|string|max:255',
             'date_of_filing' => 'required|date',
             'position' => 'required|string|max:255',
-            'salary' => 'required|numeric',
+            'salary' => 'required|string|max:255',
             'type_of_leave' => 'required|string',
             'others' => 'nullable|string|max:255',
             'number_of_days' => 'required|integer|min:1',
