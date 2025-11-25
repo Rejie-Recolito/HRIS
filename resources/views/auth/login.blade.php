@@ -4,8 +4,20 @@
         <div id="status-modal" class="fixed inset-0 flex items-center justify-center z-50">
             <div class="absolute inset-0 bg-black opacity-50"></div>
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 z-50 max-w-md w-full">
-                <h3 class="text-lg font-medium mb-2">Registration submitted</h3>
-                <p class="mb-4">{{ session('status') }}</p>
+                <h3 class="text-lg font-medium mb-2">
+                    @if(session('status') === 'approved')
+                        Account Approved
+                    @else
+                        Registration submitted
+                    @endif
+                </h3>
+                <p class="mb-4">
+                    @if(session('status') === 'approved')
+                        Your employee ID has been verified and your account has been approved. You may now login to access the LGU-Bulusan Human Resource Information System.
+                    @else
+                        {{ session('status') }}
+                    @endif
+                </p>
                 <div class="flex justify-end">
                     <button id="status-dismiss" class="px-4 py-2 bg-green-600 text-white rounded">OK</button>
                 </div>

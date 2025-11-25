@@ -36,6 +36,7 @@ class UserApprovalController extends Controller
         $user->is_approved = true;
         $user->save();
 
-        return redirect()->back()->with('status', 'User approved successfully.');
+        // Redirect to login with approval message for the user
+        return redirect()->route('login')->with('status', 'approved');
     }
 }
