@@ -13,6 +13,10 @@ use Carbon\Carbon;
 
 // DTR search (admin) and self-view (employee)
 Route::get('/admin/dtr/search', [DtrController::class, 'adminSearch'])->middleware(['auth', 'verified'])->name('admin.dtr.search');
+// Generate PDF for admin DTR search results
+Route::get('/admin/dtr/generate-pdf', [DtrController::class, 'generatePdf'])->middleware(['auth', 'verified'])->name('admin.dtr.generate_pdf');
+// Generate DOCX then convert to PDF (matches official DOCX template layout)
+Route::get('/admin/dtr/generate-docx-pdf', [DtrController::class, 'generateDocxPdf'])->middleware(['auth', 'verified'])->name('admin.dtr.generate_docx_pdf');
 Route::get('/employee/dtr/self', [DtrController::class, 'employeeSelfView'])->middleware(['auth', 'verified'])->name('employee.dtr.self');
 
 // DTR uploads list, view, and delete
