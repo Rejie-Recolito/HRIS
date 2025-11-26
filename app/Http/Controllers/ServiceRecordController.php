@@ -113,11 +113,18 @@ class ServiceRecordController extends Controller
             return null;
         }
 
-        $outputDir = sys_get_temp_dir();
+        // Prefer a project-controlled temp directory to avoid OS temp/AV interference
+        $projectTmp = storage_path('app/tmp');
+        if ($projectTmp && is_writable(dirname($projectTmp))) {
+            $outputDir = $projectTmp;
+        } else {
+            $outputDir = sys_get_temp_dir();
+        }
         // Ensure output dir exists
         if (!is_dir($outputDir)) {
             @mkdir($outputDir, 0755, true);
         }
+        Log::info('convertDocxToPdf: using output directory', ['outdir' => $outputDir]);
 
         $baseName = pathinfo($docxPath, PATHINFO_FILENAME);
         $expectedPdf = rtrim($outputDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $baseName . '.pdf';
