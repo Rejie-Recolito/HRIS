@@ -11,6 +11,10 @@ use App\Http\Controllers\LeaveApplicationController;
 use App\Livewire\LeaveApplicationView;
 use Carbon\Carbon;
 
+// DTR search (admin) and self-view (employee)
+Route::get('/admin/dtr/search', [DtrController::class, 'adminSearch'])->middleware(['auth', 'verified'])->name('admin.dtr.search');
+Route::get('/employee/dtr/self', [DtrController::class, 'employeeSelfView'])->middleware(['auth', 'verified'])->name('employee.dtr.self');
+
 // DTR uploads list, view, and delete
 Route::get('/admin/dtr/uploads', [\App\Http\Controllers\DtrController::class, 'uploadsList'])->middleware(['auth', 'verified'])->name('admin.dtr.uploads');
 Route::get('/admin/dtr/uploads/{upload}', [\App\Http\Controllers\DtrController::class, 'viewUpload'])->middleware(['auth', 'verified'])->name('admin.dtr.uploads.view');

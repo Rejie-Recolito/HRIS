@@ -25,6 +25,20 @@
 
 @section('content')
 <div class="container mx-auto p-4">
+    {{-- DTR Search Form (Admin) --}}
+    @if(auth()->user() && auth()->user()->is_admin)
+        <form method="GET" action="{{ route('admin.dtr.search') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6">
+            <div>
+                <label for="emp_id" class="block text-sm font-bold mb-1">Employee ID</label>
+                <input type="text" name="emp_id" id="emp_id" value="{{ request('emp_id') }}" class="rounded border border-[#198f51] px-2 py-1" placeholder="Enter Employee ID" required>
+            </div>
+            <div>
+                <label for="month" class="block text-sm font-bold mb-1">Month</label>
+                <input type="month" name="month" id="month" value="{{ request('month', now()->format('Y-m')) }}" class="rounded border border-[#198f51] px-2 py-1" required>
+            </div>
+            <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-6 rounded-lg">Search</button>
+        </form>
+    @endif
     {{-- Back to Uploads link removed as requested --}}
     @php
         $hasEntries = count($entries) > 0;
@@ -46,6 +60,16 @@
     @endphp
     @if(!$hasEntries)
         <div class="text-gray-600 italic">No DTR entries found for this upload.</div>
+    @endif
+
+    {{-- Always show Save button for not stored uploads --}}
+    @if(isset($upload) && $upload->status === 'not stored')
+        <div class="flex gap-4 mt-4">
+            <form method="POST" action="{{ route('admin.dtr.store', ['upload' => $upload->id]) }}">
+                @csrf
+                <button type="submit" class="bg-[#198f51] hover:bg-[#166c3c] text-white font-bold py-2 px-4 rounded-lg">Save</button>
+            </form>
+        </div>
     @elseif(count($headers))
         <div class="overflow-x-auto">
         <table class="admin-table min-w-full divide-y divide-gray-200 mt-2">

@@ -112,129 +112,173 @@
                 </form>
 
 
-                @if(isset($groupedRecords))
-                    <div class="mt-6">
-                        @if(!empty($groupedRecords['ungrouped'] ?? null))
-                            <div class="mt-4" x-data="{ show: true }" x-show="show">
-                                <h4 class="font-medium">Ungrouped / Unparsed Dates</h4>
-                                <div class="overflow-x-auto">
-                                    <table class="admin-table min-w-full divide-y divide-gray-200 mt-2">
+
+                {{-- DTR Search and Results --}}
+                <div class="mt-10">
+                    @if(auth()->user()->is_admin)
+                        <form method="GET" action="{{ route('admin.dtr.search') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6">
+                            <div>
+                                <label for="emp_id" class="block text-sm font-bold mb-1">Employee ID</label>
+                                <input type="text" name="emp_id" id="emp_id" value="{{ request('emp_id') }}" class="rounded border border-[#198f51] px-2 py-1" placeholder="Enter Employee ID" required>
+                            </div>
+                            <div>
+                                <label for="month" class="block text-sm font-bold mb-1">Month</label>
+                                <input type="month" name="month" id="month" value="{{ request('month', now()->format('Y-m')) }}" class="rounded border border-[#198f51] px-2 py-1" required>
+                            </div>
+                            <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-6 rounded-lg">Search</button>
+                        </form>
+                        @php
+                            $showDtrResults = isset($dtrEntries) && request()->has('emp_id') && request()->has('month');
+                        @endphp
+                        <div id="dtr-results-section" @if(!$showDtrResults) style="display:none;" @endif>
+                        @if($showDtrResults)
+                            <div class="flex justify-end mb-2">
+                                <button type="button" onclick="document.getElementById('dtr-results-section').style.display='none'" class="text-gray-500 hover:text-red-600 font-bold text-lg">&times; Close</button>
+                            </div>
+                            @php
+                                // Get all unique headers from the raw field of all entries, preserving order from the first entry
+                                $firstRaw = null;
+                                foreach($dtrEntries as $entry) {
+                                    if (is_array($entry->raw) && count($entry->raw)) {
+                                        $firstRaw = $entry->raw;
+                                        break;
+                                    }
+                                }
+                                $allHeaders = $firstRaw ? array_keys($firstRaw) : [];
+                                // Fallback: collect all unique headers if firstRaw is empty
+                                if (!$allHeaders) {
+                                    $allHeaders = collect($dtrEntries)
+                                        ->flatMap(function($entry) { return is_array($entry->raw) ? array_keys($entry->raw) : []; })
+                                        ->unique()
+                                        ->filter(fn($h) => $h !== '_parsed_date')
+                                        ->values()
+                                        ->all();
+                                }
+                                // Remove _parsed_date if present
+                                $allHeaders = array_filter($allHeaders, fn($h) => $h !== '_parsed_date');
+                                // Set custom column widths
+                                $wideCols = [
+                                    'Emp Name' => 'min-w-[220px]',
+                                    'Position' => 'min-w-[220px]',
+                                ];
+                            @endphp
+                            @if(count($dtrEntries) && count($allHeaders))
+                                <div class="overflow-x-auto" style="max-width:100vw;">
+                                    <table class="admin-table min-w-full divide-y divide-gray-200 mt-2" style="min-width:900px;">
                                         <thead>
                                             <tr>
-                                                @if(!empty($headers))
-                                                    @php
-                                                        $wideCols = [
-                                                            'Date' => 'min-w-[140px]',
-                                                            'Emp ID' => 'min-w-[100px]',
-                                                            'Emp Name' => 'min-w-[180px]',
-                                                            'Department' => 'min-w-[240px]',
-                                                            'Position' => 'min-w-[180px]',
-                                                            'Undertime-Hours' => 'min-w-[120px]',
-                                                            'Undertime-Minutes' => 'min-w-[120px]',
-                                                        ];
-                                                    @endphp
-                                                    @foreach($headers as $h)
-                                                        <th class="px-2 py-1 text-left text-md font-medium text-white {{ $wideCols[$h] ?? '' }}">{{ strtoupper($h) }}</th>
-                                                    @endforeach
-                                                @else
-                                                    <th class="px-2 py-1">Value</th>
-                                                @endif
+                                                @foreach($allHeaders as $h)
+                                                    <th class="px-2 py-1 {{ $wideCols[$h] ?? '' }}">{{ strtoupper($h) }}</th>
+                                                @endforeach
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($groupedRecords['ungrouped'] as $r)
+                                            @foreach($dtrEntries as $entry)
                                                 <tr>
-                                                    @if(is_array($r))
-                                                        @for($i = 0; $i < count($headers); $i++)
-                                                            <td class="px-2 py-1 text-sm {{ $wideCols[$headers[$i] ?? ''] ?? '' }}">{{ $r[$i] ?? '' }}</td>
-                                                        @endfor
-                                                    @else
-                                                        <td class="px-2 py-1">{{ $r }}</td>
-                                                    @endif
+                                                    @foreach($allHeaders as $h)
+                                                        <td class="px-2 py-1 {{ $wideCols[$h] ?? '' }}">{{ $entry->raw[$h] ?? '' }}</td>
+                                                    @endforeach
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="flex gap-4 mt-4">
-                                    <form method="POST" action="{{ route('admin.dtr.store', ['upload' => $upload->id]) }}">
-                                        @csrf
-                                        <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-9 rounded-lg">STORE</button>
-                                    </form>
-                                    <button type="button" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded" @click="show = false">Close</button>
+                            @elseif(count($dtrEntries))
+                                <div class="overflow-x-auto">
+                                    <table class="admin-table min-w-full divide-y divide-gray-200 mt-2">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-2 py-1">Date</th>
+                                                <th class="px-2 py-1">Time In</th>
+                                                <th class="px-2 py-1">Time Out</th>
+                                                <th class="px-2 py-1">Employee ID</th>
+                                                <th class="px-2 py-1">Employee Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($dtrEntries as $entry)
+                                                <tr>
+                                                    <td class="px-2 py-1">{{ $entry->occurred_at }}</td>
+                                                    <td class="px-2 py-1">{{ $entry->time_in }}</td>
+                                                    <td class="px-2 py-1">{{ $entry->time_out }}</td>
+                                                    <td class="px-2 py-1">{{ $entry->emp_id }}</td>
+                                                    <td class="px-2 py-1">{{ $entry->emp_name ?? $entry->employee ?? '' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div>
-                        @endif
-
-                        @foreach($groupedRecords as $year => $months)
-                            @if($year === 'ungrouped')
-                                @continue
-                            @endif
-                            <div class="mt-6 border-t pt-4">
-                                @foreach($months as $month => $days)
-                                    @foreach($days as $day => $records)
-                                        <div class="mt-4">
-                                            <div class="flex items-center gap-4 mb-1">
-                                                <span class="text-lg font-semibold">{{ $year }}</span>
-                                                <span class="font-medium">{{ $month }}</span>
-                                                <span class="font-medium">Day {{ $day }}</span>
-                                            </div>
-                                            <div class="overflow-x-auto">
-                                                <table class="admin-table min-w-full divide-y divide-gray-200 mt-1">
-                                                    <thead>
+                            @else
+                                <div class="text-gray-500 mt-4">No DTR records found for this Employee ID and month.</div>
+                                {{-- Debug: Show all DTR entries for this month regardless of Employee ID --}}
+                                @php
+                                    $debugMonth = request('month', now()->format('Y-m'));
+                                    $debugEntries = \App\Models\DtrEntry::where('occurred_at', 'like', $debugMonth . '%')->orderBy('occurred_at')->get();
+                                @endphp
+                                @if(count($debugEntries))
+                                    <div class="mt-6 p-4 border border-yellow-400 bg-yellow-50 rounded">
+                                        <div class="font-bold text-yellow-700 mb-2">Debug: All DTR entries for month {{ $debugMonth }}</div>
+                                        <div class="overflow-x-auto">
+                                            <table class="admin-table min-w-full divide-y divide-gray-200 mt-2">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="px-2 py-1">Date</th>
+                                                        <th class="px-2 py-1">Employee ID</th>
+                                                        <th class="px-2 py-1">Employee Name</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($debugEntries as $entry)
                                                         <tr>
-                                                            @if(!empty($headers))
-                                                                @php
-                                                                    $wideCols = [
-                                                                        'Date' => 'min-w-[140px]',
-                                                                        'Emp ID' => 'min-w-[100px]',
-                                                                        'Emp Name' => 'min-w-[180px]',
-                                                                        'Department' => 'min-w-[240px]',
-                                                                        'Position' => 'min-w-[160px]',
-                                                                        'Undertime-Hours' => 'min-w-[120px]',
-                                                                        'Undertime-Minutes' => 'min-w-[120px]',
-                                                                    ];
-                                                                @endphp
-                                                                    @foreach($headers as $h)
-                                                                        <th class="px-2 py-1 text-left text-lg font-medium text-white {{ $wideCols[$h] ?? '' }}">{{ strtoupper($h) }}</th>
-                                                                @endforeach
-                                                            @else
-                                                                <th class="px-2 py-1">Value</th>
-                                                            @endif
+                                                            <td class="px-2 py-1">{{ $entry->occurred_at }}</td>
+                                                            <td class="px-2 py-1">{{ $entry->emp_id }}</td>
+                                                            <td class="px-2 py-1">{{ $entry->emp_name ?? $entry->employee ?? '' }}</td>
                                                         </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach($records as $r)
-                                                            <tr>
-                                                                @if(is_array($r))
-                                                                    @for($i = 0; $i < count($headers); $i++)
-                                                                        @php $c = $r[$i] ?? ($r[$headers[$i]] ?? ''); @endphp
-                                                                        <td class="px-2 py-1 text-sm {{ $wideCols[$headers[$i] ?? ''] ?? '' }}">{{ $c }}</td>
-                                                                    @endfor
-                                                                @else
-                                                                    <td class="px-2 py-1">{{ $r }}</td>
-                                                                @endif
-                                                            </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        @endforeach
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                @endforeach
-                            </div>
-                        @endforeach
-                        @if(isset($upload) && $upload->status === 'not stored')
-                            <div class="flex gap-4 mt-4">
-                                <form method="POST" action="{{ route('admin.dtr.store', ['upload' => $upload->id]) }}">
-                                    @csrf
-                                    <button type="submit" class="bg-[#198F51] text-white font-bold py-2 px-8 rounded-lg">Store</button>
-                                </form>
-                            </div>
+                                @endif
+                            @endif
                         @endif
-                    </div>
-                @endif
+                        </div>
+                    @else
+                        <form method="GET" action="{{ route('employee.dtr.self') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6">
+                            <div>
+                                <label for="month" class="block text-sm font-bold mb-1">Month</label>
+                                <input type="month" name="month" id="month" value="{{ request('month', now()->format('Y-m')) }}" class="rounded border border-[#198f51] px-2 py-1" required>
+                            </div>
+                            <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-6 rounded-lg">View My DTR</button>
+                        </form>
+                        @if(isset($dtrEntries))
+                            @if(count($dtrEntries))
+                                <div class="overflow-x-auto">
+                                    <table class="admin-table min-w-full divide-y divide-gray-200 mt-2">
+                                        <thead>
+                                            <tr>
+                                                <th class="px-2 py-1">Date</th>
+                                                <th class="px-2 py-1">Time In</th>
+                                                <th class="px-2 py-1">Time Out</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($dtrEntries as $entry)
+                                                <tr>
+                                                    <td class="px-2 py-1">{{ $entry->occurred_at }}</td>
+                                                    <td class="px-2 py-1">{{ $entry->time_in }}</td>
+                                                    <td class="px-2 py-1">{{ $entry->time_out }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="text-gray-500 mt-4">No DTR records found for this month.</div>
+                            @endif
+                        @endif
+                    @endif
+                </div
             </div>
         </div>
     </div>
