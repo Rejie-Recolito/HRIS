@@ -638,9 +638,9 @@ class LeaveApplicationController extends Controller
         ];
 
         $vacationRules = [
-            'vacation_total_earned' => 'nullable|integer',
-            'vacation_less_this_application' => 'nullable|integer',
-            'vacation_balance' => 'nullable|integer',
+                'vacation_total_earned' => 'nullable|numeric',
+                'vacation_less_this_application' => 'nullable|numeric',
+                'vacation_balance' => 'nullable|numeric',
         ];
 
         $sickRules = [
@@ -672,14 +672,14 @@ class LeaveApplicationController extends Controller
         // Fill appropriate credit group (we'll compute balances server-side)
         if ($request->input('cert_leave_type') === 'vacation' || isset($validated['vacation_total_earned']) || isset($validated['vacation_less_this_application'])) {
             // determine total earned: prefer validated value, fall back to existing leave record or employee leave credits
-            $totalVacation = isset($validated['vacation_total_earned']) ? (int) $validated['vacation_total_earned'] : ($leave->vacation_total_earned ?? 0);
+                $totalVacation = isset($validated['vacation_total_earned']) ? (float) $validated['vacation_total_earned'] : ($leave->vacation_total_earned ?? 0.0);
 
             // if there's an associated employee, derive current total from leave_credits
             if ($leave->user_id) {
                 $employee = Employee::where('user_id', $leave->user_id)->first();
                 if ($employee) {
                     $credits = LeaveCredit::where('employee_id', $employee->id)->get();
-                    $totalVacation = (int) $credits->where('type', 'vacation')->sum('amount');
+                        $totalVacation = (float) $credits->where('type', 'vacation')->sum('amount');
                 }
             }
 
@@ -698,7 +698,7 @@ class LeaveApplicationController extends Controller
                 $employee = Employee::where('user_id', $leave->user_id)->first();
                 if ($employee) {
                     $credits = LeaveCredit::where('employee_id', $employee->id)->get();
-                    $totalSick = (int) $credits->where('type', 'sick')->sum('amount');
+                        $totalSick = (float) $credits->where('type', 'sick')->sum('amount');
                 }
             }
 

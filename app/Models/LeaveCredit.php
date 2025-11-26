@@ -21,6 +21,15 @@ class LeaveCredit extends Model
         'source_id',
     ];
 
+    /**
+     * Attribute casting.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'amount' => 'decimal:2',
+    ];
+
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id');

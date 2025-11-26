@@ -237,7 +237,7 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Total Earned (Vacation)</td>
-                                            <td><input type="number" name="vacation_total_earned" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['vacation']['total'] ?? 0 }}" /></td>
+                                            <td><input type="number" name="vacation_total_earned" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ number_format($leaveCardDetails['vacation']['total'] ?? 0, 2) }}" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Less this application (Vacation)</td>
@@ -245,7 +245,7 @@
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Balance (Vacation)</td>
-                                            <td><input type="number" name="vacation_balance" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationNewBalance" /></td>
+                                            <td><input type="number" name="vacation_balance" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-xl w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="vacationNewBalance.toFixed(2)" /></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -255,7 +255,7 @@
                                     <table class="w-full border-collapse">
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Total Earned (Sick)</td>
-                                            <td><input type="number" name="sick_total_earned" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ $leaveCardDetails['sick']['total'] ?? 0 }}" /></td>
+                                            <td><input type="number" name="sick_total_earned" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" value="{{ number_format($leaveCardDetails['sick']['total'] ?? 0, 2) }}" /></td>
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Less this application (Sick)</td>
@@ -263,7 +263,7 @@
                                         </tr>
                                         <tr>
                                             <td class="pr-2 dark:text-gray-300">Balance (Sick)</td>
-                                            <td><input type="number" name="sick_balance" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickNewBalance" /></td>
+                                            <td><input type="number" name="sick_balance" readonly step="0.01" class="border-gray-300 input-field-border custom-input rounded-md w-full bg-gray-100 dark:bg-gray-600 dark:text-gray-100" x-bind:value="sickNewBalance.toFixed(2)" /></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -309,6 +309,9 @@
                                 <button type="submit" class="bg-blue-600 text-white px-2 py-1 rounded">Accept</button>
                             </form>
                         @elseif($leaveApplication->status === 'Under Review')
+                            
+                        
+
                             <form method="POST" action="{{ route('leave.approve', $leaveApplication->id) }}" style="display:inline-block;">
                                 @csrf
                                 <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded">Approve</button>

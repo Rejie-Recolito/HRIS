@@ -91,7 +91,7 @@
         <table>
             <tr>
                 <td>Certification of Leave Credits:</td>
-                <td>Total Earned: {{ $leave->leave_credits_total }}, Less This Application: {{ $leave->leave_credits_used }}</td>
+                <td>Total Earned: {{ number_format($leave->leave_credits_total ?? 0, 2) }}, Less This Application: {{ number_format($leave->leave_credits_used ?? 0, 2) }}</td>
             </tr>
             <tr>
                 <td>Recommendation:</td>
