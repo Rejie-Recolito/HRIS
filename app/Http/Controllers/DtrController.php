@@ -12,6 +12,7 @@ use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Style\Tab;
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\TemplateProcessor;
+use Symfony\Component\Process\Process;
 
 
 class DtrController {
@@ -286,24 +287,51 @@ class DtrController {
                 return back()->withErrors(['pdf' => "Failed to convert DOCX to PDF. LibreOffice 'soffice' binary not found. Install LibreOffice or set 'services.libreoffice.path' in config/services.php. Detected OS: " . PHP_OS]);
             }
 
-            // Quote the soffice executable correctly. On Windows use double quotes, on Unix escapeshellcmd is fine.
-            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                $foundQuoted = '"' . str_replace('"', '\\"', $found) . '"';
-            } else {
-                $foundQuoted = escapeshellcmd($found);
-            }
-            $cmd = $foundQuoted . ' --headless --convert-to pdf --outdir ' . escapeshellarg($tmpDir) . ' ' . escapeshellarg($docxPath) . ' 2>&1';
-            // Allow more time for the conversion to complete
+            // Use Symfony Process with argument array to avoid quoting problems on Windows
+            $processBinary = $found;
+            $process = new Process([
+                $processBinary,
+                '--headless',
+                '--convert-to',
+                'pdf',
+                '--outdir',
+                $tmpDir,
+                $docxPath,
+            ]);
             if (function_exists('set_time_limit')) {
                 @set_time_limit(120);
             }
-            $output = [];
-            $rc = 0;
-            @exec($cmd, $output, $rc);
-            if (!file_exists($pdfPath)) {
-                $outStr = trim(implode("\n", array_slice($output, 0, 200)));
-                Log::error('soffice conversion failed', ['cmd' => $cmd, 'rc' => $rc, 'output' => implode("\n", $output), 'docx' => $docxPath, 'pdf' => $pdfPath]);
-                return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF. soffice exit code: ' . $rc . '. Output (truncated): ' . substr($outStr, 0, 1000) . '. Check storage/logs/laravel.log for full output. Also verify soffice is installed and that PHP can execute external commands and write to storage/app/tmp.']);
+            try {
+                Log::info('Attempting DOCX->PDF conversion', ['binary' => $processBinary, 'docx' => $docxPath, 'outdir' => $tmpDir]);
+                $process->setTimeout(120);
+                $process->run();
+                $stdout = $process->getOutput();
+                $stderr = $process->getErrorOutput();
+                $exit = $process->getExitCode();
+                Log::info('LibreOffice conversion finished', ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr]);
+
+                if (!$process->isSuccessful()) {
+                    Log::warning('LibreOffice conversion reported non-success', ['exit' => $exit, 'stderr' => $stderr]);
+                    return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF. soffice exit code: ' . $exit . '. Check storage/logs/laravel.log for details.']);
+                }
+
+                // Poll for generated PDF (some Windows installs create file slightly after soffice exits)
+                $waitMs = 3000;
+                $intervalMs = 200;
+                $elapsed = 0;
+                while ($elapsed < $waitMs) {
+                    if (file_exists($pdfPath)) {
+                        return response()->download($pdfPath)->deleteFileAfterSend(true);
+                    }
+                    usleep($intervalMs * 1000);
+                    $elapsed += $intervalMs;
+                }
+
+                Log::error('LibreOffice conversion succeeded but PDF not found', ['expected_pdf' => $pdfPath, 'stdout' => $stdout, 'stderr' => $stderr]);
+                return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF. PDF not found after conversion. Check storage/logs/laravel.log for details.']);
+            } catch (\Throwable $e) {
+                Log::error('soffice conversion failed', ['exception' => $e->getMessage(), 'docx' => $docxPath, 'pdf' => $pdfPath]);
+                return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF (exception). See logs for details.']);
             }
 
             return response()->download($pdfPath)->deleteFileAfterSend(true);
@@ -468,26 +496,52 @@ class DtrController {
             return back()->withErrors(['pdf' => "Failed to convert DOCX to PDF. LibreOffice 'soffice' binary not found. Install LibreOffice or set 'services.libreoffice.path' in config/services.php. Detected OS: " . PHP_OS]);
         }
 
-        // Quote the soffice executable correctly for Windows
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $foundQuoted = '"' . str_replace('"', '\\"', $found) . '"';
-        } else {
-            $foundQuoted = escapeshellcmd($found);
-        }
-        $cmd = $foundQuoted . ' --headless --convert-to pdf --outdir ' . escapeshellarg($tmpDir) . ' ' . escapeshellarg($docxPath) . ' 2>&1';
+        // Use Symfony Process with argument array to avoid quoting problems on Windows
+        $processBinary = $found;
+        $process = new Process([
+            $processBinary,
+            '--headless',
+            '--convert-to',
+            'pdf',
+            '--outdir',
+            $tmpDir,
+            $docxPath,
+        ]);
         if (function_exists('set_time_limit')) {
             @set_time_limit(120);
         }
-        $output = [];
-        $rc = 0;
-        @exec($cmd, $output, $rc);
-        if (!file_exists($pdfPath)) {
-            $outStr = trim(implode("\n", array_slice($output, 0, 200)));
-            Log::error('soffice conversion failed (fallback)', ['cmd' => $cmd, 'rc' => $rc, 'output' => implode("\n", $output), 'docx' => $docxPath, 'pdf' => $pdfPath]);
-            return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF (fallback). soffice exit code: ' . $rc . '. Output (truncated): ' . substr($outStr, 0, 1000) . '. Check storage/logs/laravel.log for full output and verify permissions.']);
-        }
+        try {
+            Log::info('Attempting DOCX->PDF conversion (fallback)', ['binary' => $processBinary, 'docx' => $docxPath, 'outdir' => $tmpDir]);
+            $process->setTimeout(120);
+            $process->run();
+            $stdout = $process->getOutput();
+            $stderr = $process->getErrorOutput();
+            $exit = $process->getExitCode();
+            Log::info('LibreOffice conversion finished (fallback)', ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr]);
 
-        return response()->download($pdfPath)->deleteFileAfterSend(true);
+            if (!$process->isSuccessful()) {
+                Log::warning('LibreOffice conversion reported non-success (fallback)', ['exit' => $exit, 'stderr' => $stderr]);
+                return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF (fallback). soffice exit code: ' . $exit . '. Check storage/logs/laravel.log for details.']);
+            }
+
+            // Poll for generated PDF (some Windows installs create file slightly after soffice exits)
+            $waitMs = 3000;
+            $intervalMs = 200;
+            $elapsed = 0;
+            while ($elapsed < $waitMs) {
+                if (file_exists($pdfPath)) {
+                    return response()->download($pdfPath)->deleteFileAfterSend(true);
+                }
+                usleep($intervalMs * 1000);
+                $elapsed += $intervalMs;
+            }
+
+            Log::error('LibreOffice conversion succeeded but PDF not found (fallback)', ['expected_pdf' => $pdfPath, 'stdout' => $stdout, 'stderr' => $stderr]);
+            return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF (fallback). PDF not found after conversion. Check storage/logs/laravel.log for details.']);
+        } catch (\Throwable $e) {
+            Log::error('soffice conversion failed (fallback)', ['exception' => $e->getMessage(), 'docx' => $docxPath, 'pdf' => $pdfPath]);
+            return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF (fallback exception). See logs for details.']);
+        }
     }
 
     // Employee self DTR view by month
