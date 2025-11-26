@@ -671,20 +671,23 @@ class LeaveApplicationController extends Controller
 
         // Fill appropriate credit group (we'll compute balances server-side)
         if ($request->input('cert_leave_type') === 'vacation' || isset($validated['vacation_total_earned']) || isset($validated['vacation_less_this_application'])) {
-            // determine total earned: prefer validated value, fall back to existing leave record or employee leave credits
-                $totalVacation = isset($validated['vacation_total_earned']) ? (float) $validated['vacation_total_earned'] : ($leave->vacation_total_earned ?? 0.0);
+            // determine total earned: prefer validated value, fall back to existing leave record
+            // Only derive from leave credits when the validated value was NOT provided.
+            $totalVacation = isset($validated['vacation_total_earned']) ? (float) $validated['vacation_total_earned'] : ($leave->vacation_total_earned ?? 0.0);
 
             // if there's an associated employee, derive current total from leave_credits
+            // but only when the admin did not explicitly supply a value for vacation_total_earned
             if ($leave->user_id) {
                 $employee = Employee::where('user_id', $leave->user_id)->first();
-                if ($employee) {
+                if ($employee && !isset($validated['vacation_total_earned'])) {
                     $credits = LeaveCredit::where('employee_id', $employee->id)->get();
-                        $totalVacation = (float) $credits->where('type', 'vacation')->sum('amount');
+                    $totalVacation = (float) $credits->where('type', 'vacation')->sum('amount');
                 }
             }
 
-            $lessVacation = isset($validated['vacation_less_this_application']) ? (int) $validated['vacation_less_this_application'] : ($leave->vacation_less_this_application ?? 0);
-            $balanceVacation = max(0, $totalVacation - $lessVacation);
+            // less and balance: prefer validated inputs when present, otherwise compute
+            $lessVacation = isset($validated['vacation_less_this_application']) ? (float) $validated['vacation_less_this_application'] : ($leave->vacation_less_this_application ?? 0.0);
+            $balanceVacation = isset($validated['vacation_balance']) ? (float) $validated['vacation_balance'] : max(0, $totalVacation - $lessVacation);
 
             $leave->vacation_total_earned = $totalVacation;
             $leave->vacation_less_this_application = $lessVacation;
@@ -692,18 +695,19 @@ class LeaveApplicationController extends Controller
         }
 
         if ($request->input('cert_leave_type') === 'sick' || isset($validated['sick_total_earned']) || isset($validated['sick_less_this_application'])) {
-            $totalSick = isset($validated['sick_total_earned']) ? (int) $validated['sick_total_earned'] : ($leave->sick_total_earned ?? 0);
+            $totalSick = isset($validated['sick_total_earned']) ? (float) $validated['sick_total_earned'] : ($leave->sick_total_earned ?? 0.0);
 
             if ($leave->user_id) {
                 $employee = Employee::where('user_id', $leave->user_id)->first();
-                if ($employee) {
+                // only derive from credits when admin did not supply a sick total explicitly
+                if ($employee && !isset($validated['sick_total_earned'])) {
                     $credits = LeaveCredit::where('employee_id', $employee->id)->get();
-                        $totalSick = (float) $credits->where('type', 'sick')->sum('amount');
+                    $totalSick = (float) $credits->where('type', 'sick')->sum('amount');
                 }
             }
 
-            $lessSick = isset($validated['sick_less_this_application']) ? (int) $validated['sick_less_this_application'] : ($leave->sick_less_this_application ?? 0);
-            $balanceSick = max(0, $totalSick - $lessSick);
+            $lessSick = isset($validated['sick_less_this_application']) ? (float) $validated['sick_less_this_application'] : ($leave->sick_less_this_application ?? 0.0);
+            $balanceSick = isset($validated['sick_balance']) ? (float) $validated['sick_balance'] : max(0, $totalSick - $lessSick);
 
             $leave->sick_total_earned = $totalSick;
             $leave->sick_less_this_application = $lessSick;
