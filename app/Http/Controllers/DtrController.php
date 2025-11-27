@@ -321,9 +321,14 @@ class DtrController {
             $tpl->saveAs($docxPath);
 
             // Convert DOCX -> PDF via soffice (auto-detect path)
-            // Auto-detect soffice binary: try PATH then common install locations
+            // Auto-detect soffice binary: prefer LIBREOFFICE_PATH from env, then try PATH and common locations
             $found = null;
-            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Respect explicit path if provided in .env (prefer this)
+            if ($envPath = env('LIBREOFFICE_PATH')) {
+                $found = $envPath;
+            }
+
+            if (!$found && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $whereOut = [];
                 @exec('where soffice', $whereOut, $whereRc);
                 if (!empty($whereOut)) {
@@ -535,7 +540,10 @@ class DtrController {
         // Convert DOCX -> PDF via soffice (auto-detect path)
         // Auto-detect soffice binary: try PATH then common install locations
         $found = null;
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if ($envPath = env('LIBREOFFICE_PATH')) {
+            $found = $envPath;
+        }
+        if (!$found && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             $whereOut = [];
             @exec('where soffice', $whereOut, $whereRc);
             if (!empty($whereOut)) {
