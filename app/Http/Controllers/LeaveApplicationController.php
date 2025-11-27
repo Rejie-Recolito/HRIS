@@ -506,10 +506,10 @@ class LeaveApplicationController extends Controller
     $pdfTempDir = sys_get_temp_dir();
     $pdfTemp = $pdfTempDir . DIRECTORY_SEPARATOR . pathinfo($tempDocx, PATHINFO_FILENAME) . '.pdf';
 
-    // 🔍 Detect OS and set LibreOffice path accordingly
+    // 🔍 Detect OS and set LibreOffice path accordingly (try to find soffice on PATH first)
     if (stripos(PHP_OS, 'WIN') === 0) {
         // Windows default path
-        $libreOfficePath = '"C:\Program Files\LibreOffice\program\soffice.exe"';
+        $libreOfficePath = '"C:\\Program Files\\LibreOffice\\program\\soffice.exe"';
     } elseif (stripos(PHP_OS, 'DAR') === 0) {
         // macOS (Homebrew or app path)
         $libreOfficePath = '/Applications/LibreOffice.app/Contents/MacOS/soffice';
@@ -517,16 +517,48 @@ class LeaveApplicationController extends Controller
             $libreOfficePath = 'libreoffice'; // fallback if in PATH
         }
     } else {
-        // Linux or others
+        // Linux or others - prefer the binary on PATH
         $libreOfficePath = 'libreoffice';
     }
 
-    $command = $libreOfficePath . ' --headless --convert-to pdf --outdir ' . escapeshellarg($pdfTempDir) . ' ' . escapeshellarg($tempDocx);
+    // Create a temporary LibreOffice user profile to avoid writing into non-writable HOME dirs
+    $loUserDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'libreoffice_profile_' . uniqid();
+    if (!is_dir($loUserDir)) {
+        @mkdir($loUserDir, 0700, true);
+    }
+    $userInstallation = 'file://' . str_replace('\\', '/', $loUserDir);
+
+    // Prepend environment HOME and XDG_RUNTIME_DIR to ensure LibreOffice uses a writable profile
+    $envPrefix = 'HOME=' . escapeshellarg($loUserDir) . ' XDG_RUNTIME_DIR=' . escapeshellarg($loUserDir) . ' ';
+
+    // Build command and capture stdout/stderr
+    $cmdBinary = escapeshellcmd($libreOfficePath);
+    $command = $envPrefix . $cmdBinary
+        . ' --headless -env:UserInstallation=' . escapeshellarg($userInstallation)
+        . ' --convert-to pdf --outdir ' . escapeshellarg($pdfTempDir) . ' ' . escapeshellarg($tempDocx)
+        . ' 2>&1';
+
     exec($command, $output, $resultCode);
 
+    if (!empty($output)) {
+        Log::info('LibreOffice conversion output: ' . implode("\n", $output));
+    }
+
     if ($resultCode !== 0) {
-        // cleanup temp docx
+        // cleanup temp docx and temp profile
         if (file_exists($tempDocx)) @unlink($tempDocx);
+        if (is_dir($loUserDir)) {
+            $it = new \RecursiveDirectoryIterator($loUserDir, \FilesystemIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    @rmdir($file->getRealPath());
+                } else {
+                    @unlink($file->getRealPath());
+                }
+            }
+            @rmdir($loUserDir);
+        }
         return redirect()->back()->with('error', 'Failed to convert DOCX to PDF');
     }
 
