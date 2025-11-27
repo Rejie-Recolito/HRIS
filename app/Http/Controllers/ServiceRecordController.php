@@ -134,47 +134,23 @@ class ServiceRecordController extends Controller
             @unlink($expectedPdf);
         }
 
-        // Build argv-array for Process to avoid shell quoting issues on Windows
-        $processArgs = [$soffice, '--headless', '--convert-to', 'pdf', '--outdir', $outputDir, $docxPath];
-
+        // Use centralized converter service which handles per-conversion profile and env
         try {
-            $process = new Process($processArgs);
-            // give the process a reasonable timeout
-            $process->setTimeout(60);
-            Log::info('convertDocxToPdf: starting soffice', ['cmd' => $processArgs]);
-            $process->run();
-
-            Log::info('convertDocxToPdf: soffice finished', ['exit' => $process->getExitCode(), 'stdout' => $process->getOutput(), 'stderr' => $process->getErrorOutput()]);
-
-            // Poll for the produced PDF for a short window (filesystems/LibreOffice may delay write)
-            $waitMs = 3000;
-            $intervalMs = 200;
-            $elapsed = 0;
-            while ($elapsed < $waitMs) {
-                if (file_exists($expectedPdf) && filesize($expectedPdf) > 0) {
-                    return $expectedPdf;
-                }
-                usleep($intervalMs * 1000);
-                $elapsed += $intervalMs;
-            }
-
-            // If soffice exited with success but PDF not found, log for debugging
-            if ($process->isSuccessful() && !file_exists($expectedPdf)) {
-                Log::warning('convertDocxToPdf: soffice reported success but expected PDF not found', ['expected_pdf' => $expectedPdf, 'docx' => $docxPath]);
+            $converter = new \App\Services\LibreOfficeConverter();
+            $result = $converter->convertDocxToPdf($docxPath, $outputDir);
+            if (($result['exit'] ?? 1) !== 0) {
+                Log::warning('convertDocxToPdf: converter reported non-success', ['result' => $result]);
                 return null;
             }
-
-            // If process failed, record stderr
-            if (!$process->isSuccessful()) {
-                Log::error('convertDocxToPdf: soffice process failed', ['exit' => $process->getExitCode(), 'stderr' => $process->getErrorOutput(), 'stdout' => $process->getOutput()]);
-                return null;
+            $pdf = $result['pdf'] ?? null;
+            if ($pdf && file_exists($pdf) && filesize($pdf) > 0) {
+                return $pdf;
             }
+            return null;
         } catch (\Throwable $e) {
-            Log::error('convertDocxToPdf: exception while running soffice', ['exception' => $e->getMessage()]);
+            Log::error('convertDocxToPdf: converter exception', ['exception' => $e->getMessage()]);
             return null;
         }
-
-        return null;
     }
 
     /**
