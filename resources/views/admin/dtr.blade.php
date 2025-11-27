@@ -133,8 +133,7 @@
                         <div id="dtr-results-section" @if(!$showDtrResults) style="display:none;" @endif>
                         @if($showDtrResults)
                             <div class="flex justify-end mb-2 items-center gap-3">
-                                <a href="{{ route('admin.dtr.generate_pdf', ['emp_id' => request('emp_id'), 'month' => request('month')]) }}" class="inline-flex items-center px-4 py-2 bg-[#1f8f51] text-white rounded-lg">Generate PDF (HTML template)</a>
-                                <a href="{{ route('admin.dtr.generate_docx_pdf', ['emp_id' => request('emp_id'), 'month' => request('month')]) }}" class="inline-flex items-center px-4 py-2 bg-[#0b62a3] text-white rounded-lg">Generate PDF (DOCX template)</a>
+                                <a href="{{ route('admin.dtr.generate_docx_pdf', ['emp_id' => request('emp_id'), 'month' => request('month')]) }}" class="inline-flex items-center px-4 py-2 bg-[#198f51] text-white rounded-lg">Generate PDF</a>
                                 <button type="button" onclick="document.getElementById('dtr-results-section').style.display='none'" class="text-gray-500 hover:text-red-600 font-bold text-lg">&times; Close</button>
                             </div>
                             @php

@@ -126,6 +126,71 @@ class DtrController {
                 return \Carbon\Carbon::parse($e->occurred_at)->day;
             });
 
+        // Resolve employee name: prefer name found in DTR entries raw payload, else try employees table, else use empId
+        $empName = null;
+        // look for a name in the entries' raw payload
+        foreach ($entries as $day => $dayEntries) {
+            foreach ($dayEntries as $ent) {
+                $raw = $ent->raw ?? null;
+                if (is_string($raw)) {
+                    $tmp = @json_decode($raw, true);
+                    if (is_array($tmp)) $raw = $tmp;
+                }
+                if (is_array($raw)) {
+                    foreach (['Emp Name','EmpName','Emp','Employee Name','EmployeeName','emp_name','empname'] as $k) {
+                        if (array_key_exists($k, $raw) && trim($raw[$k]) !== '') {
+                            $empName = trim($raw[$k]);
+                            break 3;
+                        }
+                    }
+                    // case-insensitive fallback
+                    foreach ($raw as $rk => $rv) {
+                        if (in_array(strtolower($rk), ['emp name','empname','emp','employee name','employeename','emp_name','empname']) && trim($rv) !== '') {
+                            $empName = trim($rv);
+                            break 3;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$empName) {
+            try {
+                $empModel = \App\Models\Employee::where('employee_id', $empId)->first();
+                if ($empModel) {
+                    $empName = trim(($empModel->firstname ?? '') . ' ' . ($empModel->middlename ? ($empModel->middlename . ' ') : '') . ($empModel->lastname ?? ''));
+                }
+            } catch (\Exception $e) {
+                // ignore lookup errors
+            }
+        }
+        if (!$empName) {
+            $empName = $empId; // fallback to ID when name not available
+        }
+
+        // Compute total working days: count of days that have at least one AM/PM arrival or departure
+        $totalWorkingDays = 0;
+        foreach (range(1, $daysInMonth) as $d) {
+            $dayEntries = $entries->get($d, collect());
+            if ($dayEntries->isEmpty()) continue;
+            // if any entry has non-empty time_in/time_out or raw AM/PM fields, count it
+            $countable = false;
+            foreach ($dayEntries as $ent) {
+                if (!empty($ent->time_in) || !empty($ent->time_out)) { $countable = true; break; }
+                $raw = $ent->raw ?? null;
+                if (is_string($raw)) {
+                    $tmp = @json_decode($raw, true);
+                    if (is_array($tmp)) $raw = $tmp;
+                }
+                if (is_array($raw)) {
+                    foreach ($raw as $k => $v) {
+                        if ($v !== null && $v !== '') { $countable = true; break 2; }
+                    }
+                }
+            }
+            if ($countable) $totalWorkingDays++;
+        }
+
         // If a DOCX template is provided, use TemplateProcessor to populate it (preferred)
         $templatePath = resource_path('templates/dtr_template.docx');
         $tmpDir = storage_path('app/tmp');
@@ -142,7 +207,10 @@ class DtrController {
             // day, am_arrival, am_departure, pm_arrival, pm_departure, undertime_hours, undertime_minutes
             $tpl = new TemplateProcessor($templatePath);
             $tpl->setValue('EMP_ID', $empId);
-            $tpl->setValue('MONTH', $start->format('F Y'));
+            $tpl->setValue('EMP_NAME', $empName);
+            // only the month name is required (e.g., "October")
+            $tpl->setValue('MONTH', $start->format('F'));
+            $tpl->setValue('REGULAR_DAYS', (string)$totalWorkingDays);
 
             // clone the row placeholder 'day' daysInMonth times
             $tpl->cloneRow('day', $daysInMonth);
@@ -341,13 +409,16 @@ class DtrController {
         $phpWord = new PhpWord();
         $section = $phpWord->addSection(['marginTop' => 600, 'marginBottom' => 600]);
 
-        // Header
-        $section->addText('DAILY TIME RECORD', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
-        $section->addTextBreak(1);
+    // Header
+    $section->addText('DAILY TIME RECORD', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
+    $section->addTextBreak(1);
 
-        // Basic info
-        $section->addText('Employee ID: ' . $empId);
-        $section->addText('Month: ' . $start->format('F Y'));
+    // Basic info
+    $section->addText('Employee ID: ' . $empId);
+    $section->addText('Employee Name: ' . $empName);
+    // only output month name
+    $section->addText('Month: ' . $start->format('F'));
+    $section->addText('Regular days (worked): ' . $totalWorkingDays);
         $section->addTextBreak(1);
 
         // Table with columns (Day, AM Arrival, AM Departure, PM Arrival, PM Departure, Undertime Hours, Minutes)
