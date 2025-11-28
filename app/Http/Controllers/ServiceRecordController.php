@@ -246,7 +246,8 @@ class ServiceRecordController extends Controller
 
                 // Try converting to PDF using LibreOffice (soffice). If conversion fails, fall back to DOCX.
                 try {
-                    $pdfFile = $this->convertDocxToPdf($tempFile);
+                    $convResult = \App\Services\LibreOfficeConverter::convertDocxToPdf($tempFile, storage_path('app/tmp'));
+                    $pdfFile = $convResult['pdf'] ?? null;
                     $specificRequestId = request()->query('request');
                     $updatedRequestId = null;
                     if ($specificRequestId) {
@@ -431,7 +432,8 @@ class ServiceRecordController extends Controller
 
         // Attempt conversion to PDF via LibreOffice
         try {
-            $pdfFile = $this->convertDocxToPdf($tempFile);
+            $convResult = \App\Services\LibreOfficeConverter::convertDocxToPdf($tempFile, storage_path('app/tmp'));
+            $pdfFile = $convResult['pdf'] ?? null;
             if ($pdfFile && file_exists($pdfFile)) {
                 @unlink($tempFile);
                 $pdfName = str_replace('.docx', '.pdf', $fileName);

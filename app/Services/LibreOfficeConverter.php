@@ -1,136 +1,162 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
 class LibreOfficeConverter
 {
     /**
-     * Convert a DOCX to PDF using LibreOffice in headless mode.
-     * Returns an array: [ 'exit' => int, 'stdout' => string, 'stderr' => string, 'pdf' => string|null ]
+     * Convert a DOCX file to PDF using LibreOffice CLI.
+     * Returns an array: ['exit' => int, 'stdout' => string, 'stderr' => string, 'pdf' => ?string, 'profile' => ?string]
+     * On success pdf contains absolute path and profile is removed. On failure profile is preserved for inspection.
+     *
+     * @param string $docxPath absolute or relative path to DOCX
+     * @param string|null $outDir absolute path to output dir (defaults to storage_path('app/tmp'))
+     * @param int $timeout seconds for the process timeout
+     * @return array
      */
-    public function convertDocxToPdf(string $docxPath, string $outDir = null): array
+    public static function convertDocxToPdf(string $docxPath, ?string $outDir = null, int $timeout = 120): array
     {
-        $outDir = $outDir ?? storage_path('app/tmp');
+        $outDir = $outDir ?: storage_path('app/tmp');
         if (!is_dir($outDir)) {
-            mkdir($outDir, 0775, true);
+            @mkdir($outDir, 0775, true);
         }
 
-        // Prefer explicit env path; fall back to common locations, prefer soffice.bin when available
-        $candidates = [];
-        if ($envBin = env('LIBREOFFICE_PATH')) {
-            $candidates[] = $envBin;
+        $binary = self::findBinary();
+        if (empty($binary)) {
+            $msg = 'LibreOffice binary not found. Set LIBREOFFICE_PATH in .env or install LibreOffice.';
+            Log::warning($msg);
+            return ['exit' => 127, 'stdout' => '', 'stderr' => $msg, 'pdf' => null, 'profile' => null];
         }
-        $candidates = array_merge($candidates, [
-            '/usr/lib/libreoffice/program/soffice.bin',
-            '/usr/lib/libreoffice/program/soffice',
-            '/usr/bin/soffice',
-            '/usr/local/bin/soffice',
-            '/snap/bin/soffice',
-            'soffice',
+
+        $profileDir = storage_path('app/tmp/libreoffice_profile_'.Str::random(12));
+        @mkdir($profileDir, 0700, true);
+        @mkdir($profileDir.'/runtime', 0700, true);
+
+        $env = array_merge($_SERVER, [
+            'HOME' => $profileDir,
+            'XDG_RUNTIME_DIR' => $profileDir.'/runtime',
         ]);
-        $binary = null;
-        foreach ($candidates as $c) {
-            if ($c === 'soffice') {
-                // rely on PATH
-                $which = null;
-                @exec('which soffice 2>/dev/null', $whichOut, $whichRc);
-                if (!empty($whichOut) && file_exists(trim($whichOut[0]))) {
-                    $binary = trim($whichOut[0]);
-                    break;
-                }
-                continue;
-            }
-            if (file_exists($c) && is_executable($c)) {
-                $binary = $c;
-                break;
-            }
-        }
-        if (!$binary) {
-            // fallback to env even if not executable (best effort)
-            $binary = env('LIBREOFFICE_PATH') ?: '/usr/lib/libreoffice/program/soffice.bin';
-        }
-        $basename = pathinfo($docxPath, PATHINFO_FILENAME);
-        $pdfPath = rtrim($outDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $basename . '.pdf';
 
-        // create per-conversion profile inside storage/tmp so the process user owns it when run from web
-        $profileBase = storage_path('app/tmp/libreoffice_profile_' . uniqid());
-        if (!is_dir($profileBase)) {
-            mkdir($profileBase, 0700, true);
+        // Ensure absolute docx path
+        $docxFull = $docxPath;
+        if (!file_exists($docxFull)) {
+            // try relative to project
+            $docxFull = base_path($docxPath);
         }
 
-        $userInstallation = $profileBase . '/LibreOffice_ConversionProfile';
-
-        $cmd = [
+        $command = [
             $binary,
-            '-env:UserInstallation=file://' . $userInstallation,
             '--headless',
+            '-env:UserInstallation=file://'.$profileDir,
             '--convert-to',
             'pdf',
             '--outdir',
             $outDir,
-            $docxPath,
+            $docxFull,
         ];
 
-        // Run process with HOME and XDG_RUNTIME_DIR pointing to the profile
-        $process = new Process($cmd);
-        $process->setTimeout(120);
-        $process->setWorkingDirectory($outDir);
-        $env = array_merge($_ENV, [
-            'HOME' => $profileBase,
-            'XDG_RUNTIME_DIR' => $profileBase,
-        ]);
-        $process->setEnv($env);
-
+        // Run process
+        $process = new Process($command);
+        $process->setTimeout($timeout);
         try {
+            $process->setWorkingDirectory($outDir);
+            $process->setEnv($env);
             $process->run();
         } catch (\Throwable $e) {
-            $stdout = '';
             $stderr = $e->getMessage();
-            $exit = 255;
-            Log::warning('LibreOffice convert exception', ['exception' => $stderr, 'cmd' => $cmd]);
-
-            // persist error output for inspection
-            @file_put_contents($profileBase . '/soffice_out.txt', $stdout);
-            @file_put_contents($profileBase . '/soffice_err.txt', $stderr);
-
-            return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => null, 'profile' => $profileBase];
+            // persist error files
+            @file_put_contents($profileDir.'/soffice_out.txt', '');
+            @file_put_contents($profileDir.'/soffice_err.txt', $stderr);
+            Log::warning('LibreOffice conversion exception: '.$stderr);
+            return ['exit' => 1, 'stdout' => '', 'stderr' => $stderr, 'pdf' => null, 'profile' => $profileDir];
         }
 
         $stdout = $process->getOutput();
         $stderr = $process->getErrorOutput();
-        $exit = $process->getExitCode();
 
-        // persist outputs for debugging in profile
-        @file_put_contents($profileBase . '/soffice_out.txt', $stdout);
-        @file_put_contents($profileBase . '/soffice_err.txt', $stderr);
+        // persist outputs for debugging
+        @file_put_contents($profileDir.'/soffice_out.txt', $stdout);
+        @file_put_contents($profileDir.'/soffice_err.txt', $stderr);
 
-        Log::info('LibreOffice conversion finished', ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'profile' => $profileBase]);
+        $exit = $process->getExitCode() ?? 1;
 
-        // determine pdf path (some installs append exact name)
-        $producedPdf = null;
-        if (file_exists($pdfPath)) {
-            $producedPdf = $pdfPath;
-        } else {
-            // try to find recently created pdf in outdir
-            $files = glob(rtrim($outDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $basename . '*.pdf');
-            if (!empty($files)) {
-                $producedPdf = $files[0];
+        // find produced PDF
+        $pdfCandidate = null;
+        $base = pathinfo($docxFull, PATHINFO_FILENAME);
+        $files = @scandir($outDir) ?: [];
+        foreach ($files as $f) {
+            if (stripos($f, $base) !== false && Str::endsWith($f, '.pdf')) {
+                $pdfCandidate = rtrim($outDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$f;
+                break;
             }
         }
 
-        // cleanup profile only on success
-        if ($exit === 0) {
-            $this->recursiveRmdir($profileBase);
-            return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $producedPdf];
+        if ($exit === 0 && $pdfCandidate && file_exists($pdfCandidate)) {
+            // success: remove profile dir
+            try {
+                self::deleteDirectory($profileDir);
+            } catch (\Throwable $e) {
+                // best effort
+                Log::info('Could not delete libreoffice profile dir: '.$profileDir.' '.$e->getMessage());
+            }
+            return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => null];
         }
 
-        // keep profile for debugging and return its path
-        return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $producedPdf, 'profile' => $profileBase];
+        // failure: attempt fallback converter (PhpWord -> HTML -> Dompdf)
+        Log::warning('LibreOffice conversion failed, attempting fallback', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
+        try {
+            $fallbackPdf = \App\Services\DocxToPdfFallback::convert($docxFull, $outDir);
+            if ($fallbackPdf) {
+                // success via fallback: remove profile
+                try { self::deleteDirectory($profileDir); } catch (\Throwable $e) { /* best effort */ }
+                return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $fallbackPdf, 'profile' => null, 'fallback' => true];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Fallback converter threw: '.$e->getMessage());
+        }
+
+        // keep profile for debugging
+        Log::warning('LibreOffice conversion failed (fallback also failed)', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
+        return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => $profileDir];
     }
 
-    private function recursiveRmdir(string $dir)
+    private static function findBinary(): ?string
+    {
+        $candidates = [];
+        $envPath = env('LIBREOFFICE_PATH');
+        if ($envPath) {
+            $candidates[] = $envPath;
+        }
+        // common linux locations
+        $candidates = array_merge($candidates, [
+            '/usr/lib/libreoffice/program/soffice.bin',
+            '/usr/lib/libreoffice/program/soffice',
+            '/usr/bin/soffice',
+            'soffice',
+        ]);
+
+        foreach ($candidates as $c) {
+            if (!$c) continue;
+            // if absolute path and executable
+            if (strpos($c, '/') === 0 && is_executable($c)) {
+                return $c;
+            }
+            // try which for commands
+            $which = trim(shell_exec('which '.escapeshellarg($c).' 2>/dev/null'));
+            if ($which) {
+                return $which;
+            }
+        }
+
+        return null;
+    }
+
+    private static function deleteDirectory(string $dir): void
     {
         if (!is_dir($dir)) {
             return;

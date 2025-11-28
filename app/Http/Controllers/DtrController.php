@@ -362,8 +362,7 @@ class DtrController {
             }
 
             // Use centralized converter service to ensure per-conversion profile and env handling
-            $converter = new LibreOfficeConverter();
-            $result = $converter->convertDocxToPdf($docxPath, $tmpDir);
+            $result = \App\Services\LibreOfficeConverter::convertDocxToPdf($docxPath, $tmpDir);
             if (($result['exit'] ?? 1) !== 0) {
                 Log::warning('LibreOffice conversion reported non-success', ['result' => $result]);
                 return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF. soffice exit code: ' . ($result['exit'] ?? 'unknown') . '. Check storage/logs/laravel.log for details.']);
@@ -541,9 +540,8 @@ class DtrController {
             return back()->withErrors(['pdf' => "Failed to convert DOCX to PDF. LibreOffice 'soffice' binary not found. Install LibreOffice or set 'services.libreoffice.path' in config/services.php. Detected OS: " . PHP_OS]);
         }
 
-        // Use centralized converter service for the fallback path as well
-        $converter = new LibreOfficeConverter();
-        $result = $converter->convertDocxToPdf($docxPath, $tmpDir);
+    // Use centralized converter service for the fallback path as well
+    $result = \App\Services\LibreOfficeConverter::convertDocxToPdf($docxPath, $tmpDir);
         if (($result['exit'] ?? 1) !== 0) {
             Log::warning('LibreOffice conversion reported non-success (fallback)', ['result' => $result]);
             return back()->withErrors(['pdf' => 'Failed to convert DOCX to PDF (fallback). soffice exit code: ' . ($result['exit'] ?? 'unknown') . '. Check storage/logs/laravel.log for details.']);

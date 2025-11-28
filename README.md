@@ -90,3 +90,26 @@ Troubleshooting:
 
 Only set `LIBREOFFICE_PATH` in environments where you trust the runtime (do not expose this
 setting publicly).
+
+Additional notes (new converter behavior):
+
+-   The application now uses a centralized `App\Services\LibreOfficeConverter` service to run
+    DOCX→PDF conversions. The converter creates a per-conversion LibreOffice user profile
+    directory (inside `storage/app/tmp`) and passes it to LibreOffice via
+    `-env:UserInstallation=file://...` while also setting `HOME` and `XDG_RUNTIME_DIR`.
+
+-   This avoids common headless-server failures like dconf/javaldx errors and ensures the
+    conversion runs under the same user that created the profile (usually the web user,
+    `www-data`).
+
+-   Recommended `LIBREOFFICE_PATH` value on Linux: point to the real binary when available
+    (preferred). For example:
+
+          LIBREOFFICE_PATH="/usr/lib/libreoffice/program/soffice.bin"
+
+    Using `soffice.bin` avoids wrapper scripts and provides the most consistent behavior
+    on headless servers. If unset, the converter will fall back to common locations.
+
+If you run into permission issues, ensure `storage/app/tmp` and `/var/www/.cache/dconf`
+are writable by the web user (`www-data`) or let the converter create per-conversion
+profiles which it will remove after conversion.
