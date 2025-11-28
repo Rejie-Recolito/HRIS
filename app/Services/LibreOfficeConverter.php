@@ -49,19 +49,22 @@ class LibreOfficeConverter
             $docxFull = base_path($docxPath);
         }
 
-        $command = [
-            $binary,
-            '--headless',
-            '-env:UserInstallation=file://'.$profileDir,
-            '--convert-to',
-            'pdf',
-            '--outdir',
-            $outDir,
-            $docxFull,
-        ];
+        // Build a deterministic shell command (use the real soffice binary when available)
+        $filter = 'pdf:writer_pdf_Export';
+        $flags = '--headless --nologo --nodefault --norestore';
+        $cmd = sprintf("%s %s -env:UserInstallation=file://%s --convert-to %s --outdir %s %s",
+            escapeshellcmd($binary),
+            $flags,
+            escapeshellarg($profileDir),
+            escapeshellarg($filter),
+            escapeshellarg($outDir),
+            escapeshellarg($docxFull)
+        );
 
-        // Run process
-        $process = new Process($command);
+        Log::info('Running LibreOffice command', ['cmd' => $cmd]);
+
+        // Run process via shell so quoting matches manual runs
+        $process = Process::fromShellCommandline($cmd);
         $process->setTimeout($timeout);
         try {
             $process->setWorkingDirectory($outDir);
@@ -82,6 +85,28 @@ class LibreOfficeConverter
         // persist outputs for debugging
         @file_put_contents($profileDir.'/soffice_out.txt', $stdout);
         @file_put_contents($profileDir.'/soffice_err.txt', $stderr);
+
+        // also collect any internal LibreOffice log files from the profile and append to soffice_err.txt
+        try {
+            $logs = @glob($profileDir.'/LibreOffice_ConversionProfile/**/**/*.log', GLOB_BRACE) ?: [];
+            // fallback: search any .log files (depth-limited)
+            if (empty($logs)) {
+                $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($profileDir));
+                foreach ($it as $f) {
+                    if ($f->isFile() && preg_match('/\.log$/i', $f->getFilename())) {
+                        $logs[] = $f->getRealPath();
+                    }
+                }
+            }
+            foreach ($logs as $l) {
+                $content = @file_get_contents($l);
+                if ($content !== false && trim($content) !== '') {
+                    @file_put_contents($profileDir.'/soffice_err.txt', "\n---- INTERNAL LOG: $l ----\n".substr($content,0,20000), FILE_APPEND);
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
 
         $exit = $process->getExitCode() ?? 1;
 
