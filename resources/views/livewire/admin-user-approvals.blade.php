@@ -1,15 +1,18 @@
 <div>
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold">Pending Users</h2>
-
-        <div class="flex items-center space-x-3">
-            <input wire:model.debounce.300ms="search" type="text" placeholder="Search name or email" class="border rounded px-3 py-1" />
-            <select wire:model="perPage" class="border rounded px-2 py-1">
-                <option value="5">5 / page</option>
-                <option value="10">10 / page</option>
-                <option value="25">25 / page</option>
-            </select>
+    <div style="height: 32px;"></div>
+    <div style="width: 70%; margin: 0 auto;" class="mb-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <h2 class="text-lg font-semibold mb-2 md:mb-0">Pending Users for Approval</h2>
+            <div class="flex items-center space-x-3">
+                <input wire:model.debounce.300ms="search" type="text" placeholder="Search name or email" class="border rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" style="min-width: 220px;" />
+                <select wire:model="perPage" class="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="5">5 / page</option>
+                    <option value="10">10 / page</option>
+                    <option value="25">25 / page</option>
+                </select>
+            </div>
         </div>
+        <div class="mb-2 text-md text-black" style="text-align: right;">Pending Accounts: <span class="font-medium">{{ $pendingUsers->total() }}</span></div>
     </div>
 
     <!-- Success Modal -->
@@ -47,16 +50,15 @@
     @if($pendingUsers->isEmpty())
         <p>No users awaiting approval.</p>
     @else
-        <div class="mb-2 text-sm text-gray-600">Total pending: <span class="font-medium">{{ $pendingUsers->total() }}</span></div>
-
-        <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-900">
+        <div style="height: 24px;"></div>
+        <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow" style="width: 70%; margin: 0 auto;">
+            <table class="admin-table min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead style="background-color: #198f51;">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="background-color: #198f51; color: #fff;">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="background-color: #198f51; color: #fff;">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="background-color: #198f51; color: #fff;">Employee ID</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style="background-color: #198f51; color: #fff;">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
