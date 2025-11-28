@@ -86,26 +86,38 @@ class LibreOfficeConverter
         @file_put_contents($profileDir.'/soffice_out.txt', $stdout);
         @file_put_contents($profileDir.'/soffice_err.txt', $stderr);
 
-        // also collect any internal LibreOffice log files from the profile and append to soffice_err.txt
+        // also collect any internal LibreOffice log-like files from the profile and append to soffice_err.txt
         try {
-            $logs = @glob($profileDir.'/LibreOffice_ConversionProfile/**/**/*.log', GLOB_BRACE) ?: [];
-            // fallback: search any .log files (depth-limited)
-            if (empty($logs)) {
-                $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($profileDir));
-                foreach ($it as $f) {
-                    if ($f->isFile() && preg_match('/\.log$/i', $f->getFilename())) {
-                        $logs[] = $f->getRealPath();
-                    }
+            $collected = 0;
+            $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($profileDir, \RecursiveDirectoryIterator::SKIP_DOTS));
+            foreach ($it as $f) {
+                if (!$f->isFile()) continue;
+                $name = $f->getFilename();
+                // match a variety of likely log-like files produced by LibreOffice
+                if (!preg_match('/\.(log|out|err|trace|txt)$/i', $name) && stripos($name, 'stderr') === false && stripos($name, 'stdout') === false) {
+                    continue;
                 }
+                $path = $f->getRealPath();
+                $content = @file_get_contents($path);
+                if ($content === false) continue;
+                $content = trim($content);
+                // write a header and the content (truncate large files)
+                $header = "\n---- INTERNAL LOG: {$path} (size=".filesize($path)." bytes) ----\n";
+                if ($content === '') {
+                    @file_put_contents($profileDir.'/soffice_err.txt', $header."[empty]\n", FILE_APPEND);
+                } else {
+                    // keep at most 200KB per internal file to avoid huge outputs
+                    $snippet = (strlen($content) > 200*1024) ? substr($content, -200*1024) : $content;
+                    @file_put_contents($profileDir.'/soffice_err.txt', $header.$snippet.PHP_EOL, FILE_APPEND);
+                }
+                $collected++;
             }
-            foreach ($logs as $l) {
-                $content = @file_get_contents($l);
-                if ($content !== false && trim($content) !== '') {
-                    @file_put_contents($profileDir.'/soffice_err.txt', "\n---- INTERNAL LOG: $l ----\n".substr($content,0,20000), FILE_APPEND);
-                }
+            if ($collected === 0) {
+                @file_put_contents($profileDir.'/soffice_err.txt', "\n---- NO INTERNAL LOG FILES FOUND UNDER PROFILE (scanned path={$profileDir}) ----\n", FILE_APPEND);
             }
         } catch (\Throwable $e) {
-            // ignore
+            // ensure at least an explanatory message is present
+            @file_put_contents($profileDir.'/soffice_err.txt', "\n---- LOG COLLECTION FAILED: ".substr($e->getMessage(),0,100)." ----\n", FILE_APPEND);
         }
 
         $exit = $process->getExitCode() ?? 1;
