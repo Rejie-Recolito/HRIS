@@ -114,8 +114,7 @@ If you run into permission issues, ensure `storage/app/tmp` and `/var/www/.cache
 are writable by the web user (`www-data`) or let the converter create per-conversion
 profiles which it will remove after conversion.
 
-Persistent profile (recommended for servers)
--------------------------------------------
+## Persistent profile (recommended for servers)
 
 On headless servers it's more robust to use a dedicated persistent LibreOffice profile
 directory owned by the web user to avoid first-run installers or extension prompts that
