@@ -9,7 +9,56 @@
     }
 @endphp
 
-<div x-data="{ typeOfLeave: '', showSickDetails: '', vacationDetails: '', showOverlay: false, inclusiveFrom: '', inclusiveTo: '', formatInclusive() { return (this.inclusiveFrom || this.inclusiveTo) ? `From:${this.inclusiveFrom} - To:${this.inclusiveTo}` : '' }, submitForm() { this.$refs.leaveForm.submit(); } }">
+<div x-data="{
+    typeOfLeave: '',
+    showSickDetails: '',
+    vacationDetails: '',
+    showOverlay: false,
+    inclusiveFrom: '',
+    inclusiveTo: '',
+    numberOfDays: '',
+    inclusiveToEdited: false,
+    init() {
+        // re-compute when either the start date or number of days changes
+        this.$watch('inclusiveFrom', () => this.computeInclusiveTo());
+        this.$watch('numberOfDays', () => this.computeInclusiveTo());
+        // if user types into inclusiveTo, mark it as edited so auto-fill won't override
+        this.$watch('inclusiveTo', (val, old) => {
+            if (old !== undefined && val !== this.__computedInclusiveTo) {
+                this.inclusiveToEdited = true;
+            }
+        });
+    },
+    __computedInclusiveTo: '',
+    computeInclusiveTo() {
+        // require both values
+        if (!this.inclusiveFrom || !this.numberOfDays) {
+            this.__computedInclusiveTo = '';
+            if (!this.inclusiveToEdited) this.inclusiveTo = '';
+            return;
+        }
+
+        const days = parseInt(this.numberOfDays, 10);
+        if (isNaN(days) || days <= 0) {
+            this.__computedInclusiveTo = this.inclusiveFrom;
+            if (!this.inclusiveToEdited) this.inclusiveTo = this.__computedInclusiveTo;
+            return;
+        }
+
+        // inclusive calculation: to = from + (days - 1)
+        const fromDate = new Date(this.inclusiveFrom + 'T00:00:00');
+        const toDate = new Date(fromDate);
+        toDate.setDate(fromDate.getDate() + days - 1);
+
+        const yyyy = toDate.getFullYear();
+        const mm = String(toDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(toDate.getDate()).padStart(2, '0');
+        this.__computedInclusiveTo = `${yyyy}-${mm}-${dd}`;
+        if (!this.inclusiveToEdited) this.inclusiveTo = this.__computedInclusiveTo;
+    },
+    formatInclusive() { return (this.inclusiveFrom || this.inclusiveTo) ? `From:${this.inclusiveFrom} - To:${this.inclusiveTo}` : '' },
+    submitForm() { this.$refs.leaveForm.submit(); }
+}">
  
 
     {{-- Leave Application Form Section --}}
@@ -211,7 +260,7 @@
                     </select>
                     </div>
 
-                <x-primary-text-input name="number_of_days" type="number" label="Number of Days" />
+                <x-primary-text-input name="number_of_days" type="number" label="Number of Days" x-model="numberOfDays" />
 
                 <div class="mb-4">
                     <label for="inclusive_from" class="w-full font-bold custom-label mb-2 whitespace-nowrap">Inclusive Dates</label>
@@ -226,7 +275,10 @@
                     <div class="mb-4 flex flex-col sm:flex-row sm:items-center">
                             <label for="inclusive_to" class="w-full sm:w-1/3 font-medium custom-label sm:pr-12 sm:text-left mb-1 sm:mb-0">To :</label>
                         <div class="flex-1">
-                            <input id="inclusive_to" name="inclusive_to" type="date" x-model="inclusiveTo" class="w-full border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                            <div class="flex items-center">
+                                <input id="inclusive_to" name="inclusive_to" type="date" x-model="inclusiveTo" class="w-full border-gray-300 input-field-border custom-input text-black dark:text-white rounded-xl shadow-sm" />
+                                <button type="button" x-show="inclusiveToEdited" @click="inclusiveTo = __computedInclusiveTo; inclusiveToEdited = false" class="ms-2 px-2 py-1 text-sm rounded bg-gray-200 dark:bg-gray-600">Auto</button>
+                            </div>
                         </div>
                     </div>
                 </div>
