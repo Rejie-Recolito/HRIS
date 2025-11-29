@@ -49,42 +49,33 @@ class LibreOfficeConverter
             $docxFull = base_path($docxPath);
         }
 
-        // Build a deterministic shell command (use the real soffice binary when available)
-        $filter = 'pdf:writer_pdf_Export';
-        $flags = '--headless --nologo --nodefault --norestore';
-        $cmd = sprintf("%s %s -env:UserInstallation=file://%s --convert-to %s --outdir %s %s",
-            escapeshellcmd($binary),
-            $flags,
-            escapeshellarg($profileDir),
-            escapeshellarg($filter),
-            escapeshellarg($outDir),
-            escapeshellarg($docxFull)
-        );
 
-        Log::info('Running LibreOffice command', ['cmd' => $cmd]);
+        // Build command using the same exec-based pattern as LeaveApplicationController
+        // Use an env prefix so HOME and XDG_RUNTIME_DIR are set for the soffice process
+        $loUserInstallation = 'file://' . str_replace('\\', '/', $profileDir);
+        $envPrefix = 'HOME=' . escapeshellarg($profileDir) . ' XDG_RUNTIME_DIR=' . escapeshellarg($profileDir . '/runtime') . ' ';
 
-        // Run process via shell so quoting matches manual runs
-        $process = Process::fromShellCommandline($cmd);
-        $process->setTimeout($timeout);
-        try {
-            $process->setWorkingDirectory($outDir);
-            $process->setEnv($env);
-            $process->run();
-        } catch (\Throwable $e) {
-            $stderr = $e->getMessage();
-            // persist error files
-            @file_put_contents($profileDir.'/soffice_out.txt', '');
-            @file_put_contents($profileDir.'/soffice_err.txt', $stderr);
-            Log::warning('LibreOffice conversion exception: '.$stderr);
-            return ['exit' => 1, 'stdout' => '', 'stderr' => $stderr, 'pdf' => null, 'profile' => $profileDir];
+        $cmd = $envPrefix . escapeshellcmd($binary)
+            . ' --headless -env:UserInstallation=' . escapeshellarg($loUserInstallation)
+            . ' --convert-to pdf --outdir ' . escapeshellarg($outDir) . ' ' . escapeshellarg($docxFull)
+            . ' 2>&1';
+
+        Log::info('Running LibreOffice exec command', ['cmd' => $cmd]);
+
+        // exec captures combined stdout+stderr into $output array and $exitCode
+        $outputLines = [];
+        $exitCode = 1;
+        @exec($cmd, $outputLines, $exitCode);
+        $stdout = implode("\n", $outputLines);
+        $stderr = ''; // exec merged stderr into $outputLines; internal logs will be collected below
+
+        // persist outputs for debugging (exec merges stderr into stdout)
+        @file_put_contents($profileDir.'/soffice_out.txt', $stdout);
+        if (!file_exists($profileDir.'/soffice_err.txt')) {
+            @file_put_contents($profileDir.'/soffice_err.txt', "");
         }
 
-        $stdout = $process->getOutput();
-        $stderr = $process->getErrorOutput();
-
-        // persist outputs for debugging
-        @file_put_contents($profileDir.'/soffice_out.txt', $stdout);
-        @file_put_contents($profileDir.'/soffice_err.txt', $stderr);
+        
 
         // also collect any internal LibreOffice log-like files from the profile and append to soffice_err.txt
         try {
@@ -120,7 +111,9 @@ class LibreOfficeConverter
             @file_put_contents($profileDir.'/soffice_err.txt', "\n---- LOG COLLECTION FAILED: ".substr($e->getMessage(),0,100)." ----\n", FILE_APPEND);
         }
 
-        $exit = $process->getExitCode() ?? 1;
+    $exit = $exitCode ?? 1;
+
+        Log::info('LibreOffice exec finished', ['exit' => $exit, 'lines' => min(50, count($outputLines))]);
 
         // find produced PDF
         $pdfCandidate = null;
