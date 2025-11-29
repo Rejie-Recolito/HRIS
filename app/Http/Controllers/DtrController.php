@@ -519,8 +519,14 @@ class DtrController {
                 $tpl->setValue("am_departure#{$i}", $amDeparture);
                 $tpl->setValue("pm_arrival#{$i}", $pmArrival);
                 $tpl->setValue("pm_departure#{$i}", $pmDeparture);
-                $tpl->setValue("undertime_hours#{$i}", '');
-                $tpl->setValue("undertime_minutes#{$i}", '');
+                // Compute per-day undertime totals (hours/minutes) and populate template
+                try {
+                    $dailyTotals = $this->computeUndertimeTotals($dayEntries);
+                } catch (\Exception $e) {
+                    $dailyTotals = ['hours' => 0, 'minutes' => 0, 'total_minutes' => 0];
+                }
+                $tpl->setValue("undertime_hours#{$i}", (string)($dailyTotals['hours'] ?? 0));
+                $tpl->setValue("undertime_minutes#{$i}", (string)($dailyTotals['minutes'] ?? 0));
             }
 
             $tpl->saveAs($docxPath);
@@ -700,8 +706,14 @@ class DtrController {
             $table->addCell(Converter::cmToTwip(2))->addText($amDeparture);
             $table->addCell(Converter::cmToTwip(2))->addText($pmArrival);
             $table->addCell(Converter::cmToTwip(2))->addText($pmDeparture);
-            $table->addCell(Converter::cmToTwip(2))->addText('');
-            $table->addCell(Converter::cmToTwip(2))->addText('');
+            // compute daily undertime totals for fallback table
+            try {
+                $dailyTotals = $this->computeUndertimeTotals($dayEntries);
+            } catch (\Exception $e) {
+                $dailyTotals = ['hours' => 0, 'minutes' => 0, 'total_minutes' => 0];
+            }
+            $table->addCell(Converter::cmToTwip(2))->addText((string)($dailyTotals['hours'] ?? 0));
+            $table->addCell(Converter::cmToTwip(2))->addText((string)($dailyTotals['minutes'] ?? 0));
         }
 
         $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
