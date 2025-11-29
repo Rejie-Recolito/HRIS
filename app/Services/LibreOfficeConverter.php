@@ -137,21 +137,8 @@ class LibreOfficeConverter
             return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => null];
         }
 
-        // failure: attempt fallback converter (PhpWord -> HTML -> Dompdf)
-        Log::warning('LibreOffice conversion failed, attempting fallback', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
-        try {
-            $fallbackPdf = \App\Services\DocxToPdfFallback::convert($docxFull, $outDir);
-            if ($fallbackPdf) {
-                // success via fallback: remove profile
-                try { self::deleteDirectory($profileDir); } catch (\Throwable $e) { /* best effort */ }
-                return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $fallbackPdf, 'profile' => null, 'fallback' => true];
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Fallback converter threw: '.$e->getMessage());
-        }
-
-        // keep profile for debugging
-        Log::warning('LibreOffice conversion failed (fallback also failed)', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
+        // failure: preserve profile for debugging and return failure result
+        Log::warning('LibreOffice conversion failed', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
         return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => $profileDir];
     }
 
