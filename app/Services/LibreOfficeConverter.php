@@ -33,14 +33,12 @@ class LibreOfficeConverter
             return ['exit' => 127, 'stdout' => '', 'stderr' => $msg, 'pdf' => null, 'profile' => null];
         }
 
-        $profileDir = storage_path('app/tmp/libreoffice_profile_'.Str::random(12));
-        @mkdir($profileDir, 0700, true);
-        @mkdir($profileDir.'/runtime', 0700, true);
-
-        $env = array_merge($_SERVER, [
-            'HOME' => $profileDir,
-            'XDG_RUNTIME_DIR' => $profileDir.'/runtime',
-        ]);
+        // Create the LibreOffice user profile under system temp (like LeaveApplicationController)
+        $profileDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'libreoffice_profile_' . uniqid();
+        if (!is_dir($profileDir)) {
+            @mkdir($profileDir, 0700, true);
+        }
+        @mkdir($profileDir . '/runtime', 0700, true);
 
         // Ensure absolute docx path
         $docxFull = $docxPath;
