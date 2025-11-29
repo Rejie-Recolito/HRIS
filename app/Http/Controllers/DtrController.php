@@ -129,41 +129,87 @@ class DtrController {
             $mins = 0;
 
             if (is_array($raw)) {
+                // First, try to find explicit undertime hours/minutes keys and prefer them
+                $explicitHours = null;
+                $explicitMinutes = null;
                 foreach ($raw as $k => $v) {
                     if ($v === null || $v === '') continue;
                     $lk = strtolower($k);
-                    // look for keys that indicate undertime
                     if (strpos($lk, 'undertime') === false) continue;
-
-                    // parse value
-                    if (is_numeric($v)) {
-                        $num = floatval($v);
-                        if ($num > 0 && $num <= 5) {
-                            // likely hours (fractional allowed)
-                            $hrs += $num;
-                        } else {
-                            // likely minutes
-                            $mins += intval(round($num));
-                        }
+                    // look for explicit hour/minute qualifiers in the key name
+                    if (preg_match('/hour|hr|hrs/i', $lk)) {
+                        $explicitHours = $v;
                         continue;
                     }
+                    if (preg_match('/min|minute|mins/i', $lk)) {
+                        $explicitMinutes = $v;
+                        continue;
+                    }
+                    // also capture common suffixes
+                    if (strpos($lk, 'undertime_hours') !== false) $explicitHours = $v;
+                    if (strpos($lk, 'undertime_minutes') !== false) $explicitMinutes = $v;
+                }
 
-                    if (is_string($v)) {
-                        // H:M style
-                        if (preg_match('/^(\d+)\s*[:h]\s*(\d+)?/i', trim($v), $m)) {
-                            $h = intval($m[1]);
-                            $m2 = isset($m[2]) ? intval($m[2]) : 0;
-                            $hrs += $h;
-                            $mins += $m2;
-                            continue;
+                if ($explicitHours !== null || $explicitMinutes !== null) {
+                    // parse explicit values if present (support numeric or H:M)
+                    if ($explicitHours !== null) {
+                        if (is_numeric($explicitHours)) {
+                            $hrs = floatval($explicitHours);
+                        } elseif (is_string($explicitHours) && preg_match('/^(\d+)\s*[:h]\s*(\d+)?/i', trim($explicitHours), $m)) {
+                            $hrs = intval($m[1]);
+                            $mins += isset($m[2]) ? intval($m[2]) : 0;
+                        } else {
+                            $num = floatval(preg_replace('/[^0-9.]/', '', $explicitHours));
+                            if ($num > 0) $hrs = $num;
                         }
-                        // numeric inside string
-                        $num = floatval(preg_replace('/[^0-9.]/', '', $v));
-                        if ($num > 0) {
-                            if ($num <= 5) {
+                    }
+                    if ($explicitMinutes !== null) {
+                        if (is_numeric($explicitMinutes)) {
+                            $mins += intval(round(floatval($explicitMinutes)));
+                        } elseif (is_string($explicitMinutes) && preg_match('/^(\d+)\s*[:h]\s*(\d+)?/i', trim($explicitMinutes), $m)) {
+                            $mins += isset($m[2]) ? intval($m[2]) : intval($m[1]);
+                        } else {
+                            $num = intval(round(floatval(preg_replace('/[^0-9.]/', '', $explicitMinutes))));
+                            if ($num > 0) $mins += $num;
+                        }
+                    }
+                } else {
+                    // Fallback: aggregate any undertime-like fields (legacy parsers may use different keys)
+                    foreach ($raw as $k => $v) {
+                        if ($v === null || $v === '') continue;
+                        $lk = strtolower($k);
+                        if (strpos($lk, 'undertime') === false) continue;
+
+                        // parse value
+                        if (is_numeric($v)) {
+                            $num = floatval($v);
+                            if ($num > 0 && $num <= 5) {
+                                // likely hours (fractional allowed)
                                 $hrs += $num;
                             } else {
+                                // likely minutes
                                 $mins += intval(round($num));
+                            }
+                            continue;
+                        }
+
+                        if (is_string($v)) {
+                            // H:M style
+                            if (preg_match('/^(\d+)\s*[:h]\s*(\d+)?/i', trim($v), $m)) {
+                                $h = intval($m[1]);
+                                $m2 = isset($m[2]) ? intval($m[2]) : 0;
+                                $hrs += $h;
+                                $mins += $m2;
+                                continue;
+                            }
+                            // numeric inside string
+                            $num = floatval(preg_replace('/[^0-9.]/', '', $v));
+                            if ($num > 0) {
+                                if ($num <= 5) {
+                                    $hrs += $num;
+                                } else {
+                                    $mins += intval(round($num));
+                                }
                             }
                         }
                     }
