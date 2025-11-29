@@ -116,24 +116,28 @@
                 {{-- DTR Search and Results --}}
                 <div class="mt-10">
                     @if(auth()->user()->is_admin)
-                        <form method="GET" action="{{ route('admin.dtr.search') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6">
-                            <div>
-                                <label for="emp_id" class="block text-sm font-bold mb-1">Employee ID</label>
-                                <input type="text" name="emp_id" id="emp_id" value="{{ request('emp_id') }}" class="rounded border border-[#198f51] px-2 py-1" placeholder="Enter Employee ID" required>
-                            </div>
-                            <div>
-                                <label for="month" class="block text-sm font-bold mb-1">Month</label>
-                                <input type="month" name="month" id="month" value="{{ request('month', now()->format('Y-m')) }}" class="rounded border border-[#198f51] px-2 py-1" required>
-                            </div>
-                            <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-6 rounded-lg">Search</button>
-                        </form>
+                            <form id="admin-dtr-search" method="GET" action="{{ route('admin.dtr.search') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6" onsubmit="return validateDtrSearch()">
+                                <div>
+                                    <label for="q" class="block text-sm font-bold mb-1">Employee ID or Name</label>
+                                    <input list="q_suggestions" name="q" id="q" value="{{ request('q') }}" class="rounded border border-[#198f51] px-2 py-1" placeholder="Enter ID or start typing name">
+                                    <datalist id="q_suggestions"></datalist>
+                                </div>
+                                <div>
+                                    <label for="month" class="block text-sm font-bold mb-1">Month</label>
+                                    <input type="month" name="month" id="month" value="{{ request('month', now()->format('Y-m')) }}" class="rounded border border-[#198f51] px-2 py-1" required>
+                                </div>
+                                <button type="submit" class="bg-[#198f51] text-white font-bold py-2 px-6 rounded-lg">Search</button>
+                            </form>
                         @php
-                            $showDtrResults = isset($dtrEntries) && request()->has('emp_id') && request()->has('month');
+                            // Show results if controller provided dtrEntries (and month is present)
+                            $showDtrResults = isset($dtrEntries) && isset($month) || (isset($dtrEntries) && request()->has('month'));
+                            // prefer controller-provided empId when available
+                            $resolvedEmpId = $empId ?? request('emp_id');
                         @endphp
                         <div id="dtr-results-section" @if(!$showDtrResults) style="display:none;" @endif>
                         @if($showDtrResults)
                             <div class="flex justify-end mb-2 items-center gap-3">
-                                <a href="{{ route('admin.dtr.generate_docx_pdf', ['emp_id' => request('emp_id'), 'month' => request('month')]) }}" class="inline-flex items-center px-4 py-2 bg-[#198f51] text-white rounded-lg">Generate PDF</a>
+                                <a href="{{ route('admin.dtr.generate_docx_pdf', ['emp_id' => $resolvedEmpId, 'month' => request('month')]) }}" class="inline-flex items-center px-4 py-2 bg-[#198f51] text-white rounded-lg">Generate PDF</a>
                                 <button type="button" onclick="document.getElementById('dtr-results-section').style.display='none'" class="text-gray-500 hover:text-red-600 font-bold text-lg">&times; Close</button>
                             </div>
                             @php
@@ -284,3 +288,63 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Debounce helper
+    function debounce(fn, delay) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), delay);
+        }
+    }
+
+    async function fetchSuggestions(q) {
+        if (!q || q.length < 1) return [];
+        try {
+            const res = await fetch('/admin/dtr/suggest?q=' + encodeURIComponent(q));
+            if (!res.ok) return [];
+            return await res.json();
+        } catch (e) {
+            console.error('Suggestion fetch failed', e);
+            return [];
+        }
+    }
+
+    const populateDatalist = debounce(async function(e) {
+        const q = e.target.value;
+        const list = document.getElementById('q_suggestions');
+        if (!list) return;
+        const results = await fetchSuggestions(q);
+        list.innerHTML = '';
+        if (Array.isArray(results)) {
+            // results expected to be array of { id, name } or strings
+            results.slice(0, 20).forEach(item => {
+                const opt = document.createElement('option');
+                if (typeof item === 'string') {
+                    opt.value = item;
+                } else if (item && item.name) {
+                    // show "id - name" for clarity but value should be name (so user can type name)
+                    opt.value = item.name;
+                    opt.dataset.empId = item.id;
+                }
+                list.appendChild(opt);
+            });
+        }
+    }, 250);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const input = document.getElementById('q');
+        if (input) input.addEventListener('input', populateDatalist);
+    });
+    function validateDtrSearch() {
+        const q = document.getElementById('q')?.value?.trim();
+        if (!q) {
+            alert('Please enter Employee ID or Name to search.');
+            return false;
+        }
+        return true;
+    }
+</script>
+@endpush

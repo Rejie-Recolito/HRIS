@@ -26,17 +26,18 @@ class DtrController {
     public function adminSearch(Request $request)
     {
         $request->validate([
-            'emp_id' => 'required|string',
+            'q' => 'nullable|string',
             'month' => 'required|date_format:Y-m',
         ]);
 
-
-        $empId = trim($request->input('emp_id'));
+        $q = trim($request->input('q', ''));
         $month = $request->input('month');
 
-        // Debug: collect available employee IDs from existing DTR entries
-        // (the employees table in this project does not currently have an `employee_id` column,
-        //  so use the DTR entries as the source of truth for searchable IDs)
+        if (!$q) {
+            return back()->withErrors(['q' => 'Please enter Employee ID or name to search.'])->withInput();
+        }
+
+        // Collect available employee IDs from existing DTR entries (source of truth)
         $allEmpIds = \App\Models\DtrEntry::whereNotNull('emp_id')
             ->distinct()
             ->pluck('emp_id')
@@ -44,12 +45,53 @@ class DtrController {
             ->values()
             ->all();
 
-    Log::info('Searching for emp_id: ' . $empId);
-    Log::info('Available employee_ids: ' . implode(',', $allEmpIds));
+    Log::info('Admin DTR search: q=' . $q);
+        Log::info('Available employee_ids: ' . implode(',', $allEmpIds));
 
-        // Validate that the provided emp_id exists in the DTR entries
-        if (!in_array($empId, $allEmpIds)) {
-            return back()->withErrors(['emp_id' => 'Employee ID not found. (Available: ' . implode(', ', $allEmpIds) . ')'])->withInput();
+        // If q looks like an emp_id that exists in DTR entries, use it directly
+        $empId = null;
+        if (in_array($q, $allEmpIds)) {
+            $empId = $q;
+        } else {
+            // Otherwise treat q as a name and try to resolve candidate emp_ids
+            $nameQ = $q;
+            try {
+                $empIdsFromEmployees = \App\Models\Employee::where(function($b) use ($nameQ) {
+                    $b->where('firstname', 'like', "%{$nameQ}%")
+                      ->orWhere('lastname', 'like', "%{$nameQ}%")
+                      ->orWhere('middlename', 'like', "%{$nameQ}%");
+                })->pluck('employee_id')->filter()->unique()->values()->all();
+            } catch (\Exception $e) {
+                $empIdsFromEmployees = [];
+            }
+
+            try {
+                $empIdsFromDtr = \App\Models\DtrEntry::where('raw', 'like', "%{$nameQ}%")
+                    ->whereNotNull('emp_id')
+                    ->distinct()
+                    ->pluck('emp_id')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+            } catch (\Exception $e) {
+                $empIdsFromDtr = [];
+            }
+
+            $candidateIds = array_values(array_unique(array_merge($empIdsFromEmployees, $empIdsFromDtr)));
+            $intersect = array_values(array_intersect($candidateIds, $allEmpIds));
+            if (!empty($intersect)) {
+                $candidateIds = $intersect;
+            }
+
+            if (empty($candidateIds)) {
+                return back()->withErrors(['q' => 'Employee not found.'])->withInput();
+            }
+
+            if (count($candidateIds) > 1) {
+                session()->flash('warning', 'Multiple employee IDs matched that query; using first: ' . $candidateIds[0]);
+            }
+            $empId = $candidateIds[0];
         }
 
         // Get DTR entries for this emp_id and month
@@ -64,7 +106,91 @@ class DtrController {
         return view('admin.dtr', [
             'uploads' => $uploads,
             'dtrEntries' => $dtrEntries,
+            'empId' => $empId,
         ]);
+    }
+
+    /**
+     * Suggest endpoint for admin DTR single-field autosuggest.
+     * Returns JSON array of { id, name } objects based on 'q' query param.
+     */
+    public function suggest(Request $request)
+    {
+        $q = trim($request->input('q', ''));
+        if (!$q || strlen($q) < 1) {
+            return response()->json([], 200);
+        }
+
+        $results = [];
+
+        try {
+            // 1) Find emp_ids directly matching q (exact match)
+            $direct = \App\Models\DtrEntry::where('emp_id', $q)
+                ->whereNotNull('emp_id')
+                ->distinct()
+                ->pluck('emp_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+            foreach ($direct as $id) {
+                $results[$id] = ['id' => $id, 'name' => $id];
+            }
+
+            // 2) Search DtrEntry.raw for the query (name hints)
+            $fromDtr = \App\Models\DtrEntry::where('raw', 'like', "%{$q}%")
+                ->whereNotNull('emp_id')
+                ->orderBy('emp_id')
+                ->get();
+            foreach ($fromDtr as $entry) {
+                $id = $entry->emp_id;
+                if (!$id) continue;
+                $name = null;
+                $raw = $entry->raw;
+                if (is_string($raw)) {
+                    $tmp = @json_decode($raw, true);
+                    if (is_array($tmp)) $raw = $tmp;
+                }
+                if (is_array($raw)) {
+                    foreach (['Emp Name','EmpName','Emp','Employee Name','EmployeeName','emp_name','empname','NAME','name'] as $k) {
+                        if (array_key_exists($k, $raw) && trim($raw[$k]) !== '') {
+                            $name = trim($raw[$k]);
+                            break;
+                        }
+                    }
+                    if (!$name) {
+                        // fallback: pick any non-empty field that contains q
+                        foreach ($raw as $rk => $rv) {
+                            if (is_string($rv) && stripos($rv, $q) !== false) {
+                                $name = trim($rv);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!$name) $name = $id;
+                $results[$id] = ['id' => $id, 'name' => $name];
+            }
+
+            // 3) Search Employee table for matches
+            $fromEmp = \App\Models\Employee::where(function($b) use ($q) {
+                $b->where('firstname', 'like', "%{$q}%")
+                  ->orWhere('lastname', 'like', "%{$q}%")
+                  ->orWhere('middlename', 'like', "%{$q}%")
+                  ->orWhereRaw("CONCAT(firstname, ' ', lastname) like ?", ["%{$q}%"]);
+            })->limit(50)->get();
+            foreach ($fromEmp as $e) {
+                $id = $e->employee_id ?? null;
+                $name = trim(($e->firstname ?? '') . ' ' . ($e->middlename ? ($e->middlename . ' ') : '') . ($e->lastname ?? '')) ?: ($e->name ?? null) ?: $id;
+                if ($id) $results[$id] = ['id' => $id, 'name' => $name];
+            }
+        } catch (\Exception $e) {
+            \Log::warning('DTR suggest error: ' . $e->getMessage());
+        }
+
+        // Return unique suggestions limited
+        $out = array_values(array_slice(array_values($results), 0, 50));
+        return response()->json($out);
     }
 
     /**
