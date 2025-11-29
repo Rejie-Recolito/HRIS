@@ -33,12 +33,29 @@ class LibreOfficeConverter
             return ['exit' => 127, 'stdout' => '', 'stderr' => $msg, 'pdf' => null, 'profile' => null];
         }
 
-        // Create the LibreOffice user profile under system temp (like LeaveApplicationController)
-        $profileDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'libreoffice_profile_' . uniqid();
-        if (!is_dir($profileDir)) {
-            @mkdir($profileDir, 0700, true);
+        // Determine profile directory.
+        // If LIBREOFFICE_PROFILE_DIR is set (recommended for servers), use it as a persistent profile
+        // otherwise create an isolated per-conversion profile under sys_get_temp_dir().
+        $envProfileBase = getenv('LIBREOFFICE_PROFILE_DIR') ?: null;
+        $usingPersistentProfile = false;
+        if ($envProfileBase) {
+            // use the configured persistent profile (do not delete on success)
+            $profileDir = rtrim($envProfileBase, DIRECTORY_SEPARATOR);
+            $usingPersistentProfile = true;
+            if (!is_dir($profileDir)) {
+                // try to create it (best-effort)
+                @mkdir($profileDir, 0700, true);
+            }
+            // ensure runtime exists
+            @mkdir($profileDir . '/runtime', 0700, true);
+        } else {
+            // per-conversion transient profile
+            $profileDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'libreoffice_profile_' . uniqid();
+            if (!is_dir($profileDir)) {
+                @mkdir($profileDir, 0700, true);
+            }
+            @mkdir($profileDir . '/runtime', 0700, true);
         }
-        @mkdir($profileDir . '/runtime', 0700, true);
 
         // Ensure absolute docx path
         $docxFull = $docxPath;
@@ -125,14 +142,20 @@ class LibreOfficeConverter
         }
 
         if ($exit === 0 && $pdfCandidate && file_exists($pdfCandidate)) {
-            // success: remove profile dir
-            try {
-                self::deleteDirectory($profileDir);
-            } catch (\Throwable $e) {
-                // best effort
-                Log::info('Could not delete libreoffice profile dir: '.$profileDir.' '.$e->getMessage());
+            // success: remove profile dir if it was a transient per-conversion profile
+            if (!$usingPersistentProfile) {
+                try {
+                    self::deleteDirectory($profileDir);
+                } catch (\Throwable $e) {
+                    // best effort
+                    Log::info('Could not delete libreoffice profile dir: '.$profileDir.' '.$e->getMessage());
+                }
+                $returnedProfile = null;
+            } else {
+                // preserve persistent profile and return its path for debugging/inspection
+                $returnedProfile = $profileDir;
             }
-            return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => null];
+            return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => $returnedProfile];
         }
 
         // failure: collect richer diagnostics into soffice_err.txt (no fallback) and preserve profile
