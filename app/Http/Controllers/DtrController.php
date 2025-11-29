@@ -111,6 +111,74 @@ class DtrController {
     }
 
     /**
+     * Compute total undertime across a collection of DtrEntry models.
+     * Returns array with keys: hours, minutes, total_minutes
+     */
+    protected function computeUndertimeTotals($entries)
+    {
+        $totalMinutes = 0;
+        if (!$entries) return ['hours' => 0, 'minutes' => 0, 'total_minutes' => 0];
+        foreach ($entries as $entry) {
+            $raw = $entry->raw ?? null;
+            if (is_string($raw)) {
+                $tmp = @json_decode($raw, true);
+                if (is_array($tmp)) $raw = $tmp;
+            }
+
+            $hrs = 0.0;
+            $mins = 0;
+
+            if (is_array($raw)) {
+                foreach ($raw as $k => $v) {
+                    if ($v === null || $v === '') continue;
+                    $lk = strtolower($k);
+                    // look for keys that indicate undertime
+                    if (strpos($lk, 'undertime') === false) continue;
+
+                    // parse value
+                    if (is_numeric($v)) {
+                        $num = floatval($v);
+                        if ($num > 0 && $num <= 5) {
+                            // likely hours (fractional allowed)
+                            $hrs += $num;
+                        } else {
+                            // likely minutes
+                            $mins += intval(round($num));
+                        }
+                        continue;
+                    }
+
+                    if (is_string($v)) {
+                        // H:M style
+                        if (preg_match('/^(\d+)\s*[:h]\s*(\d+)?/i', trim($v), $m)) {
+                            $h = intval($m[1]);
+                            $m2 = isset($m[2]) ? intval($m[2]) : 0;
+                            $hrs += $h;
+                            $mins += $m2;
+                            continue;
+                        }
+                        // numeric inside string
+                        $num = floatval(preg_replace('/[^0-9.]/', '', $v));
+                        if ($num > 0) {
+                            if ($num <= 5) {
+                                $hrs += $num;
+                            } else {
+                                $mins += intval(round($num));
+                            }
+                        }
+                    }
+                }
+            }
+
+            $entryMinutes = intval(round($hrs * 60)) + intval($mins);
+            $totalMinutes += $entryMinutes;
+        }
+        $totalHours = intdiv($totalMinutes, 60);
+        $remMinutes = $totalMinutes % 60;
+        return ['hours' => $totalHours, 'minutes' => $remMinutes, 'total_minutes' => $totalMinutes];
+    }
+
+    /**
      * Suggest endpoint for admin DTR single-field autosuggest.
      * Returns JSON array of { id, name } objects based on 'q' query param.
      */
@@ -317,6 +385,13 @@ class DtrController {
             }
             if ($countable) $totalWorkingDays++;
         }
+            // Compute undertime totals for the month (use flattened entries collection)
+            try {
+                $allEntriesFlat = collect($entries)->flatten(1);
+                $undertimeTotals = $this->computeUndertimeTotals($allEntriesFlat);
+            } catch (\Exception $e) {
+                $undertimeTotals = ['hours' => 0, 'minutes' => 0, 'total_minutes' => 0];
+            }
 
         // If a DOCX template is provided, use TemplateProcessor to populate it (preferred)
         $templatePath = resource_path('templates/dtr_template.docx');
@@ -338,6 +413,9 @@ class DtrController {
             // only the month name is required (e.g., "October")
             $tpl->setValue('MONTH', $start->format('F'));
             $tpl->setValue('REGULAR_DAYS', (string)$totalWorkingDays);
+            // Add undertime totals placeholders
+            $tpl->setValue('TOTAL_UNDERTIME_HOURS', (string)($undertimeTotals['hours'] ?? 0));
+            $tpl->setValue('TOTAL_UNDERTIME_MINUTES', (string)($undertimeTotals['minutes'] ?? 0));
 
             // clone the row placeholder 'day' daysInMonth times
             $tpl->cloneRow('day', $daysInMonth);
@@ -515,6 +593,7 @@ class DtrController {
     // only output month name
     $section->addText('Month: ' . $start->format('F'));
     $section->addText('Regular days (worked): ' . $totalWorkingDays);
+    $section->addText('Total Undertime: ' . ($undertimeTotals['hours'] ?? 0) . ' hrs ' . ($undertimeTotals['minutes'] ?? 0) . ' mins');
         $section->addTextBreak(1);
 
         // Table with columns (Day, AM Arrival, AM Departure, PM Arrival, PM Departure, Undertime Hours, Minutes)
