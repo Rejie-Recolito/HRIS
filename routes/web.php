@@ -207,3 +207,9 @@ Route::post('/service-records/{id}/mark-claimed', [ServiceRecordController::clas
 // Route for AJAX trend data
 Route::get('/admin/dashboard/trends', [App\Http\Controllers\AdminDashboardController::class, 'trends'])->name('admin.dashboard.trends');
 
+
+// Temporary diagnostic route: returns which LibreOffice binary will be used and env info
+Route::get('/_debug/libreoffice', function () {
+    return response()->json(\App\Services\LibreOfficeConverter::diagnostic());
+});
+

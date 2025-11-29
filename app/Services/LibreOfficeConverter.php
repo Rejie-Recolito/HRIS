@@ -135,15 +135,39 @@ class LibreOfficeConverter
             return ['exit' => 0, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => null];
         }
 
-        // failure: preserve profile for debugging and return failure result
-        Log::warning('LibreOffice conversion failed', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
+        // failure: collect richer diagnostics into soffice_err.txt (no fallback) and preserve profile
+        Log::warning('LibreOffice conversion failed (no fallback)', ['exit' => $exit, 'stdout' => substr($stdout,0,2000), 'stderr' => substr($stderr,0,2000), 'profile' => $profileDir]);
+
+        try {
+            $diag = "\n---- DIAGNOSTICS START ----\n";
+            $diag .= "Command: ".($cmd ?? 'n/a')."\n";
+            $diag .= "Exit code: ".($exit ?? 'n/a')."\n";
+            // soffice version
+            $ver = @shell_exec(escapeshellcmd($binary).' --version 2>&1');
+            $diag .= "soffice --version:\n".($ver ?: '[no output]')."\n";
+            // ldd
+            $ldd = @shell_exec('ldd '.escapeshellarg($binary).' 2>&1');
+            $diag .= "ldd output:\n".($ldd ?: '[no output]')."\n";
+            // environment snapshot
+            $diag .= "ENV HOME=".getenv('HOME')." XDG_RUNTIME_DIR=".getenv('XDG_RUNTIME_DIR')."\n";
+            $diag .= "PHP_OS=".PHP_OS."\n";
+            $diag .= "uname -a:\n".@shell_exec('uname -a 2>&1')."\n";
+            // list profile top tree
+            $listing = @shell_exec('ls -la '.escapeshellarg($profileDir).' 2>&1');
+            $diag .= "Profile listing:\n".($listing ?: '[no listing]')."\n";
+            // append to soffice_err.txt
+            @file_put_contents($profileDir.'/soffice_err.txt', "\n".$diag, FILE_APPEND);
+        } catch (\Throwable $e) {
+            @file_put_contents($profileDir.'/soffice_err.txt', "\n---- DIAGNOSTICS FAILED: ".substr($e->getMessage(),0,200)." ----\n", FILE_APPEND);
+        }
+
         return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr, 'pdf' => $pdfCandidate, 'profile' => $profileDir];
     }
 
     private static function findBinary(): ?string
     {
         $candidates = [];
-        $envPath = env('LIBREOFFICE_PATH');
+        $envPath = getenv('LIBREOFFICE_PATH') ?: null;
         if ($envPath) {
             $candidates[] = $envPath;
         }
@@ -169,6 +193,37 @@ class LibreOfficeConverter
         }
 
         return null;
+    }
+
+    /**
+     * Return diagnostic information useful for debugging which soffice binary will be used
+     * and some environment details. This is safe to call from a web route.
+     */
+    public static function diagnostic(): array
+    {
+        $binary = null;
+        try {
+            $binary = self::findBinary();
+        } catch (\Throwable $e) {
+            $binary = null;
+        }
+
+        $isExecutable = $binary ? is_executable($binary) : false;
+        $ldd = null;
+        if ($binary && PHP_OS_FAMILY !== 'Windows') {
+            $ldd = @shell_exec('ldd '.escapeshellarg($binary).' 2>&1');
+        }
+
+        return [
+            'binary' => $binary,
+            'is_executable' => $isExecutable,
+            'ldd' => $ldd ?: null,
+            'php_uname' => php_uname(),
+            'php_version' => PHP_VERSION,
+            'env_LIBREOFFICE_PATH' => getenv('LIBREOFFICE_PATH') ?: null,
+            'env_HOME' => getenv('HOME') ?: null,
+            'sys_temp_dir' => sys_get_temp_dir(),
+        ];
     }
 
     private static function deleteDirectory(string $dir): void
