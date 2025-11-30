@@ -81,7 +81,7 @@
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td class="text-md py-1" style="width: 70%;">Opening Balance</td>
+                                                <td class="text-md py-1" style="width: 70%;">Year-Start Balance</td>
                                                 <td class="text-right font-semibold text-md py-1" style="width: 30%;">{{ $leaveCardDetails['vacation']['opening'] ?? 0 }}</td>
                                             </tr>
                                             <tr>
