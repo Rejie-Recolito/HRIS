@@ -2,7 +2,7 @@
 
 @section('header')
     <h2 class="font-semibold text-xl text-white dark:text-white leading-tight flex items-center">
-        <img src="{{ asset('images/leave-icon.svg') }}" class="w-8 h-8 mr-3 header-icon" alt="Leave Icon">
+        <img src="{{ asset('Images/leave-icon.svg') }}" class="w-8 h-8 mr-3 header-icon" alt="Leave Icon">
         LEAVE APPLICATION
     </h2>
 @endsection
