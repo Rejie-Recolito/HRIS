@@ -41,7 +41,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 30%; border-color: #ffffff;">TYPE OF LEAVE</th>
-                                    <th style="text-align: center !important; width: 14%; border-color: #ffffff;">Opening Balance</th>
+                                    <th style="text-align: center !important; width: 14%; border-color: #ffffff;">Year-Start Balance</th>
                                     <th style="text-align: center !important; width: 14%; border-color: #ffffff;">Credited/Earned</th>
                                     <th style="text-align: center !important; width: 14%; border-color: #ffffff;">Total</th>
                                     <th style="text-align: center !important; width: 14%; border-color: #ffffff;">Availed</th>
