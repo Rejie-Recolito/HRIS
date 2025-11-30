@@ -170,7 +170,7 @@
         <!-- Styled text section -->
         <div class="text-center mb-8 bg-white dark:bg-[#1c1c1d] rounded-lg border border-gray-700 dark:border-gray-600">
             <div class="flex items-center justify-center mb-3">
-                <img src="{{ asset('images/leave-icon.svg') }}" class="w-7 h-7 sm:w-9 sm:h-9 mr-2 sm:mr-3 form-header-icon" alt="Leave Icon">
+                <img src="{{ asset('Images/leave-icon.svg') }}" class="w-7 h-7 sm:w-9 sm:h-9 mr-2 sm:mr-3 form-header-icon" alt="Leave Icon">
                 @if(isset($lastApplication) && in_array($lastApplication->status, ['Under Review', 'Submitted', 'Approved', 'Denied']) && !session('acknowledged_leave_' . $lastApplication->id))
                     <h1 class="font-bold custom-label custom-heading mb-0" style="margin-top: 0 !important;">Leave Application Status</h1>
                 @else
