@@ -455,7 +455,11 @@ class DtrController {
             mkdir($tmpDir, 0755, true);
         }
 
-        $base = 'dtr_' . preg_replace('/[^A-Za-z0-9-_]/', '_', $empId) . '_' . $month;
+    // Use employee name for filename when available, fall back to emp_id.
+    $nameForFile = $empName ?: $empId;
+    // sanitize: allow letters, numbers, dash and underscore; replace others with underscore
+    $safeName = preg_replace('/[^A-Za-z0-9-_]/', '_', $nameForFile);
+    $base = $safeName . '_DTR_' . $month;
         $docxPath = $tmpDir . DIRECTORY_SEPARATOR . $base . '.docx';
         $pdfPath = $tmpDir . DIRECTORY_SEPARATOR . $base . '.pdf';
 

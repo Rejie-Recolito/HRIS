@@ -423,7 +423,7 @@ class ServiceRecordController extends Controller
             $table->addCell(1800)->addText($rec->separation_cause ?? '');
         }
 
-        $fileName = 'service_record_' . $user->id . '_' . date('Ymd_His') . '.docx';
+        $fileName = $user->firstname . '_' . $user->lastname . '_' . date('Ymd_His') . '.docx';
 
         // Save to temporary file and return download
         $tempFile = tempnam(sys_get_temp_dir(), 'srvrec') . '.docx';
