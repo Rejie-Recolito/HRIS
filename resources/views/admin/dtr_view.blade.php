@@ -27,10 +27,11 @@
 <div class="container mx-auto p-4">
     {{-- DTR Search Form (Admin) --}}
     @if(auth()->user() && auth()->user()->is_admin)
-        <form method="GET" action="{{ route('admin.dtr.search') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6">
+        <form id="admin-dtr-search-view" method="GET" action="{{ route('admin.dtr.search') }}" class="flex flex-col md:flex-row gap-4 items-end mb-6" onsubmit="return validateDtrSearch()">
             <div>
-                <label for="emp_id" class="block text-sm font-bold mb-1">Employee ID</label>
-                <input type="text" name="emp_id" id="emp_id" value="{{ request('emp_id') }}" class="rounded border border-[#198f51] px-2 py-1" placeholder="Enter Employee ID" required>
+                <label for="q" class="block text-sm font-bold mb-1">Employee ID or Name</label>
+                <input list="q_suggestions" name="q" id="q" value="{{ request('q') }}" class="rounded border border-[#198f51] px-2 py-1" placeholder="Enter ID or start typing name">
+                <datalist id="q_suggestions"></datalist>
             </div>
             <div>
                 <label for="month" class="block text-sm font-bold mb-1">Month</label>
@@ -105,7 +106,7 @@
                 @foreach($entries as $entry)
                 <tr>
                     <td class="px-2 py-1">{{ $entry->occurred_at }}</td>
-                    <td class="px-2 py-1">{{ $entry->employee }}</td>
+                    <td class="px-2 py-1">{{ $entry->emp_name ?? $entry->employee ?? '' }}</td>
                     <td class="px-2 py-1">{{ $entry->time_in }}</td>
                     <td class="px-2 py-1">{{ $entry->time_out }}</td>
                 </tr>
@@ -113,5 +114,64 @@
             </tbody>
         </table>
     @endif
+    {{-- Autosuggest JS for employee name and validation --}}
+    @push('scripts')
+    <script>
+        // Debounced fetch for employee name suggestions
+        function debounce(fn, delay) {
+            let t;
+            return function(...args) {
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(this, args), delay);
+            }
+        }
+
+        async function fetchSuggestions(q) {
+            if (!q || q.length < 1) return [];
+            try {
+                const res = await fetch('/admin/dtr/suggest?q=' + encodeURIComponent(q));
+                if (!res.ok) return [];
+                return await res.json();
+            } catch (e) {
+                console.error('Suggestion fetch failed', e);
+                return [];
+            }
+        }
+
+        const populateDatalist = debounce(async function(e) {
+            const q = e.target.value;
+            const list = document.getElementById('q_suggestions');
+            if (!list) return;
+            const results = await fetchSuggestions(q);
+            list.innerHTML = '';
+            if (Array.isArray(results)) {
+                results.slice(0, 20).forEach(item => {
+                    const opt = document.createElement('option');
+                    if (typeof item === 'string') {
+                        opt.value = item;
+                    } else if (item && item.name) {
+                        opt.value = item.name;
+                        opt.dataset.empId = item.id;
+                    }
+                    list.appendChild(opt);
+                });
+            }
+        }, 250);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('q');
+            if (input) input.addEventListener('input', populateDatalist);
+        });
+
+        function validateDtrSearch() {
+            const q = document.getElementById('q')?.value?.trim();
+            if (!q) {
+                alert('Please enter Employee ID or Name to search.');
+                return false;
+            }
+            return true;
+        }
+    </script>
+    @endpush
 </div>
 @endsection

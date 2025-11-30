@@ -90,3 +90,52 @@ Troubleshooting:
 
 Only set `LIBREOFFICE_PATH` in environments where you trust the runtime (do not expose this
 setting publicly).
+
+Additional notes (new converter behavior):
+
+-   The application now uses a centralized `App\Services\LibreOfficeConverter` service to run
+    DOCX→PDF conversions. The converter creates a per-conversion LibreOffice user profile
+    directory (inside `storage/app/tmp`) and passes it to LibreOffice via
+    `-env:UserInstallation=file://...` while also setting `HOME` and `XDG_RUNTIME_DIR`.
+
+-   This avoids common headless-server failures like dconf/javaldx errors and ensures the
+    conversion runs under the same user that created the profile (usually the web user,
+    `www-data`).
+
+-   Recommended `LIBREOFFICE_PATH` value on Linux: point to the real binary when available
+    (preferred). For example:
+
+          LIBREOFFICE_PATH="/usr/lib/libreoffice/program/soffice.bin"
+
+    Using `soffice.bin` avoids wrapper scripts and provides the most consistent behavior
+    on headless servers. If unset, the converter will fall back to common locations.
+
+If you run into permission issues, ensure `storage/app/tmp` and `/var/www/.cache/dconf`
+are writable by the web user (`www-data`) or let the converter create per-conversion
+profiles which it will remove after conversion.
+
+## Persistent profile (recommended for servers)
+
+On headless servers it's more robust to use a dedicated persistent LibreOffice profile
+directory owned by the web user to avoid first-run installers or extension prompts that
+may try to escalate privileges. Set the `LIBREOFFICE_PROFILE_DIR` environment variable
+to point to that directory and the converter will use it instead of creating a transient
+profile.
+
+Example commands to create a persistent profile directory:
+
+```bash
+sudo mkdir -p /var/lib/libreoffice-www/runtime
+sudo chown -R www-data:www-data /var/lib/libreoffice-www
+sudo chmod -R 700 /var/lib/libreoffice-www
+
+# (optional) run once to initialize the profile
+sudo -u www-data /usr/lib/libreoffice/program/soffice.bin --headless --invisible -env:UserInstallation=file:///var/lib/libreoffice-www --version
+
+# then set in your .env
+LIBREOFFICE_PROFILE_DIR=/var/lib/libreoffice-www
+LIBREOFFICE_PATH=/usr/lib/libreoffice/program/soffice.bin
+```
+
+With `LIBREOFFICE_PROFILE_DIR` set, the converter preserves the profile directory on
+success and will reuse it for subsequent conversions (faster and more stable on servers).

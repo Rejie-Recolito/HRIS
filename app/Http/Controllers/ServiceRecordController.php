@@ -77,85 +77,80 @@ class ServiceRecordController extends Controller
      */
     protected function convertDocxToPdf(string $docxPath): ?string
     {
+        // Robust DOCX -> PDF conversion using LibreOffice (soffice).
+        // Returns the produced PDF path on success or null on failure.
         if (!file_exists($docxPath)) {
+            Log::warning('convertDocxToPdf: input DOCX does not exist', ['docx' => $docxPath]);
             return null;
         }
 
-        // Prepare output directory
-        $outputDir = sys_get_temp_dir();
+        // Common candidate locations for soffice on Windows and Linux/macOS
+        $candidates = [
+            // Windows typical
+            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+            // Linux / macOS
+            '/usr/bin/soffice',
+            '/usr/local/bin/soffice',
+            'soffice',
+        ];
 
-        // Determine soffice binary path: check env var first, then common locations, then assume 'soffice' on PATH.
-        $candidates = [];
-        if ($env = env('LIBREOFFICE_PATH')) {
-            $candidates[] = $env;
-        }
-        // Common Windows locations
-        $candidates[] = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe';
-        $candidates[] = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe';
-        // Common Linux path
-        $candidates[] = '/usr/bin/soffice';
-        $candidates[] = '/usr/local/bin/soffice';
-        $candidates[] = 'soffice';
-
-        $processBinary = null;
+        $soffice = null;
         foreach ($candidates as $c) {
-            // If candidate is just 'soffice' skip file_exists check
-            if ($c === 'soffice') {
-                // hope it's on PATH
-                $processBinary = $c;
+            if (stripos($c, 'soffice') === 0) {
+                // bare command (will rely on PATH)
+                $soffice = $c;
                 break;
             }
             if (file_exists($c)) {
-                $processBinary = $c;
+                $soffice = $c;
                 break;
             }
         }
 
-        if (!$processBinary) {
-            Log::warning('LibreOffice not found: cannot convert DOCX to PDF. Candidates tried: ' . implode(', ', $candidates));
+        if (!$soffice) {
+            Log::warning('convertDocxToPdf: soffice binary not found in candidates; skipping conversion');
             return null;
         }
 
-        // Construct and run the process using argv array (safer on Windows with spaces)
-        $process = new Process([
-            $processBinary,
-            '--headless',
-            '--convert-to',
-            'pdf',
-            '--outdir',
-            $outputDir,
-            $docxPath,
-        ]);
-        // Set a reasonable timeout (e.g., 60 seconds)
-        $process->setTimeout(60);
+        // Prefer a project-controlled temp directory to avoid OS temp/AV interference
+        $projectTmp = storage_path('app/tmp');
+        if ($projectTmp && is_writable(dirname($projectTmp))) {
+            $outputDir = $projectTmp;
+        } else {
+            $outputDir = sys_get_temp_dir();
+        }
+        // Ensure output dir exists
+        if (!is_dir($outputDir)) {
+            @mkdir($outputDir, 0755, true);
+        }
+        Log::info('convertDocxToPdf: using output directory', ['outdir' => $outputDir]);
 
+        $baseName = pathinfo($docxPath, PATHINFO_FILENAME);
+        $expectedPdf = rtrim($outputDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $baseName . '.pdf';
+
+        // Remove any stale PDF
+        if (file_exists($expectedPdf)) {
+            @unlink($expectedPdf);
+        }
+
+        // Use centralized converter service which handles per-conversion profile and env
         try {
-            Log::info('Attempting DOCX->PDF conversion', ['binary' => $processBinary, 'docx' => $docxPath, 'outdir' => $outputDir]);
-            $process->run();
-
-            $stdout = $process->getOutput();
-            $stderr = $process->getErrorOutput();
-            $exit = $process->getExitCode();
-            Log::info('LibreOffice conversion finished', ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr]);
-
-            if (!$process->isSuccessful()) {
-                Log::warning('LibreOffice conversion reported non-success', ['exit' => $exit, 'stderr' => $stderr]);
+            $converter = new \App\Services\LibreOfficeConverter();
+            $result = $converter->convertDocxToPdf($docxPath, $outputDir);
+            if (($result['exit'] ?? 1) !== 0) {
+                Log::warning('convertDocxToPdf: converter reported non-success', ['result' => $result]);
                 return null;
             }
-
-            // Determine produced PDF filename (same basename but .pdf)
-            $pdfPath = $outputDir . DIRECTORY_SEPARATOR . pathinfo($docxPath, PATHINFO_FILENAME) . '.pdf';
-            if (file_exists($pdfPath)) {
-                return $pdfPath;
+            $pdf = $result['pdf'] ?? null;
+            if ($pdf && file_exists($pdf) && filesize($pdf) > 0) {
+                return $pdf;
             }
-
-            Log::warning('LibreOffice conversion succeeded but PDF not found', ['expected_pdf' => $pdfPath]);
+            return null;
         } catch (\Throwable $e) {
-            Log::error('Exception during LibreOffice conversion', ['exception' => $e->getMessage()]);
+            Log::error('convertDocxToPdf: converter exception', ['exception' => $e->getMessage()]);
             return null;
         }
-
-        return null;
     }
 
     /**
@@ -173,7 +168,7 @@ class ServiceRecordController extends Controller
     // - The template should include a single table row with placeholders like:
     //   ${from}, ${to}, ${rank}, ${designation}, ${status}, ${monthly_pay}, ${station}, ${branch}, ${leave_of_absence}, ${sep_date}, ${sep_cause}
         // - TemplateProcessor::cloneRow('from', $n) will be used; the code sets values using keys like from#1, rank#1, etc.
-        $templatePath = resource_path('templates/service_record_template.docx');
+        $templatePath = resource_path('templates/Service-Record-template.docx');
         $altTemplatePath = resource_path('templates/Service-Record-template.docx');
         // accept either normalized or original uploaded filename
         if (!file_exists($templatePath) && file_exists($altTemplatePath)) {
@@ -183,6 +178,14 @@ class ServiceRecordController extends Controller
         if (file_exists($templatePath)) {
             try {
                 $tpl = new TemplateProcessor($templatePath);
+
+                // Escape values before inserting into the .docx XML to avoid
+                // breaking document.xml with raw '&', '<' or other entities.
+                $escapeForXml = function ($v) {
+                    if ($v === null) return '';
+                    // Ensure string and encode for XML (ENT_XML1 covers & and others)
+                    return htmlspecialchars((string)$v, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                };
 
                 $n = max(1, $serviceRecords->count());
                 // cloneRow expects the template to have placeholders like ${from#1} in the row
@@ -199,24 +202,27 @@ class ServiceRecordController extends Controller
 
                 for ($i = 1; $i <= $n; $i++) {
                     $rec = $serviceRecords->get($i - 1);
-                    $tpl->setValue("from#{$i}", $rec ? $fmt($rec->service_from) : '');
-                    $tpl->setValue("to#{$i}", $rec ? $fmt($rec->service_to) : '');
+                    $valFrom = $rec ? $fmt($rec->service_from) : '';
+                    $valTo = $rec ? $fmt($rec->service_to) : '';
 
-                    $tpl->setValue("designation#{$i}", $rec->appointment_designation ?? '');
-                    $tpl->setValue("status#{$i}", $rec->appointment_status ?? '');
+                    $tpl->setValue("from#{$i}", $escapeForXml($valFrom));
+                    $tpl->setValue("to#{$i}", $escapeForXml($valTo));
+
+                    $tpl->setValue("designation#{$i}", $escapeForXml($rec->appointment_designation ?? ''));
+                    $tpl->setValue("status#{$i}", $escapeForXml($rec->appointment_status ?? ''));
 
                     // Monthly pay: support both appointment_salary and appointment_monthly_base_pay
                     $monthly = $rec ? ($rec->appointment_salary ?? $rec->appointment_monthly_base_pay ?? '') : '';
-                    $tpl->setValue("monthly_pay#{$i}", $monthly !== '' ? number_format($monthly, 2) : '');
+                    $tpl->setValue("monthly_pay#{$i}", $escapeForXml($monthly !== '' ? number_format($monthly, 2) : ''));
 
                     // Station/place: prefer station_place then station
                     $station = $rec ? ($rec->station_place ?? $rec->station ?? '') : '';
-                    $tpl->setValue("station#{$i}", $station);
+                    $tpl->setValue("station#{$i}", $escapeForXml($station));
 
                     // Use single 'leave_of_absence' field
-                    $tpl->setValue("leave_of_absence#{$i}", $rec->leave_of_absence ?? '');
-                    $tpl->setValue("sep_date#{$i}", $rec ? $fmt($rec->separation_date) : '');
-                    $tpl->setValue("sep_cause#{$i}", $rec->separation_cause ?? '');
+                    $tpl->setValue("leave_of_absence#{$i}", $escapeForXml($rec->leave_of_absence ?? ''));
+                    $tpl->setValue("sep_date#{$i}", $escapeForXml($rec ? $fmt($rec->separation_date) : ''));
+                    $tpl->setValue("sep_cause#{$i}", $escapeForXml($rec->separation_cause ?? ''));
                 }
 
                 // Header placeholders (if template contains them)
@@ -226,21 +232,22 @@ class ServiceRecordController extends Controller
                 $middlename = $employee->middlename ?? ($user->middlename ?? '');
 
                 // Keep old 'name' placeholder for backwards compatibility
-                $tpl->setValue('name', $employee ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? '')) : ($user->name ?? ''));
-                $tpl->setValue('lastname', $lastname);
-                $tpl->setValue('firstname', $firstname);
-                $tpl->setValue('middlename', $middlename);
-                $tpl->setValue('birth', $employee->date_of_birth ?? ($user->date_of_birth ?? ''));
-                $tpl->setValue('place_of_birth', $employee->place_of_birth ?? ($user->place_of_birth ?? ''));
+                $tpl->setValue('name', $escapeForXml($employee ? trim(sprintf('%s, %s %s', $employee->lastname ?? '', $employee->firstname ?? '', $employee->middlename ?? '')) : ($user->name ?? '')));
+                $tpl->setValue('lastname', $escapeForXml($lastname));
+                $tpl->setValue('firstname', $escapeForXml($firstname));
+                $tpl->setValue('middlename', $escapeForXml($middlename));
+                $tpl->setValue('birth', $escapeForXml($employee->date_of_birth ?? ($user->date_of_birth ?? '')));
+                $tpl->setValue('place_of_birth', $escapeForXml($employee->place_of_birth ?? ($user->place_of_birth ?? '')));
                 // Date accomplished: default to today; templates may override this if needed
-                $tpl->setValue('date_accomplished', date('Y-m-d'));
+                $tpl->setValue('date_accomplished', $escapeForXml(date('Y-m-d')));
 
                 $tempFile = tempnam(sys_get_temp_dir(), 'srvrec') . '.docx';
                 $tpl->saveAs($tempFile);
 
                 // Try converting to PDF using LibreOffice (soffice). If conversion fails, fall back to DOCX.
                 try {
-                    $pdfFile = $this->convertDocxToPdf($tempFile);
+                    $convResult = \App\Services\LibreOfficeConverter::convertDocxToPdf($tempFile, storage_path('app/tmp'));
+                    $pdfFile = $convResult['pdf'] ?? null;
                     $specificRequestId = request()->query('request');
                     $updatedRequestId = null;
                     if ($specificRequestId) {
@@ -425,7 +432,8 @@ class ServiceRecordController extends Controller
 
         // Attempt conversion to PDF via LibreOffice
         try {
-            $pdfFile = $this->convertDocxToPdf($tempFile);
+            $convResult = \App\Services\LibreOfficeConverter::convertDocxToPdf($tempFile, storage_path('app/tmp'));
+            $pdfFile = $convResult['pdf'] ?? null;
             if ($pdfFile && file_exists($pdfFile)) {
                 @unlink($tempFile);
                 $pdfName = str_replace('.docx', '.pdf', $fileName);

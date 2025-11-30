@@ -13,6 +13,12 @@ use Carbon\Carbon;
 
 // DTR search (admin) and self-view (employee)
 Route::get('/admin/dtr/search', [DtrController::class, 'adminSearch'])->middleware(['auth', 'verified'])->name('admin.dtr.search');
+// Suggest endpoint used by the admin single-field autosuggest (search by id or name)
+Route::get('/admin/dtr/suggest', [DtrController::class, 'suggest'])->middleware(['auth', 'verified'])->name('admin.dtr.suggest');
+// Generate PDF for admin DTR search results
+Route::get('/admin/dtr/generate-pdf', [DtrController::class, 'generatePdf'])->middleware(['auth', 'verified'])->name('admin.dtr.generate_pdf');
+// Generate DOCX then convert to PDF (matches official DOCX template layout)
+Route::get('/admin/dtr/generate-docx-pdf', [DtrController::class, 'generateDocxPdf'])->middleware(['auth', 'verified'])->name('admin.dtr.generate_docx_pdf');
 Route::get('/employee/dtr/self', [DtrController::class, 'employeeSelfView'])->middleware(['auth', 'verified'])->name('employee.dtr.self');
 
 // DTR uploads list, view, and delete
@@ -202,4 +208,10 @@ Route::post('/service-records/{id}/mark-claimed', [ServiceRecordController::clas
 
 // Route for AJAX trend data
 Route::get('/admin/dashboard/trends', [App\Http\Controllers\AdminDashboardController::class, 'trends'])->name('admin.dashboard.trends');
+
+
+// Temporary diagnostic route: returns which LibreOffice binary will be used and env info
+Route::get('/_debug/libreoffice', function () {
+    return response()->json(\App\Services\LibreOfficeConverter::diagnostic());
+});
 
