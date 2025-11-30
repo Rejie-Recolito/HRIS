@@ -62,7 +62,7 @@
                                                aria-label="View/Edit employee profile" 
                                                title="View/Edit Employee Info" 
                                                class="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-blue-100">
-                                                <span role="img" aria-hidden="true" class="inline-block w-5 h-5" style="background-color:#253D90; -webkit-mask-image: url({{ asset('images/icons/profile-icon.png') }}); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; mask-image: url({{ asset('images/icons/profile-icon.png') }}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></span>
+                                                <span role="img" aria-hidden="true" class="inline-block w-5 h-5" style="background-color:#253D90; -webkit-mask-image: url({{ asset('Images/icons/profile-icon.png') }}); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain; mask-image: url({{ asset('images/icons/profile-icon.png') }}); mask-repeat: no-repeat; mask-position: center; mask-size: contain;"></span>
                                             </a>
 
                                             <a href="{{ route('employees.service_record', $employee->id) }}" 

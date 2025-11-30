@@ -15,7 +15,7 @@
                 </div>
                 <div class="flex-1 bg-[#198f51] dark:bg-[#198f51] rounded-xl shadow p-3 flex flex-col items-start justify-between min-w-[180px]">
                     <div class="flex items-center">
-                        <img src="{{ asset('images/leave-icon.svg') }}" class="w-10 h-10 mr-2 filter invert brightness-0" alt="Leave Icon">
+                        <img src="{{ asset('Images/leave-icon.svg') }}" class="w-10 h-10 mr-2 filter invert brightness-0" alt="Leave Icon">
                         <span class="text-3xl font-bold text-white ml-2">{{ $leaveApplications }}</span>
                     </div>
                     <span class="text-sm font-semibold text-white ml-0">LEAVE APPLICATIONS</span>
