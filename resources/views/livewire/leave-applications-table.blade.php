@@ -34,6 +34,7 @@
                     <td style="text-align: center !important;">{{ $leave->status }}</td>
                     <td style="text-align: center !important;">
                         <a href="{{ route('leave_application.view', ['id' => $leave->id]) }}" class="inline-flex items-center justify-center px-3 py-1 bg-[#198f51] hover:bg-[#166534] text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#166534] whitespace-nowrap">Leave Form</a>
+                        <button type="button" onclick="if(!confirm('Delete this leave application from view?')) { event.stopImmediatePropagation(); return false; }" wire:click="delete({{ $leave->id }})" class="inline-flex items-center justify-center ml-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-700">Delete</button>
                     </td>
                 </tr>
             @empty

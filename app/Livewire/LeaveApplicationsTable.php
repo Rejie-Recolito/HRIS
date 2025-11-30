@@ -15,12 +15,12 @@ class LeaveApplicationsTable extends Component
 
     public function mount()
     {
-        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->orderByDesc('date_of_filing')->get();
     }
 
     public function updated()
     {
-        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->orderByDesc('date_of_filing')->get();
     }
 
     public function accept($id)
@@ -29,7 +29,7 @@ class LeaveApplicationsTable extends Component
         if ($leave->status === 'Submitted') {
             $leave->status = 'Under Review';
             $leave->save();
-            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->orderByDesc('date_of_filing')->get();
             session()->flash('success', 'Leave application set to Under Review.');
         }
     }
@@ -41,7 +41,7 @@ class LeaveApplicationsTable extends Component
             $leave->status = 'Approved';
             $leave->action_date = now();
             $leave->save();
-            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->orderByDesc('date_of_filing')->get();
             session()->flash('success', 'Leave application approved.');
         }
     }
@@ -53,7 +53,7 @@ class LeaveApplicationsTable extends Component
             $leave->status = 'Denied';
             $leave->action_date = now();
             $leave->save();
-            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+            $this->leaveApplications = LeaveApplication::where('is_deleted', false)->orderByDesc('date_of_filing')->get();
             session()->flash('success', 'Leave application denied.');
         }
     }
@@ -63,7 +63,7 @@ class LeaveApplicationsTable extends Component
         $leave = LeaveApplication::findOrFail($id);
         $leave->is_deleted = true;
         $leave->save();
-        $this->leaveApplications = LeaveApplication::where('is_deleted', false)->get();
+    $this->leaveApplications = LeaveApplication::where('is_deleted', false)->orderByDesc('date_of_filing')->get();
         session()->flash('success', 'Leave application deleted.');
     }
 

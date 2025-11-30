@@ -201,16 +201,28 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <a 
-                                                href="{{ route('leave_application.view', $application->id) }}" 
-                                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                title="View Details"
-                                            >
-                                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                </svg>
-                                            </a>
+                                            <div class="inline-flex items-center justify-center space-x-2">
+                                                <a 
+                                                    href="{{ route('leave_application.view', $application->id) }}" 
+                                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                    title="View Details"
+                                                >
+                                                    <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                </a>
+                                                <form id="delete-form-{{ $application->id }}" action="{{ route('leave.delete', $application->id) }}" method="POST" style="display:inline; margin:0;" class="delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <input type="hidden" name="permanent" value="1" />
+                                                    <button type="button" data-form-id="{{ $application->id }}" data-target-form-id="delete-form-{{ $application->id }}" class="delete-trigger inline-flex items-center justify-center px-2 py-1 rounded-md text-red-600 hover:text-red-800 focus:outline-none" title="Delete">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m4 0H5" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -232,4 +244,94 @@
             </div>
         </div>
     </div>
+    
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-lg w-full p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Confirm delete</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Are you sure you want to permanently delete this leave application? This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDelete" class="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Cancel</button>
+                <button id="confirmDelete" class="px-4 py-2 rounded-md bg-red-600 text-white">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            let modal = document.getElementById('deleteModal');
+            let confirmBtn = document.getElementById('confirmDelete');
+            let cancelBtn = document.getElementById('cancelDelete');
+            let targetForm = null;
+
+            document.querySelectorAll('.delete-trigger').forEach(function(btn){
+                btn.addEventListener('click', function(e){
+                    // prefer explicit data-target-form-id attribute if present
+                    const targetId = btn.getAttribute('data-target-form-id');
+                    if (targetId) {
+                        targetForm = document.getElementById(targetId);
+                    }
+                    // fallback to closest form
+                    if (!targetForm) targetForm = btn.closest('form');
+                    console.log('Delete triggered for form:', targetForm ? targetForm.id : null, 'action=', targetForm ? targetForm.action : null);
+                    if(!targetForm) return;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+            });
+
+            cancelBtn.addEventListener('click', function(){
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                targetForm = null;
+            });
+
+            confirmBtn.addEventListener('click', function(){
+                console.log('Confirm delete clicked. Performing AJAX delete for form:', targetForm ? targetForm.id : null);
+                if(!targetForm) return;
+
+                // Build FormData from the form (includes _token and _method)
+                const formData = new FormData(targetForm);
+
+                // Add header to indicate AJAX
+                const headers = {
+                    'X-Requested-With': 'XMLHttpRequest'
+                };
+
+                // Disable confirm button while request in progress
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+                fetch(targetForm.action, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData,
+                    credentials: 'same-origin'
+                }).then(function(resp){
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    if (!resp.ok) throw new Error('Network response was not ok: ' + resp.status);
+                    return resp.json();
+                }).then(function(json){
+                    console.log('Delete response:', json);
+                    if (json && json.success) {
+                        // remove the table row containing the form
+                        const row = targetForm.closest('tr');
+                        if (row) row.remove();
+                        // optionally show a toast / flash — here we log
+                        console.info(json.message || 'Deleted');
+                    } else {
+                        console.warn('Delete responded with success=false', json);
+                    }
+                }).catch(function(err){
+                    console.error('AJAX delete failed', err);
+                }).finally(function(){
+                    // hide modal and reset
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    targetForm = null;
+                });
+            });
+        })();
+    </script>
 @endsection

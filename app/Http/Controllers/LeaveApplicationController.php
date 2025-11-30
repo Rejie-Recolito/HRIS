@@ -245,7 +245,7 @@ class LeaveApplicationController extends Controller
     }
 
     // Admin: delete a leave application
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         $leave = LeaveApplication::findOrFail($id);
         // Only restore consumed credits if the leave was not approved
@@ -254,9 +254,30 @@ class LeaveApplicationController extends Controller
             $this->restoreConsumedCredits($leave);
         }
         // Mark as deleted instead of actually deleting
-        $leave->is_deleted = true;
-        $leave->save();
-        return redirect()->route('leave')->with('success', 'Leave application deleted successfully.');
+        // If permanent flag is present, perform a hard delete after restoring credits when appropriate
+        $permanent = $request->input('permanent') == '1' || $request->boolean('permanent');
+        if ($permanent) {
+            if ($leave->status !== 'Approved') {
+                $this->restoreConsumedCredits($leave);
+            }
+            $leave->delete();
+            $message = 'Leave application permanently deleted.';
+        } else {
+            $leave->is_deleted = true;
+            $leave->save();
+            $message = 'Leave application deleted successfully.';
+        }
+
+        // If the client expects JSON (AJAX), return JSON so client can update UI without redirect.
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'id' => $id,
+            ]);
+        }
+
+        return redirect()->route('leave')->with('success', $message);
     }
 
     /**
