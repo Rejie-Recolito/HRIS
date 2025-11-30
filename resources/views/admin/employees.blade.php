@@ -16,32 +16,34 @@
         .overlay .form-container { background-color: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; }
     </style>
 
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="card-bg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h2 class="text-xl font-bold mb-4">LGU-Bulusan Employees</h2>
+                    <h2 class="text-[#198f51] text-xl font-bold mb-4">LGU-BULUSAN EMPLOYEES</h2>
                     <!-- Filter Input -->
                     <div class="mb-4">
                         <input type="text" id="employeeFilter" placeholder="Search employee..." class="border-gray-300 rounded-xl shadow-sm text-gray-900" style="width:30%">
                     </div>
 
-                    <table class="admin-table table-auto mb-6">
-                        <colgroup>
-                            <col />
-                            <col />
-                            <col style="width:150px"/>
-                            <col />
-                            <col />
-                            <col />
-                            <col />
-                        </colgroup>
+                    <table class="admin-table table-auto mb-6" style="width:100%;">
+                                    <colgroup>
+                                        <col style="width:260px;" /> <!-- Name column wider -->
+                                                    <col style="width:180px;" /> <!-- Department column reduced -->
+                                           <col style="width:150px" />
+                                        <col />
+                                        <col />
+                                        <col />
+                                        <col />
+                                           <col style="width:300px;" /> <!-- Name column wider -->
+                                    </colgroup>
+                                                <div style="overflow-x:auto; width:100%; padding:0; margin:0;">
+                                                <table class="admin-table table-auto mb-6" style="min-width:1100px; width:100%;">
                         <thead>
                             <tr>
                                 <th>NAME</th>
                                 <th>DEPARTMENT</th>
                                 <th>JOB TITLE</th>
-                                <th>START DATE</th>
                                 <th>STATUS</th>
                                 <th>SEX</th>
                                 <th>ACTIONS</th>
@@ -53,7 +55,6 @@
                                     <td class="whitespace-nowrap">{{ $employee->lastname }} {{ $employee->firstname }} {{ $employee->middlename }}</td>
                                     <td>{{ $employee->department }}</td>
                                     <td>{{ $employee->job_title }}</td>
-                                    <td>{{ $employee->start_date }}</td>
                                     <td>{{ $employee->status }}</td>
                                     <td>{{ $employee->sex }}</td>
                                     <td>
