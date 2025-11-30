@@ -84,6 +84,11 @@
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('add-user-information.user')" :active="request()->routeIs('add-user-information.user')">
+                                {{ __('EMPLOYEE PROFILE') }}
+                            </x-nav-link>
+                        </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('leave.user')" :active="request()->routeIs('leave.user')">
                                 {{ __('LEAVE') }}
                             </x-nav-link>
@@ -93,11 +98,7 @@
                                 {{ __('SERVICE RECORD') }}
                             </x-nav-link>
                         </div>
-                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link :href="route('add-user-information.user')" :active="request()->routeIs('add-user-information.user')">
-                                {{ __('EMPLOYEE PROFILE') }}
-                            </x-nav-link>
-                        </div>
+                        
                     @endif
 
 
@@ -219,7 +220,7 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                     </svg>
-                    {{ __('Dashboard') }}
+                    {{ __('Home') }}
                 </div>
             </x-responsive-nav-link>
         </div>
@@ -241,12 +242,12 @@
         @endif
 
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">
+            <x-responsive-nav-link :href="route('add-user-information.user')" :active="request()->routeIs('add-user-information.user')">
                 <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.121 17.804zM12 12a3 3 0 100-6 3 3 0 000 6z" />
                     </svg>
-                    {{ __('Service Record') }}
+                    {{ __('Employee Profile') }}
                 </div>
             </x-responsive-nav-link>
         </div>
@@ -262,16 +263,18 @@
             </x-responsive-nav-link>
         </div>
 
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('add-user-information.user')" :active="request()->routeIs('add-user-information.user')">
+         <div class="pt-2 pb-3 space-y-1">
+            <x-responsive-nav-link :href="route('service_record.user')" :active="request()->routeIs('service_record.user')">
                 <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.121 17.804zM12 12a3 3 0 100-6 3 3 0 000 6z" />
+                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                     </svg>
-                    {{ __('Employee Profile') }}
+                    {{ __('Service Record') }}
                 </div>
             </x-responsive-nav-link>
         </div>
+
+        
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-white dark:border-gray-600">
@@ -282,7 +285,7 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    {{ __('Account Settings') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
