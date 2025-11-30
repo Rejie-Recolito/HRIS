@@ -409,7 +409,7 @@ class DtrController {
             $empName = $empId; // fallback to ID when name not available
         }
 
-        // Compute total working days: count of days that have at least one AM/PM arrival or departure
+    // Compute total working days: count of days that have at least one AM/PM arrival or departure
         $totalWorkingDays = 0;
         foreach (range(1, $daysInMonth) as $d) {
             $dayEntries = $entries->get($d, collect());
@@ -439,6 +439,15 @@ class DtrController {
                 $undertimeTotals = ['hours' => 0, 'minutes' => 0, 'total_minutes' => 0];
             }
 
+            // Compute Philippines holidays for this month and year
+            try {
+                $year = (int)$start->year;
+                $monthNum = (int)$start->month;
+                $holidays = \App\Services\PhilippinesHolidays::getHolidaysForMonth($year, $monthNum);
+            } catch (\Exception $e) {
+                $holidays = [];
+            }
+
         // If a DOCX template is provided, use TemplateProcessor to populate it (preferred)
         $templatePath = resource_path('templates/dtr_template.docx');
         $tmpDir = storage_path('app/tmp');
@@ -462,6 +471,10 @@ class DtrController {
             // Add undertime totals placeholders
             $tpl->setValue('TOTAL_UNDERTIME_HOURS', (string)($undertimeTotals['hours'] ?? 0));
             $tpl->setValue('TOTAL_UNDERTIME_MINUTES', (string)($undertimeTotals['minutes'] ?? 0));
+            // Holidays list placeholder (comma-separated) and per-day HOLIDAY#N placeholders
+            $tpl->setValue('HOLIDAYS_LIST', implode(', ', array_values($holidays)) ?: '');
+            // also set alternative placeholder naming used in template (e.g. ${HOLIDAY LIST#1})
+            $tpl->setValue('HOLIDAY LIST', implode(', ', array_values($holidays)) ?: '');
 
             // clone the row placeholder 'day' daysInMonth times
             $tpl->cloneRow('day', $daysInMonth);
@@ -573,6 +586,10 @@ class DtrController {
                 }
                 $tpl->setValue("undertime_hours#{$i}", (string)($dailyTotals['hours'] ?? 0));
                 $tpl->setValue("undertime_minutes#{$i}", (string)($dailyTotals['minutes'] ?? 0));
+                // Fill holiday name for the day if present
+                $holidayName = $holidays[$i] ?? '';
+                $tpl->setValue("HOLIDAY#{$i}", $holidayName);
+                $tpl->setValue("HOLIDAY LIST#{$i}", $holidayName);
             }
 
             $tpl->saveAs($docxPath);
@@ -663,9 +680,10 @@ class DtrController {
         $table->addCell(Converter::cmToTwip(2))->addText('AM Arrival');
         $table->addCell(Converter::cmToTwip(2))->addText('AM Departure');
         $table->addCell(Converter::cmToTwip(2))->addText('PM Arrival');
-        $table->addCell(Converter::cmToTwip(2))->addText('PM Departure');
-        $table->addCell(Converter::cmToTwip(2))->addText('Undertime Hours');
-        $table->addCell(Converter::cmToTwip(2))->addText('Undertime Minutes');
+    $table->addCell(Converter::cmToTwip(2))->addText('PM Departure');
+    $table->addCell(Converter::cmToTwip(3))->addText('Holiday');
+    $table->addCell(Converter::cmToTwip(2))->addText('Undertime Hours');
+    $table->addCell(Converter::cmToTwip(2))->addText('Undertime Minutes');
 
         Log::info('generateDocxPdf fallback: grouped entries summary', ['emp' => $empId, 'month' => $month, 'groups' => array_keys($entries->toArray())]);
         for ($d = 1; $d <= $daysInMonth; $d++) {
@@ -752,6 +770,9 @@ class DtrController {
             $table->addCell(Converter::cmToTwip(2))->addText($amDeparture);
             $table->addCell(Converter::cmToTwip(2))->addText($pmArrival);
             $table->addCell(Converter::cmToTwip(2))->addText($pmDeparture);
+            // Holiday name for this day (if any)
+            $holidayName = $holidays[$d] ?? '';
+            $table->addCell(Converter::cmToTwip(3))->addText($holidayName);
             // compute daily undertime totals for fallback table
             try {
                 $dailyTotals = $this->computeUndertimeTotals($dayEntries);
