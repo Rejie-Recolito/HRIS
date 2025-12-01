@@ -19,6 +19,10 @@
         @livewireStyles
         <!-- Alpine.js -->
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+        <style>
+            /* Ensure x-cloak elements stay hidden until Alpine is ready */
+            [x-cloak] { display: none !important; }
+        </style>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-[#282828]">

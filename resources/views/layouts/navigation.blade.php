@@ -5,6 +5,9 @@
     isDark: localStorage.getItem('darkMode') === 'true' || false,
     init() {
         this.updateDarkMode();
+        // Ensure notification dropdowns are closed after hydration to avoid flash-open on refresh
+        this.openUserNotifications = false;
+        this.openResponsiveNotifications = false;
     },
     toggleDarkMode() {
         this.isDark = !this.isDark;
@@ -166,8 +169,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                     </button>
-                    <div x-show="openResponsiveNotifications" @click.outside="openResponsiveNotifications = false" class="absolute right-0 mt-2 w-80 max-h-[500px] overflow-y-auto bg-white dark:bg-[#282828] rounded-lg shadow-lg overflow-hidden z-20">
-                        @livewire('notification-bell')
+                    <div x-show="openResponsiveNotifications" x-cloak @click.outside="openResponsiveNotifications = false" style="display: none;" class="absolute right-0 mt-2 w-80 max-h-[500px] overflow-y-auto bg-white dark:bg-[#282828] rounded-lg shadow-lg overflow-hidden z-20">
+                        @livewire('notification-bell', ['renderOnlyList' => true])
                     </div>
                 </div>
 
